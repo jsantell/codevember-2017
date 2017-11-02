@@ -1,0 +1,43 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  color: white;
+  padding: fixed;
+}
+
+#info {
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.4);
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  font-size: 120%;
+}
+
+.experiment-number {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.experiment-number:after {
+  content: ':';
+}
+
+.experiment-title {
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+.experiment-subtitle {
+  margin-top: 3px;
+  text-transform: lowercase;
+  font-weight: 300;
+  font-size: 70%;
+  color: #ccc;
+  display: block;
+}
+
+.experiment-subtitle:before {
+  content: '>';
+}

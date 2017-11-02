@@ -1,0 +1,45 @@
+{
+  "name": "@jsantell/codevember-2017",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Codevember 2017",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack-dev-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsantell/codevember-2017.git"
+  },
+  "author": "Jordan Santell",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jsantell/codevember-2017/issues"
+  },
+  "homepage": "https://github.com/jsantell/codevember-2017#readme",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-latest": "^6.24.1",
+    "glsl-conditionals": "^1.0.0",
+    "glsl-hsl2rgb": "^1.1.0",
+    "glsl-hsv2rgb": "^1.0.0",
+    "glsl-map": "^1.0.1",
+    "glsl-noise": "0.0.0",
+    "glsl-raytrace": "^1.0.0",
+    "glsl-sdf-box": "^1.0.0",
+    "glsl-sdf-normal": "^1.0.0",
+    "glsl-turntable-camera": "^1.0.0",
+    "glslify-loader": "^1.0.2",
+    "handlebars": "^4.0.11",
+    "handlebars-loader": "^1.6.0",
+    "html-webpack-plugin": "^2.30.1",
+    "raw-loader": "^0.5.1",
+    "webpack": "^3.7.1",
+    "webpack-dev-server": "^2.9.1"
+  },
+  "dependencies": {
+    "@alex_toudic/wagner": "^0.1.20",
+    "stats.js": "^0.17.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "experiments": {
+    "01": {
+      "title": "Galaxy",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
+    }
+  }
+}
