@@ -1,3 +1,2 @@
-# experiments
+# codevember 2017
 
-audio/VR/AR/GL experiments for the web.
