@@ -6,6 +6,13 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "02": {
+      "title": "cake cake cake cake",
+      "subtitle": "not even a cake",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
