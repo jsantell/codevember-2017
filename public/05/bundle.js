@@ -1016,8 +1016,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var LIMIT = 20;
-var size = 1;
+var LIMIT = 15;
+var size = 20;
 var randomDir = function randomDir() {
   return Math.random() < 0.5 ? -1 : 1;
 };
@@ -1034,6 +1034,8 @@ var Experiment = function (_ThreeApp) {
   _createClass(Experiment, [{
     key: 'init',
     value: function init() {
+      var _this2 = this;
+
       this.renderer.setClearColor(0x000000);
 
       this.pivot = new _three.Object3D();
@@ -1042,15 +1044,23 @@ var Experiment = function (_ThreeApp) {
       this.scene.add(this.pivot);
       this.camera.position.set(0, 2, 40);
 
-      this.geometry = new _three.DodecahedronGeometry(3, 4);
+      this.geometry = new _three.DodecahedronGeometry(3, 2);
       this.material = new _three.ShaderMaterial({
+        transparent: true,
         fragmentShader: _frag2.default,
         vertexShader: _vert2.default,
         uniforms: {
+          color: { value: new _three.Color(0xddddff) },
           time: { value: 0 },
           size: { value: size },
           alphaMap: { value: 0 }
-        }
+        },
+        depthWrite: false
+      });
+      this.material.blending = _three.AdditiveBlending;
+      this.textureLoader = new _three.TextureLoader();
+      this.textureLoader.load('particle.jpg', function (texture) {
+        _this2.material.uniforms.alphaMap.value = texture;
       });
       this.points = new _three.Points(this.geometry, this.material);
       for (var i = 0; i < this.geometry.vertices.length; i++) {
@@ -1058,16 +1068,16 @@ var Experiment = function (_ThreeApp) {
         var v = this.geometry.vertices[i];
         var value = i / this.geometry.vertices.length * Math.random();
         v.velocity = new _three.Vector3(Math.random() * randomDir(), Math.random() * randomDir(), Math.random() * randomDir());
-        v.velocity.x *= 0.09;
-        v.velocity.y *= 0.05;
-        v.velocity.z *= 0.05;
+        v.velocity.x *= 0.02;
+        v.velocity.y *= 0.02;
+        v.velocity.z *= 0.02;
       }
       this.scene.add(this.points);
       this.composer = new _wagner2.default.Composer(this.renderer);
       this.bloomPass = new _MultiPassBloomPass2.default({
         zoomBlurStrength: 0.8, //0.2,
         applyZoomBlur: true,
-        blurAmount: 10
+        blurAmount: 100
       });
     }
   }, {
@@ -1076,17 +1086,18 @@ var Experiment = function (_ThreeApp) {
       for (var i = 0; i < this.geometry.vertices.length; i++) {
         var vertex = this.geometry.vertices[i];
         if (vertex.length() > LIMIT) {
-          vertex.velocity.x *= -1;
-          vertex.velocity.y *= -1;
-          vertex.velocity.z *= -1;
+          vertex.velocity.x *= Math.random() * -2;
+          vertex.velocity.y *= Math.random() * -2;
+          vertex.velocity.z *= Math.random() * -2;
         }
-        vertex.x += vertex.velocity.x + Math.sin(t * i * 0.001 + vertex.velocity.x) * 0.1;
-        vertex.y += vertex.velocity.y + Math.cos(t * i * 0.001 + vertex.velocity.y) * 0.1;
-        vertex.z += vertex.velocity.z + Math.sin(t * i * 0.001 + vertex.velocity.z) * 0.1;
+        vertex.x += delta * 0.1 * vertex.velocity.x + Math.sin(t * i * 0.001 + vertex.velocity.x) * 0.01;
+        vertex.y += delta * 0.1 * vertex.velocity.y + Math.cos(t * i * 0.001 + vertex.velocity.y) * 0.01;
+        vertex.z += delta * 0.1 * vertex.velocity.z + Math.sin(t * i * 0.001 + vertex.velocity.z) * 0.01;
       }
       this.pivot.rotation.y = t * 0.0001;
       this.pivot.rotation.z = t * 0.0001;
       this.geometry.verticesNeedUpdate = true;
+      this.material.uniforms.time.value = t * 0.001;
     }
   }, {
     key: 'render',
@@ -1110,13 +1121,13 @@ exports.default = new Experiment();
 /* 43 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nvarying vec3 vPosition;\n\nvoid main() {\n  vPosition = position;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float size;\nvarying vec3 vPosition;\n\nvoid main() {\n  vPosition = position;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size * length(modelViewMatrix * vec4(position, 1.0)) / 4.0;\n}\n"
 
 /***/ }),
 /* 44 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float time;\n\nvarying vec3 vPosition;\n\nfloat map_2_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_2_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_2_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_2_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_1_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_1_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_1_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_1_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_1_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_1_2(float h, float s, float l) {\n    return hsl2rgb_1_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  float l = length(vPosition);\n  float t = clamp(-1.0, 1.0, sin(time*0.1)) * 1.5;\n  float m = map_2_0(t+(l*2.0), -1.5, 6.0, 0.45, 0.70);\n  vec3 hsl = hsl2rgb_1_2(m, 0.8, 0.5);\n  float alpha = clamp(0.0, 1.0, l) * 0.1;\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D alphaMap;\nvarying vec3 vPosition;\nuniform vec3 color;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(alphaMap, gl_PointCoord);\n  float l = length(vPosition) * 2.0;\n  float t = sin(time*2.0) * 2.0;\n  float m = map_1_0(t+(l), -3.0, 7.0, 0.2, 0.6);\n  vec3 hsl = hsl2rgb_2_2(m, 0.8, 0.5);\n  float alpha = smoothstep(0.1, 0.8, tex.r) * 0.005 * l;//smoothstep(1.0, 2.0, l);\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
 
 /***/ })
 /******/ ]);
