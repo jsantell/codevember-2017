@@ -4,12 +4,7 @@ import WAGNER from '@alex_toudic/wagner';
 import BloomPass from '@alex_toudic/wagner/src/passes/bloom/MultiPassBloomPass';
 import Vine from './vine';
 
-const scale = 60;
-const size = 12;
-const radius = 2;
-const radiusSpread = 5;
-const speed = 1;
-const speedSpread = 10;
+const frequency = 1000;
 class Experiment extends ThreeApp {
   init() {
     this.renderer.setClearColor(0x111111);
@@ -32,6 +27,13 @@ class Experiment extends ThreeApp {
 
   update(t, delta) {
     this.pivot.rotation.y = t * 0.0001;
+    for ( var i = 0; i < this.vine.mesh.skeleton.bones.length; i ++ ) {
+      this.vine.mesh.skeleton.bones[ i ].position.z = Math.sin( t*0.01) * 2 / this.vine.mesh.skeleton.bones.length;
+    }
+
+    if (this.frequency + this._lastGrowth > t) {
+      this.vine.grow();
+    }
   }
 
   render() {
