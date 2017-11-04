@@ -20,6 +20,14 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "04": {
+      "title": "sapphire",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" },
+        { "name": "tween" }
+      ]
     }
   }
 }
