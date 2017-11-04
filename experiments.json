@@ -28,6 +28,13 @@
         { "name": "three" },
         { "name": "tween" }
       ]
+    },
+    "05": {
+      "title": "germs",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
