@@ -13,6 +13,13 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "03": {
+      "title": "trees",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
