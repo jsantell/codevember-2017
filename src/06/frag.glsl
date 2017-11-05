@@ -21,18 +21,18 @@ const float PI = 3.141592653589793;
 const float LOOP = 1000.0;
 const float LENGTH = 0.7;
 const float SPEED = 3.0;
-const float MOD = 2.0;
+const float MOD = 1.0;
 const float WAVE_SPEED = 0.001;
-const float WAVE_DEPTH = 0.05;
-const float COLUMNS = 20.0;
-const float ROWS = 20.0;
+const float WAVE_DEPTH = 0.03;
+const float COLUMNS = 30.0;
+const float ROWS = 30.0;
 const float F = 6.0;
 
 void main() {
   vec2 st = gl_FragCoord.xy / uResolution.xy;
   vec2 pos = st / -2.0 + 1.0;
-  float x = floor(pos.x * COLUMNS);
-  float y = floor(pos.y * ROWS) / ROWS;
+  float x = gl_FragCoord.x; //floor(pos.x * COLUMNS);
+  float y = pos.y; // floor(pos.y * ROWS) / ROWS;
   float n = noise(x * MOD);
   float speed = clamp(n, 0.1, 20.0);
 
