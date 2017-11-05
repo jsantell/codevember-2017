@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 34);
+/******/ 	return __webpack_require__(__webpack_require__.s = 37);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -955,8 +955,44 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 
 /***/ }),
 /* 22 */,
-/* 23 */,
-/* 24 */,
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var vertex = __webpack_require__(2);
+var fragment = __webpack_require__(24);
+
+function VignettePass(boost, reduction) {
+  Pass.call(this);
+
+  this.setShader(vertex, fragment);
+
+  this.params.boost = boost || 2;
+  this.params.reduction = reduction || 2;
+}
+
+module.exports = VignettePass;
+
+VignettePass.prototype = Object.create(Pass.prototype);
+VignettePass.prototype.constructor = VignettePass;
+
+VignettePass.prototype.run = function(composer) {
+  this.shader.uniforms.boost.value = this.params.boost;
+  this.shader.uniforms.reduction.value = this.params.reduction;
+  composer.pass(this.shader);
+};
+
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
+
+/***/ }),
 /* 25 */,
 /* 26 */,
 /* 27 */,
@@ -966,7 +1002,10 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 /* 31 */,
 /* 32 */,
 /* 33 */,
-/* 34 */
+/* 34 */,
+/* 35 */,
+/* 36 */,
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -992,11 +1031,11 @@ var _MultiPassBloomPass = __webpack_require__(13);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _VignettePass = __webpack_require__(35);
+var _VignettePass = __webpack_require__(23);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
-var _vine = __webpack_require__(37);
+var _vine = __webpack_require__(38);
 
 var _vine2 = _interopRequireDefault(_vine);
 
@@ -1119,45 +1158,7 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(36);
-
-function VignettePass(boost, reduction) {
-  Pass.call(this);
-
-  this.setShader(vertex, fragment);
-
-  this.params.boost = boost || 2;
-  this.params.reduction = reduction || 2;
-}
-
-module.exports = VignettePass;
-
-VignettePass.prototype = Object.create(Pass.prototype);
-VignettePass.prototype.constructor = VignettePass;
-
-VignettePass.prototype.run = function(composer) {
-  this.shader.uniforms.boost.value = this.params.boost;
-  this.shader.uniforms.reduction.value = this.params.reduction;
-  composer.pass(this.shader);
-};
-
-
-/***/ }),
-/* 36 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
-
-/***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

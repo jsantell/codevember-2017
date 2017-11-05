@@ -42,6 +42,18 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "07": {
+      "title": "fridge",
+      "attributions": [
+        { "name": "Model by S. Paul Michael", "url": "https://poly.google.com/view/f7q6m6IL8UI" }
+      ],
+      "dependencies": [
+        { "name": "three" },
+        { "name": "OBJLoader" },
+        { "name": "MTLLoader" },
+        { "name": "tween" }
+      ]
     }
   }
 }
