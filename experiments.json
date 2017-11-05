@@ -35,6 +35,13 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "06": {
+      "title": "storm",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
