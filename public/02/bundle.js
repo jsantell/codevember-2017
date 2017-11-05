@@ -325,39 +325,6 @@ CopyPass.prototype.constructor = CopyPass;
 "use strict";
 
 
-var Pass = __webpack_require__(1);
-var BoxBlurPass = __webpack_require__(14);
-
-function FullBoxBlurPass(amount) {
-  Pass.call(this);
-
-  amount = amount || 2;
-
-  this.boxPass = new BoxBlurPass(amount, amount);
-  this.params.amount = amount;
-}
-
-module.exports = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype = Object.create(Pass.prototype);
-FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype.run = function(composer) {
-  var s = this.params.amount;
-  this.boxPass.params.delta.set( s, 0 );
-  composer.pass( this.boxPass );
-  this.boxPass.params.delta.set( 0, s );
-  composer.pass( this.boxPass );
-};
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -368,11 +335,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _stats = __webpack_require__(8);
+var _stats = __webpack_require__(7);
 
 var _stats2 = _interopRequireDefault(_stats);
 
-var _inject = __webpack_require__(9);
+var _inject = __webpack_require__(8);
 
 var _inject2 = _interopRequireDefault(_inject);
 
@@ -492,7 +459,7 @@ var App = function () {
 exports.default = App;
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // stats.js - http://github.com/mrdoob/stats.js
@@ -503,7 +470,7 @@ b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{do
 
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -521,6 +488,39 @@ function inject(url) {
     document.body.appendChild(script);
   });
 }
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var BoxBlurPass = __webpack_require__(14);
+
+function FullBoxBlurPass(amount) {
+  Pass.call(this);
+
+  amount = amount || 2;
+
+  this.boxPass = new BoxBlurPass(amount, amount);
+  this.params.amount = amount;
+}
+
+module.exports = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype = Object.create(Pass.prototype);
+FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype.run = function(composer) {
+  var s = this.params.amount;
+  this.boxPass.params.delta.set( s, 0 );
+  composer.pass( this.boxPass );
+  this.boxPass.params.delta.set( 0, s );
+  composer.pass( this.boxPass );
+};
+
 
 /***/ }),
 /* 10 */
@@ -717,7 +717,7 @@ var THREE = __webpack_require__(0);
 var Pass = __webpack_require__(1);
 var Composer = __webpack_require__(4);
 var BlendMode = __webpack_require__(3).BlendMode;
-var FullBoxBlurPass = __webpack_require__(6);
+var FullBoxBlurPass = __webpack_require__(9);
 var BlendPass = __webpack_require__(16);
 var ZoomBlurPass = __webpack_require__(18);
 var BrightnessContrastPass = __webpack_require__(20);
@@ -1320,7 +1320,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _ThreeApp2 = __webpack_require__(7);
+var _ThreeApp2 = __webpack_require__(6);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 

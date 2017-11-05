@@ -325,39 +325,6 @@ CopyPass.prototype.constructor = CopyPass;
 "use strict";
 
 
-var Pass = __webpack_require__(1);
-var BoxBlurPass = __webpack_require__(14);
-
-function FullBoxBlurPass(amount) {
-  Pass.call(this);
-
-  amount = amount || 2;
-
-  this.boxPass = new BoxBlurPass(amount, amount);
-  this.params.amount = amount;
-}
-
-module.exports = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype = Object.create(Pass.prototype);
-FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype.run = function(composer) {
-  var s = this.params.amount;
-  this.boxPass.params.delta.set( s, 0 );
-  composer.pass( this.boxPass );
-  this.boxPass.params.delta.set( 0, s );
-  composer.pass( this.boxPass );
-};
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -368,11 +335,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _stats = __webpack_require__(8);
+var _stats = __webpack_require__(7);
 
 var _stats2 = _interopRequireDefault(_stats);
 
-var _inject = __webpack_require__(9);
+var _inject = __webpack_require__(8);
 
 var _inject2 = _interopRequireDefault(_inject);
 
@@ -492,7 +459,7 @@ var App = function () {
 exports.default = App;
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // stats.js - http://github.com/mrdoob/stats.js
@@ -503,7 +470,7 @@ b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{do
 
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -521,6 +488,39 @@ function inject(url) {
     document.body.appendChild(script);
   });
 }
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var BoxBlurPass = __webpack_require__(14);
+
+function FullBoxBlurPass(amount) {
+  Pass.call(this);
+
+  amount = amount || 2;
+
+  this.boxPass = new BoxBlurPass(amount, amount);
+  this.params.amount = amount;
+}
+
+module.exports = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype = Object.create(Pass.prototype);
+FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype.run = function(composer) {
+  var s = this.params.amount;
+  this.boxPass.params.delta.set( s, 0 );
+  composer.pass( this.boxPass );
+  this.boxPass.params.delta.set( 0, s );
+  composer.pass( this.boxPass );
+};
+
 
 /***/ }),
 /* 10 */
@@ -717,7 +717,7 @@ var THREE = __webpack_require__(0);
 var Pass = __webpack_require__(1);
 var Composer = __webpack_require__(4);
 var BlendMode = __webpack_require__(3).BlendMode;
-var FullBoxBlurPass = __webpack_require__(6);
+var FullBoxBlurPass = __webpack_require__(9);
 var BlendPass = __webpack_require__(16);
 var ZoomBlurPass = __webpack_require__(18);
 var BrightnessContrastPass = __webpack_require__(20);
@@ -986,7 +986,7 @@ var _three = __webpack_require__(0);
 
 var _tween = __webpack_require__(39);
 
-var _ThreeApp2 = __webpack_require__(7);
+var _ThreeApp2 = __webpack_require__(6);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
@@ -1133,7 +1133,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec3 vPosition;\n\nvoid main() {\n 
 /* 41 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float time;\n\nvarying vec3 vPosition;\n\nfloat map_2_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_2_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_2_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_2_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_1_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_1_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_1_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_1_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_1_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_1_2(float h, float s, float l) {\n    return hsl2rgb_1_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  float l = length(vPosition);\n  float t = clamp(-1.0, 1.0, sin(time*0.1)) * 1.5;\n  float m = map_2_0(t+(l*2.0), -1.5, 6.0, 0.45, 0.70);\n  vec3 hsl = hsl2rgb_1_2(m, 0.8, 0.5);\n  float alpha = clamp(0.0, 1.0, l) * 0.1;\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float time;\n\nvarying vec3 vPosition;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  float l = length(vPosition);\n  float t = clamp(-1.0, 1.0, sin(time*0.1)) * 1.5;\n  float m = map_1_0(t+(l*2.0), -1.5, 6.0, 0.45, 0.70);\n  vec3 hsl = hsl2rgb_2_2(m, 0.8, 0.5);\n  float alpha = clamp(0.0, 1.0, l) * 0.1;\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
 
 /***/ })
 /******/ ]);
