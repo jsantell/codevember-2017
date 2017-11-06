@@ -8,7 +8,7 @@ body {
 
 #info {
   padding: 10px;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.7);
   position: fixed;
   left: 0;
   bottom: 0;
@@ -40,4 +40,19 @@ body {
 
 .experiment-subtitle:before {
   content: '>';
+}
+
+.experiment-author:before {
+  content: 'by ';
+}
+.experiment-author:after {
+  content: ' |';
+}
+.experiment-attributions:before {
+  content: '| ';
+}
+
+#info a {
+  color: white;
+  text-decoration: underline;
 }
