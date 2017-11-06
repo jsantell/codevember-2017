@@ -10,6 +10,7 @@ class Experiment002 extends ThreeApp {
         uTime: { value: performance.now() },
         uResolution: { value: [window.innerWidth, window.innerHeight] },
         uDelta: { value: 0 },
+        uPixelRatio: { value: window.devicePixelRatio },
       },
       fragmentShader,
       vertexShader,

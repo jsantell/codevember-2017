@@ -1,7 +1,7 @@
 uniform float uTime;
 uniform float uDelta;
 uniform vec2 uResolution;
-
+uniform float uPixelRatio;
 #pragma glslify: when_lt = require(glsl-conditionals/when_lt)
 #pragma glslify: when_gt = require(glsl-conditionals/when_gt)
 #pragma glslify: map = require(glsl-map)
@@ -29,7 +29,10 @@ const float ROWS = 30.0;
 const float F = 6.0;
 
 void main() {
-  vec2 st = gl_FragCoord.xy / uResolution.xy;
+  // magic number 2.0 here because I didn't take into account pixel
+  // ratio during development on a devicePixelRatio === 2 machine
+  // so a quick hack to make it consistent
+  vec2 st = gl_FragCoord.xy / uResolution.xy / uPixelRatio * 2.0;
   vec2 pos = st / -2.0 + 1.0;
   float x = gl_FragCoord.x; //floor(pos.x * COLUMNS);
   float y = pos.y; // floor(pos.y * ROWS) / ROWS;
