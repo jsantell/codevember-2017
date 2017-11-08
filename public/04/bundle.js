@@ -87,7 +87,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
 
 
 var THREE = __webpack_require__(0);
-var processShader = __webpack_require__(10);
+var processShader = __webpack_require__(9);
 
 function Pass() {
   this.shader = null;
@@ -128,8 +128,30 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 "use strict";
 
 
-module.exports.Composer = __webpack_require__(4);
-module.exports.CopyPass = __webpack_require__(5);
+var Pass = __webpack_require__(1);
+var vertex = __webpack_require__(2);
+var fragment = __webpack_require__(10);
+
+function CopyPass() {
+  Pass.call(this);
+  this.setShader(vertex, fragment);
+}
+
+module.exports = CopyPass;
+
+CopyPass.prototype = Object.create(Pass.prototype);
+CopyPass.prototype.constructor = CopyPass;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports.Composer = __webpack_require__(5);
+module.exports.CopyPass = __webpack_require__(3);
 module.exports.BlendMode = {
   Normal: 1,
   Dissolve: 2, // UNAVAILABLE
@@ -158,15 +180,15 @@ module.exports.BlendMode = {
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var THREE = __webpack_require__(0);
-var CopyPass = __webpack_require__(5);
-var Stack = __webpack_require__(12);
+var CopyPass = __webpack_require__(3);
+var Stack = __webpack_require__(11);
 var Pass = __webpack_require__(1);
 
 function Composer(renderer, settings) {
@@ -294,28 +316,6 @@ Composer.prototype.setSize = function(w, h) {
   this.back.setSize( w, h );
 };
 
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(11);
-
-function CopyPass() {
-  Pass.call(this);
-  this.setShader(vertex, fragment);
-}
-
-module.exports = CopyPass;
-
-CopyPass.prototype = Object.create(Pass.prototype);
-CopyPass.prototype.constructor = CopyPass;
 
 
 /***/ }),
@@ -496,39 +496,6 @@ function inject(url) {
 "use strict";
 
 
-var Pass = __webpack_require__(1);
-var BoxBlurPass = __webpack_require__(14);
-
-function FullBoxBlurPass(amount) {
-  Pass.call(this);
-
-  amount = amount || 2;
-
-  this.boxPass = new BoxBlurPass(amount, amount);
-  this.params.amount = amount;
-}
-
-module.exports = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype = Object.create(Pass.prototype);
-FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype.run = function(composer) {
-  var s = this.params.amount;
-  this.boxPass.params.delta.set( s, 0 );
-  composer.pass( this.boxPass );
-  this.boxPass.params.delta.set( 0, s );
-  composer.pass( this.boxPass );
-};
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 var THREE = __webpack_require__(0);
 
 module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
@@ -616,13 +583,13 @@ module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
 };
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nvoid main() {\n  gl_FragColor = texture2D( tInput, vUv );\n\n}"
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -707,6 +674,39 @@ Stack.prototype.getPasses = function() {
 
 
 /***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var BoxBlurPass = __webpack_require__(14);
+
+function FullBoxBlurPass(amount) {
+  Pass.call(this);
+
+  amount = amount || 2;
+
+  this.boxPass = new BoxBlurPass(amount, amount);
+  this.params.amount = amount;
+}
+
+module.exports = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype = Object.create(Pass.prototype);
+FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype.run = function(composer) {
+  var s = this.params.amount;
+  this.boxPass.params.delta.set( s, 0 );
+  composer.pass( this.boxPass );
+  this.boxPass.params.delta.set( 0, s );
+  composer.pass( this.boxPass );
+};
+
+
+/***/ }),
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -715,9 +715,9 @@ Stack.prototype.getPasses = function() {
 
 var THREE = __webpack_require__(0);
 var Pass = __webpack_require__(1);
-var Composer = __webpack_require__(4);
-var BlendMode = __webpack_require__(3).BlendMode;
-var FullBoxBlurPass = __webpack_require__(9);
+var Composer = __webpack_require__(5);
+var BlendMode = __webpack_require__(4).BlendMode;
+var FullBoxBlurPass = __webpack_require__(12);
 var BlendPass = __webpack_require__(16);
 var ZoomBlurPass = __webpack_require__(18);
 var BrightnessContrastPass = __webpack_require__(20);
@@ -996,7 +996,7 @@ var _ThreeApp2 = __webpack_require__(6);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _wagner = __webpack_require__(3);
+var _wagner = __webpack_require__(4);
 
 var _wagner2 = _interopRequireDefault(_wagner);
 

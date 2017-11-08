@@ -87,7 +87,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
 
 
 var THREE = __webpack_require__(0);
-var processShader = __webpack_require__(10);
+var processShader = __webpack_require__(9);
 
 function Pass() {
   this.shader = null;
@@ -128,8 +128,30 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 "use strict";
 
 
-module.exports.Composer = __webpack_require__(4);
-module.exports.CopyPass = __webpack_require__(5);
+var Pass = __webpack_require__(1);
+var vertex = __webpack_require__(2);
+var fragment = __webpack_require__(10);
+
+function CopyPass() {
+  Pass.call(this);
+  this.setShader(vertex, fragment);
+}
+
+module.exports = CopyPass;
+
+CopyPass.prototype = Object.create(Pass.prototype);
+CopyPass.prototype.constructor = CopyPass;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports.Composer = __webpack_require__(5);
+module.exports.CopyPass = __webpack_require__(3);
 module.exports.BlendMode = {
   Normal: 1,
   Dissolve: 2, // UNAVAILABLE
@@ -158,15 +180,15 @@ module.exports.BlendMode = {
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var THREE = __webpack_require__(0);
-var CopyPass = __webpack_require__(5);
-var Stack = __webpack_require__(12);
+var CopyPass = __webpack_require__(3);
+var Stack = __webpack_require__(11);
 var Pass = __webpack_require__(1);
 
 function Composer(renderer, settings) {
@@ -294,28 +316,6 @@ Composer.prototype.setSize = function(w, h) {
   this.back.setSize( w, h );
 };
 
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(11);
-
-function CopyPass() {
-  Pass.call(this);
-  this.setShader(vertex, fragment);
-}
-
-module.exports = CopyPass;
-
-CopyPass.prototype = Object.create(Pass.prototype);
-CopyPass.prototype.constructor = CopyPass;
 
 
 /***/ }),
@@ -496,39 +496,6 @@ function inject(url) {
 "use strict";
 
 
-var Pass = __webpack_require__(1);
-var BoxBlurPass = __webpack_require__(14);
-
-function FullBoxBlurPass(amount) {
-  Pass.call(this);
-
-  amount = amount || 2;
-
-  this.boxPass = new BoxBlurPass(amount, amount);
-  this.params.amount = amount;
-}
-
-module.exports = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype = Object.create(Pass.prototype);
-FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype.run = function(composer) {
-  var s = this.params.amount;
-  this.boxPass.params.delta.set( s, 0 );
-  composer.pass( this.boxPass );
-  this.boxPass.params.delta.set( 0, s );
-  composer.pass( this.boxPass );
-};
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 var THREE = __webpack_require__(0);
 
 module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
@@ -616,13 +583,13 @@ module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
 };
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nvoid main() {\n  gl_FragColor = texture2D( tInput, vUv );\n\n}"
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -707,6 +674,39 @@ Stack.prototype.getPasses = function() {
 
 
 /***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var BoxBlurPass = __webpack_require__(14);
+
+function FullBoxBlurPass(amount) {
+  Pass.call(this);
+
+  amount = amount || 2;
+
+  this.boxPass = new BoxBlurPass(amount, amount);
+  this.params.amount = amount;
+}
+
+module.exports = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype = Object.create(Pass.prototype);
+FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype.run = function(composer) {
+  var s = this.params.amount;
+  this.boxPass.params.delta.set( s, 0 );
+  composer.pass( this.boxPass );
+  this.boxPass.params.delta.set( 0, s );
+  composer.pass( this.boxPass );
+};
+
+
+/***/ }),
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -715,9 +715,9 @@ Stack.prototype.getPasses = function() {
 
 var THREE = __webpack_require__(0);
 var Pass = __webpack_require__(1);
-var Composer = __webpack_require__(4);
-var BlendMode = __webpack_require__(3).BlendMode;
-var FullBoxBlurPass = __webpack_require__(9);
+var Composer = __webpack_require__(5);
+var BlendMode = __webpack_require__(4).BlendMode;
+var FullBoxBlurPass = __webpack_require__(12);
 var BlendPass = __webpack_require__(16);
 var ZoomBlurPass = __webpack_require__(18);
 var BrightnessContrastPass = __webpack_require__(20);
@@ -954,7 +954,9 @@ BrightnessContrastPass.prototype.run = function(composer) {
 module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float contrast;\nuniform sampler2D tInput;\n\nvarying vec2 vUv;\n\nvoid main() {\n\n  vec3 color = texture2D(tInput, vUv).rgb;\n  vec3 colorContrasted = (color) * contrast;\n  vec3 bright = colorContrasted + vec3(brightness,brightness,brightness);\n  gl_FragColor.rgb = bright;\n  gl_FragColor.a = 1.;\n\n}"
 
 /***/ }),
-/* 22 */
+/* 22 */,
+/* 23 */,
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1300,8 +1302,6 @@ function GPUComputationRenderer(sizeX, sizeY, renderer) {
 }
 
 /***/ }),
-/* 23 */,
-/* 24 */,
 /* 25 */,
 /* 26 */,
 /* 27 */,
@@ -1327,7 +1327,7 @@ var _ThreeApp2 = __webpack_require__(6);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _GPUComputationRenderer = __webpack_require__(22);
+var _GPUComputationRenderer = __webpack_require__(24);
 
 var _GPUComputationRenderer2 = _interopRequireDefault(_GPUComputationRenderer);
 
@@ -1347,7 +1347,7 @@ var _computeVelocity = __webpack_require__(36);
 
 var _computeVelocity2 = _interopRequireDefault(_computeVelocity);
 
-var _wagner = __webpack_require__(3);
+var _wagner = __webpack_require__(4);
 
 var _wagner2 = _interopRequireDefault(_wagner);
 
@@ -1558,7 +1558,7 @@ module.exports = "#define GLSLIFY 1\nuniform float size;\nuniform sampler2D tPos
 /* 34 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D sprite;\n\nvarying vec3 vPosition;\n\nfloat map_2_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_2_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_2_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_2_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_1_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_1_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_1_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_1_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_1_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_1_2(float h, float s, float l) {\n    return hsl2rgb_1_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float l = length(vPosition);\n  float t = clamp(-1.0, 1.0, sin(time * 0.0008));\n  vec3 hsl = hsl2rgb_1_2(map_2_0(t+l, -1.0, 3.0, 0.0, 0.5), 0.8, 0.5);\n  hsl.x += (0.1 * vPosition.y);\n  gl_FragColor = vec4(hsl, smoothstep(0.2, 0.9999,tex.a)*0.3);\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D sprite;\n\nvarying vec3 vPosition;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float l = length(vPosition);\n  float t = clamp(-1.0, 1.0, sin(time * 0.0008));\n  vec3 hsl = hsl2rgb_2_2(map_1_0(t+l, -1.0, 3.0, 0.0, 0.5), 0.8, 0.5);\n  hsl.x += (0.1 * vPosition.y);\n  gl_FragColor = vec4(hsl, smoothstep(0.2, 0.9999,tex.a)*0.3);\n}\n"
 
 /***/ }),
 /* 35 */

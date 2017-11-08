@@ -54,6 +54,13 @@
         { "name": "MTLLoader" },
         { "name": "tween" }
       ]
+    },
+    "08": {
+      "title": "TesseracT: Altered State",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
