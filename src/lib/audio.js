@@ -2,9 +2,9 @@ const MAX_AMP = 255;
 
 export default class AudioHelper {
   constructor(src, options={}) {
-    this.smoothing = options.smoothing || 0.99;
-    this.decay = options.decay || 0.0001;
-    this.threshold = options.threshold || 0.2;
+    this.smoothing = options.smoothing || 1.0;
+    this.decay = options.decay || 0.999999;
+    this.threshold = options.threshold || 0.40;
     this.timeMin = options.timeMin || 300;
 
     this._lastBeat = -Infinity;
