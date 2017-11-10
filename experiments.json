@@ -68,6 +68,12 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "10": {
+      "title": "color space",
+      "subtitle": "",
+      "dependencies": [
+      ]
     }
   }
 }
