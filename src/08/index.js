@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { MeshBasicMaterial, TetrahedronBufferGeometry, TextureLoader, Object3D, BufferAttribute, ShaderMaterial, Color, PointsMaterial, Points, IcosahedronBufferGeometry, Mesh } from 'three';
 import ThreeApp from '../ThreeApp';
 import vertexShader from './vert.glsl';

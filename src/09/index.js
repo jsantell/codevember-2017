@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { Vector3, Vector2, EventDispatcher, MeshBasicMaterial, Geometry, LineBasicMaterial, Line, SplineCurve, Object3D, Color, Mesh, BufferGeometry } from 'three';
 import ThreeApp from '../ThreeApp';
 import { MeshLine, MeshLineMaterial } from 'three.meshline';

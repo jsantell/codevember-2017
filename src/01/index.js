@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { SphereBufferGeometry, TextureLoader, AdditiveBlending, BufferAttribute, Points, Mesh, Object3D, ShaderMaterial, BoxBufferGeometry } from 'three';
 import ThreeApp from '../ThreeApp';
 import GPUComputationRenderer from '../lib/GPUComputationRenderer';

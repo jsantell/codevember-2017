@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { Fog, Object3D } from 'three';
 import ThreeApp from '../ThreeApp';
 import WAGNER from '@alex_toudic/wagner';

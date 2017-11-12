@@ -1,3 +1,4 @@
+import '../lib/configure';
 import * as THREE from 'three';
 import { Tween, Easing, update as tweenUpdate } from 'tween';
 import { ARUtils } from 'three.ar.js';

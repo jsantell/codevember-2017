@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { Node, Model, BasicMaterial, Cube, Math as MMath } from '@jsantell/mini-webgl';
 import MiniWebGLApp from '../MiniWebGLApp';
 

@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { Mesh, AmbientLight, MeshStandardMaterial, Object3D, BoxGeometry, Color, PointLight } from 'three';
 import ThreeApp from '../ThreeApp';
 import WAGNER from '@alex_toudic/wagner';

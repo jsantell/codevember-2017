@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { Color, PlaneBufferGeometry, IcosahedronBufferGeometry, WireframeGeometry, BoxBufferGeometry, LineBasicMaterial, MeshBasicMaterial, LineSegments, SphereBufferGeometry, Mesh, Object3D, ShaderMaterial } from 'three';
 import ThreeApp from '../ThreeApp';
 import BarycentricMaterial from './BarycentricMaterial';

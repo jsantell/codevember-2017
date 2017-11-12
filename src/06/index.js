@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { PlaneGeometry, Mesh, ShaderMaterial } from 'three';
 import ThreeApp from '../ThreeApp';
 import vertexShader from './vert.glsl';

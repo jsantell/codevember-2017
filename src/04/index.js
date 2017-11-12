@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { Mesh, AdditiveBlending, ShaderMaterial, AmbientLight, DirectionalLight, DodecahedronGeometry, DoubleSide, Object3D } from 'three';
 import { Tween, Easing, update as tweenUpdate } from 'tween';
 import ThreeApp from '../ThreeApp';

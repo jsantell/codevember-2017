@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { TextureLoader, Vector3, Mesh, Color, Points, AdditiveBlending, ShaderMaterial, AmbientLight, DirectionalLight, DodecahedronGeometry, DoubleSide, Object3D } from 'three';
 import ThreeApp from '../ThreeApp';
 import WAGNER from '@alex_toudic/wagner';
