@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 49);
+/******/ 	return __webpack_require__(__webpack_require__.s = 29);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -674,286 +674,16 @@ Stack.prototype.getPasses = function() {
 
 
 /***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var BoxBlurPass = __webpack_require__(14);
-
-function FullBoxBlurPass(amount) {
-  Pass.call(this);
-
-  amount = amount || 2;
-
-  this.boxPass = new BoxBlurPass(amount, amount);
-  this.params.amount = amount;
-}
-
-module.exports = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype = Object.create(Pass.prototype);
-FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype.run = function(composer) {
-  var s = this.params.amount;
-  this.boxPass.params.delta.set( s, 0 );
-  composer.pass( this.boxPass );
-  this.boxPass.params.delta.set( 0, s );
-  composer.pass( this.boxPass );
-};
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var THREE = __webpack_require__(0);
-var Pass = __webpack_require__(1);
-var Composer = __webpack_require__(5);
-var BlendMode = __webpack_require__(4).BlendMode;
-var FullBoxBlurPass = __webpack_require__(12);
-var BlendPass = __webpack_require__(16);
-var ZoomBlurPass = __webpack_require__(18);
-var BrightnessContrastPass = __webpack_require__(20);
-
-function MultiPassBloomPass(options) {
-  Pass.call(this);
-
-  options = options || {};
-
-  this.composer = null;
-
-  this.tmpTexture = this.getOfflineTexture( options.width, options.height, true );
-  this.blurPass = new FullBoxBlurPass(2);
-  this.blendPass = new BlendPass();
-  this.zoomBlur = new ZoomBlurPass();
-  this.brightnessContrastPass = new BrightnessContrastPass();
-
-  this.width = options.width || 512;
-  this.height = options.height || 512;
-
-  this.params.blurAmount = options.blurAmount || 2;
-  this.params.applyZoomBlur = options.applyZoomBlur || false;
-  this.params.zoomBlurStrength = options.zoomBlurStrength || 0.2;
-  this.params.useTexture = options.useTexture || false;
-  this.params.zoomBlurCenter = options.zoomBlurCenter || new THREE.Vector2(0.5, 0.5);
-  this.params.blendMode = options.blendMode || BlendMode.Screen;
-  this.params.glowTexture = null;
-}
-
-module.exports = MultiPassBloomPass;
-
-MultiPassBloomPass.prototype = Object.create(Pass.prototype);
-MultiPassBloomPass.prototype.constructor = MultiPassBloomPass;
-
-MultiPassBloomPass.prototype.run = function(composer) {
-  if (!this.composer) {
-    this.composer = new Composer(composer.renderer, {useRGBA: true});
-    this.composer.setSize(this.width, this.height);
-  }
-
-  this.composer.reset();
-
-  if (this.params.useTexture === true) {
-    this.composer.setSource(this.params.glowTexture);
-  } else {
-    this.composer.setSource(composer.output);
-  }
-
-  this.blurPass.params.amount = this.params.blurAmount;
-  this.composer.pass(this.blurPass);
-  
-  if (this.params.applyZoomBlur) {
-    this.zoomBlur.params.center.set(0.5, 0.5);
-    this.zoomBlur.params.strength = this.params.zoomBlurStrength;
-    this.composer.pass(this.zoomBlur);
-  }
-
-  if (this.params.useTexture === true) {
-    this.blendPass.params.mode = BlendMode.Screen;
-    this.blendPass.params.tInput = this.params.glowTexture;
-    composer.pass(this.blendPass);
-  }
-
-  this.blendPass.params.mode = this.params.blendMode;
-  this.blendPass.params.tInput2 = this.composer.output;
-  composer.pass(this.blendPass);
-};
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var THREE = __webpack_require__(0);
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(15);
-
-function BoxBlurPass(deltaX, deltaY) {
-  Pass.call(this);
-
-  this.setShader(vertex, fragment);
-  this.params.delta = new THREE.Vector2(deltaX || 0, deltaY || 0);
-}
-
-module.exports = BoxBlurPass;
-
-BoxBlurPass.prototype = Object.create(Pass.prototype);
-BoxBlurPass.prototype.constructor = BoxBlurPass;
-
-BoxBlurPass.prototype.run = function(composer) {
-  this.shader.uniforms.delta.value.copy(this.params.delta);
-  composer.pass(this.shader);
-
-};
-
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 delta;\nuniform vec2 resolution;\n\nvoid main() {\n\n  vec4 sum = vec4( 0. );\n  vec2 inc = delta / resolution;\n\n  sum += texture2D( tInput, ( vUv - inc * 4. ) ) * 0.051;\n  sum += texture2D( tInput, ( vUv - inc * 3. ) ) * 0.0918;\n  sum += texture2D( tInput, ( vUv - inc * 2. ) ) * 0.12245;\n  sum += texture2D( tInput, ( vUv - inc * 1. ) ) * 0.1531;\n  sum += texture2D( tInput, ( vUv + inc * 0. ) ) * 0.1633;\n  sum += texture2D( tInput, ( vUv + inc * 1. ) ) * 0.1531;\n  sum += texture2D( tInput, ( vUv + inc * 2. ) ) * 0.12245;\n  sum += texture2D( tInput, ( vUv + inc * 3. ) ) * 0.0918;\n  sum += texture2D( tInput, ( vUv + inc * 4. ) ) * 0.051;\n\n  gl_FragColor = sum;\n\n}"
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var THREE = __webpack_require__(0);
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(17);
-
-function BlendPass(options) {
-  Pass.call(this);
-
-  options = options || {};
-
-  this.setShader(vertex, fragment);
-
-  this.params.mode = options.mode || 1;
-  this.params.opacity = options.opacity || 1;
-  this.params.tInput2 = options.tInput2 || null;
-  this.params.resolution2 = options.resolution2 || new THREE.Vector2();
-  this.params.sizeMode = options.sizeMode || 1;
-  this.params.aspectRatio = options.aspectRatio || 1;
-  this.params.aspectRatio2 = options.aspectRatio2 || 1;
-}
-
-module.exports = BlendPass;
-
-BlendPass.prototype = Object.create(Pass.prototype);
-BlendPass.prototype.constructor = BlendPass;
-
-BlendPass.prototype.run = function(composer) {
-  this.shader.uniforms.mode.value = this.params.mode;
-  this.shader.uniforms.opacity.value = this.params.opacity;
-  this.shader.uniforms.tInput2.value = this.params.tInput2;
-  this.shader.uniforms.sizeMode.value = this.params.sizeMode;
-  this.shader.uniforms.aspectRatio.value = this.params.aspectRatio;
-  this.shader.uniforms.aspectRatio2.value = this.params.aspectRatio2;
-  composer.pass(this.shader);
-};
-
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform sampler2D tInput2;\nuniform vec2 resolution;\nuniform vec2 resolution2;\nuniform float aspectRatio;\nuniform float aspectRatio2;\nuniform int mode;\nuniform int sizeMode;\nuniform float opacity;\n\nvec2 vUv2;\n\nfloat applyOverlayToChannel( float base, float blend ) {\n\n  return (base < 0.5 ? (2.0 * base * blend) : (1.0 - 2.0 * (1.0 - base) * (1.0 - blend)));\n\n}\n\nfloat applySoftLightToChannel( float base, float blend ) {\n\n  return ((blend < 0.5) ? (2.0 * base * blend + base * base * (1.0 - 2.0 * blend)) : (sqrt(base) * (2.0 * blend - 1.0) + 2.0 * base * (1.0 - blend)));\n\n}\n\nfloat applyColorBurnToChannel( float base, float blend ) {\n\n  return ((blend == 0.0) ? blend : max((1.0 - ((1.0 - base) / blend)), 0.0));\n\n}\n\nfloat applyColorDodgeToChannel( float base, float blend ) {\n\n  return ((blend == 1.0) ? blend : min(base / (1.0 - blend), 1.0));\n\n}\n\nfloat applyLinearBurnToChannel( float base, float blend ) {\n\n  return max(base + blend - 1., 0.0 );\n\n}\n\nfloat applyLinearDodgeToChannel( float base, float blend ) {\n\n  return min( base + blend, 1. );\n\n}\n\nfloat applyLinearLightToChannel( float base, float blend ) {\n\n  return ( blend < .5 ) ? applyLinearBurnToChannel( base, 2. * blend ) : applyLinearDodgeToChannel( base, 2. * ( blend - .5 ) );\n\n}\n\nvoid main() {\n\n  vUv2 = vUv;\n  \n  if( sizeMode == 1 ) {\n    \n    if( aspectRatio2 > aspectRatio ) {\n      vUv2.x = vUv.x * aspectRatio / aspectRatio2;\n      vUv2.x += .5 * ( 1. - aspectRatio / aspectRatio2 ); \n      vUv2.y = vUv.y;\n    }\n\n    if( aspectRatio2 < aspectRatio ) {\n      vUv2.x = vUv.x;\n      vUv2.y = vUv.y * aspectRatio2 / aspectRatio;\n      vUv2.y += .5 * ( 1. - aspectRatio2 / aspectRatio );\n    }\n\n  }\n\n  vec4 base = texture2D( tInput, vUv );\n  vec4 blend = texture2D( tInput2, vUv2 );\n\n  if( mode == 1 ) { // normal\n\n    gl_FragColor = base;\n    gl_FragColor.a *= opacity;\n    return;\n\n  }\n\n  if( mode == 2 ) { // dissolve\n\n  }\n\n  if( mode == 3 ) { // darken\n\n    gl_FragColor = min( base, blend );\n    return;\n\n  }\n\n  if( mode == 4 ) { // multiply\n\n    gl_FragColor = base * blend;\n    return;\n\n  }\n\n  if( mode == 5 ) { // color burn\n\n    gl_FragColor = vec4(\n      applyColorBurnToChannel( base.r, blend.r ),\n      applyColorBurnToChannel( base.g, blend.g ),\n      applyColorBurnToChannel( base.b, blend.b ),\n      applyColorBurnToChannel( base.a, blend.a )\n    );\n    return;\n\n  }\n\n  if( mode == 6 ) { // linear burn\n\n    gl_FragColor = max(base + blend - 1.0, 0.0);\n    return;\n\n  }\n\n  if( mode == 7 ) { // darker color\n\n  }\n\n  if( mode == 8 ) { // lighten\n\n    gl_FragColor = max( base, blend );\n    return;\n\n  }\n\n  if( mode == 9 ) { // screen\n\n    gl_FragColor = (1.0 - ((1.0 - base) * (1.0 - blend)));\n    gl_FragColor = gl_FragColor * opacity + base * ( 1. - opacity );\n    return;\n\n  }\n\n  if( mode == 10 ) { // color dodge\n\n    gl_FragColor = vec4(\n      applyColorDodgeToChannel( base.r, blend.r ),\n      applyColorDodgeToChannel( base.g, blend.g ),\n      applyColorDodgeToChannel( base.b, blend.b ),\n      applyColorDodgeToChannel( base.a, blend.a )\n    );\n    return;\n\n  }\n\n  if( mode == 11 ) { // linear dodge\n\n    gl_FragColor = min(base + blend, 1.0);\n    return;\n\n  }\n\n  if( mode == 12 ) { // lighter color\n\n  }\n\n  if( mode == 13 ) { // overlay\n\n    gl_FragColor = gl_FragColor = vec4( \n      applyOverlayToChannel( base.r, blend.r ),\n      applyOverlayToChannel( base.g, blend.g ),\n      applyOverlayToChannel( base.b, blend.b ),\n      applyOverlayToChannel( base.a, blend.a )\n    );\n    gl_FragColor = gl_FragColor * opacity + base * ( 1. - opacity );\n  \n    return;\n\n  }\n\n  if( mode == 14 ) { // soft light\n\n    gl_FragColor = vec4( \n      applySoftLightToChannel( base.r, blend.r ),\n      applySoftLightToChannel( base.g, blend.g ),\n      applySoftLightToChannel( base.b, blend.b ),\n      applySoftLightToChannel( base.a, blend.a )\n    );\n    return;\n\n  }\n\n  if( mode == 15 ) { // hard light\n\n    gl_FragColor = vec4( \n      applyOverlayToChannel( base.r, blend.r ),\n      applyOverlayToChannel( base.g, blend.g ),\n      applyOverlayToChannel( base.b, blend.b ),\n      applyOverlayToChannel( base.a, blend.a )\n    );\n    gl_FragColor = gl_FragColor * opacity + base * ( 1. - opacity );\n    return;\n\n  }\n\n  if( mode == 16 ) { // vivid light\n\n  }\n\n  if( mode == 17 ) { // linear light\n\n    gl_FragColor = vec4( \n      applyLinearLightToChannel( base.r, blend.r ),\n      applyLinearLightToChannel( base.g, blend.g ),\n      applyLinearLightToChannel( base.b, blend.b ),\n      applyLinearLightToChannel( base.a, blend.a )\n    );\n    return;\n\n  }\n\n  if( mode == 18 ) { // pin light\n\n  }\n\n  if( mode == 19 ) { // hard mix\n\n  }\n\n  if( mode == 20 ) { // difference\n\n    gl_FragColor = abs( base - blend );\n    gl_FragColor.a = base.a + blend.b;\n    return;\n\n  }\n\n  if( mode == 21 ) { // exclusion\n\n    gl_FragColor = base + blend - 2. * base * blend;\n    \n  }\n\n  if( mode == 22 ) { // substract\n\n  }\n\n  if( mode == 23 ) { // divide\n\n  }\n\n  gl_FragColor = vec4( 1., 0., 1., 1. );\n\n}"
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var THREE = __webpack_require__(0);
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(19);
-
-function ZoomBlurPass(options) {
-  Pass.call(this);
-
-  options = options || {};
-
-  this.setShader(vertex, fragment);
-
-  this.params.center = new THREE.Vector2(options.centerX || 0.5, options.centerY || 0.5);
-  this.params.strength = options.strength || 0.1;
-}
-
-module.exports = ZoomBlurPass;
-
-ZoomBlurPass.prototype = Object.create(Pass.prototype);
-ZoomBlurPass.prototype.constructor = ZoomBlurPass;
-
-ZoomBlurPass.prototype.run = function(composer) {
-  this.shader.uniforms.center.value.set(composer.width * this.params.center.x, composer.height * this.params.center.y);
-  this.shader.uniforms.strength.value = this.params.strength;
-  composer.pass(this.shader);
-};
-
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform sampler2D tInput;\nuniform vec2 center;\nuniform float strength;\nuniform vec2 resolution;\nvarying vec2 vUv;\n\nfloat random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}\n\nvoid main(){\n  vec4 color=vec4(0.0);\n  float total=0.0;\n  vec2 toCenter=center-vUv*resolution;\n  float offset=random(vec3(12.9898,78.233,151.7182),0.0);\n  for(float t=0.0;t<=40.0;t++){\n    float percent=(t+offset)/40.0;\n    float weight=4.0*(percent-percent*percent);\n    vec4 sample=texture2D(tInput,vUv+toCenter*percent*strength/resolution);\n    sample.rgb*=sample.a;\n    color+=sample*weight;\n    total+=weight;\n  }\n  gl_FragColor=color/total;\n  gl_FragColor.rgb/=gl_FragColor.a+0.00001;\n}"
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(21);
-
-function BrightnessContrastPass(brightness, contrast) {
-  Pass.call(this);
-
-  this.setShader(vertex, fragment);
-
-  this.params.brightness = brightness || 1;
-  this.params.contrast = contrast || 1;
-}
-
-module.exports = BrightnessContrastPass;
-
-BrightnessContrastPass.prototype = Object.create(Pass.prototype);
-BrightnessContrastPass.prototype.constructor = BrightnessContrastPass;
-
-BrightnessContrastPass.prototype.run = function(composer) {
-  this.shader.uniforms.brightness.value = this.params.brightness;
-  this.shader.uniforms.contrast.value = this.params.contrast;
-  composer.pass(this.shader);
-};
-
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float contrast;\nuniform sampler2D tInput;\n\nvarying vec2 vUv;\n\nvoid main() {\n\n  vec3 color = texture2D(tInput, vUv).rgb;\n  vec3 colorContrasted = (color) * contrast;\n  vec3 bright = colorContrasted + vec3(brightness,brightness,brightness);\n  gl_FragColor.rgb = bright;\n  gl_FragColor.a = 1.;\n\n}"
-
-/***/ }),
+/* 12 */,
+/* 13 */,
+/* 14 */,
+/* 15 */,
+/* 16 */,
+/* 17 */,
+/* 18 */,
+/* 19 */,
+/* 20 */,
+/* 21 */,
 /* 22 */,
 /* 23 */,
 /* 24 */,
@@ -961,27 +691,7 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 /* 26 */,
 /* 27 */,
 /* 28 */,
-/* 29 */,
-/* 30 */,
-/* 31 */,
-/* 32 */,
-/* 33 */,
-/* 34 */,
-/* 35 */,
-/* 36 */,
-/* 37 */,
-/* 38 */,
-/* 39 */,
-/* 40 */,
-/* 41 */,
-/* 42 */,
-/* 43 */,
-/* 44 */,
-/* 45 */,
-/* 46 */,
-/* 47 */,
-/* 48 */,
-/* 49 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1003,17 +713,9 @@ var _wagner = __webpack_require__(4);
 
 var _wagner2 = _interopRequireDefault(_wagner);
 
-var _MultiPassBloomPass = __webpack_require__(13);
+var _GlitchPass = __webpack_require__(30);
 
-var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
-
-var _vert = __webpack_require__(50);
-
-var _vert2 = _interopRequireDefault(_vert);
-
-var _frag = __webpack_require__(51);
-
-var _frag2 = _interopRequireDefault(_frag);
+var _GlitchPass2 = _interopRequireDefault(_GlitchPass);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1023,11 +725,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var LIMIT = 15;
-var size = 20;
-var randomDir = function randomDir() {
-  return Math.random() < 0.5 ? -1 : 1;
-};
+var ROWS = 5;
+var SCALE = 0.3;
 
 var Experiment = function (_ThreeApp) {
   _inherits(Experiment, _ThreeApp);
@@ -1041,81 +740,49 @@ var Experiment = function (_ThreeApp) {
   _createClass(Experiment, [{
     key: 'init',
     value: function init() {
-      var _this2 = this;
-
-      this.renderer.setClearColor(0x000000);
-
-      this.pivot = new _three.Object3D();
-      this.pivot.position.set(0, 0, 0);
-      this.pivot.add(this.camera);
-      this.scene.add(this.pivot);
-      this.camera.position.set(0, 2, 40);
-
-      this.geometry = new _three.DodecahedronGeometry(3, 2);
-      this.material = new _three.ShaderMaterial({
-        transparent: true,
-        fragmentShader: _frag2.default,
-        vertexShader: _vert2.default,
-        uniforms: {
-          color: { value: new _three.Color(0xddddff) },
-          time: { value: 0 },
-          size: { value: size },
-          alphaMap: { value: 0 }
-        },
-        depthWrite: false
-      });
-      this.material.blending = _three.AdditiveBlending;
-      this.textureLoader = new _three.TextureLoader();
-      this.textureLoader.load('particle.jpg', function (texture) {
-        _this2.material.uniforms.alphaMap.value = texture;
-      });
-      this.points = new _three.Points(this.geometry, this.material);
-      for (var i = 0; i < this.geometry.vertices.length; i++) {
-        var mod = Math.random() * 0.4;
-        var v = this.geometry.vertices[i];
-        var value = i / this.geometry.vertices.length * Math.random();
-        v.velocity = new _three.Vector3(Math.random() * randomDir(), Math.random() * randomDir(), Math.random() * randomDir());
-        v.velocity.x *= 0.02;
-        v.velocity.y *= 0.02;
-        v.velocity.z *= 0.02;
+      this.renderer.setClearColor(0x222222);
+      for (var i = 0; i < ROWS; i++) {
+        // x
+        for (var j = 0; j < ROWS; j++) {
+          // y
+          for (var k = 0; k < ROWS; k++) {
+            // z
+            var cube = new _three.Mesh(new _three.BoxGeometry(), new _three.MeshStandardMaterial());
+            cube.position.set(i - Math.floor(ROWS / 2), j - Math.floor(ROWS / 2), k - Math.floor(ROWS / 2));
+            //cube.material.color = new Color(i/ROWS,j/ROWS,1.0 - k/ROWS);
+            cube.scale.set(SCALE, SCALE, SCALE);
+            this.scene.add(cube);
+          }
+        }
       }
-      this.scene.add(this.points);
+
+      this.light = new _three.AmbientLight();
+      this.scene.add(this.light);
+      this.pointLight = new _three.PointLight(0xffffff, 1, 10);
+      this.pointLight.position.x = -2;
+      this.pointLightPivot = new _three.Object3D();
+      this.pointLightPivot.add(this.pointLight);
+      this.scene.add(this.pointLightPivot);
+      this.pivot = new _three.Object3D();
+      this.scene.add(this.pivot);
+      this.pivot.add(this.camera);
+      this.camera.position.set(0, 0, 5);
       this.composer = new _wagner2.default.Composer(this.renderer);
-      this.bloomPass = new _MultiPassBloomPass2.default({
-        zoomBlurStrength: 0.8, //0.2,
-        applyZoomBlur: true,
-        blurAmount: 100
-      });
+      this.pass = new _GlitchPass2.default();
     }
   }, {
     key: 'update',
     value: function update(t, delta) {
-      for (var i = 0; i < this.geometry.vertices.length; i++) {
-        var vertex = this.geometry.vertices[i];
-        if (vertex.length() > LIMIT) {
-          vertex.velocity.x *= Math.random() * -2;
-          vertex.velocity.y *= Math.random() * -2;
-          vertex.velocity.z *= Math.random() * -2;
-        }
-        vertex.x += delta * 0.1 * vertex.velocity.x + Math.sin(t * i * 0.001 + vertex.velocity.x) * 0.01;
-        vertex.y += delta * 0.1 * vertex.velocity.y + Math.cos(t * i * 0.001 + vertex.velocity.y) * 0.01;
-        vertex.z += delta * 0.1 * vertex.velocity.z + Math.sin(t * i * 0.001 + vertex.velocity.z) * 0.01;
-      }
       this.pivot.rotation.y = t * 0.0001;
-      this.pivot.rotation.z = t * 0.0001;
-      this.geometry.verticesNeedUpdate = true;
-      this.material.uniforms.time.value = t * 0.001;
+      this.pointLightPivot.rotation.z = t * 0.001;
     }
   }, {
     key: 'render',
     value: function render() {
-      this.renderer.clearColor();
       this.composer.reset();
       this.composer.render(this.scene, this.camera);
-      this.composer.pass(this.bloomPass);
+      this.composer.pass(this.pass);
       this.composer.toScreen();
-      this.camera.lookAt(this.pivot.position);
-      // this.renderer.render(this.scene, this.camera);
     }
   }]);
 
@@ -1125,16 +792,84 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 50 */
-/***/ (function(module, exports) {
+/* 30 */
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = "#define GLSLIFY 1\nuniform float size;\nvarying vec3 vPosition;\n\nvoid main() {\n  vPosition = position;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size * length(modelViewMatrix * vec4(position, 1.0)) / 4.0;\n}\n"
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Pass2 = __webpack_require__(1);
+
+var _Pass3 = _interopRequireDefault(_Pass2);
+
+var _glitchVert = __webpack_require__(31);
+
+var _glitchVert2 = _interopRequireDefault(_glitchVert);
+
+var _glitchFrag = __webpack_require__(32);
+
+var _glitchFrag2 = _interopRequireDefault(_glitchFrag);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var GlitchPass = function (_Pass) {
+  _inherits(GlitchPass, _Pass);
+
+  function GlitchPass() {
+    _classCallCheck(this, GlitchPass);
+
+    var _this = _possibleConstructorReturn(this, (GlitchPass.__proto__ || Object.getPrototypeOf(GlitchPass)).call(this));
+
+    _this.params = {};
+    _this.params.intensity = 1.0;
+    _this.params.abberations = 0.01;
+    _this.params.chance = 0.05;
+    _this.setShader(_glitchVert2.default, _glitchFrag2.default);
+    _this.tick = 0;
+    return _this;
+  }
+
+  _createClass(GlitchPass, [{
+    key: 'run',
+    value: function run(composer) {
+      this.tick++;
+      this.shader.uniforms.intensity.value = this.params.intensity;
+      this.shader.uniforms.abberations.value = this.params.abberations;
+      this.shader.uniforms.chance.value = this.params.chance;
+      this.shader.uniforms.random.value = Math.random();
+      this.shader.uniforms.rows.value = Math.floor(Math.random() * 100);
+      composer.pass(this.shader);
+    }
+  }]);
+
+  return GlitchPass;
+}(_Pass3.default);
+
+exports.default = GlitchPass;
 
 /***/ }),
-/* 51 */
+/* 31 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D alphaMap;\nvarying vec3 vPosition;\nuniform vec3 color;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(alphaMap, gl_PointCoord);\n  float l = length(vPosition) * 2.0;\n  float t = sin(time*2.0) * 2.0;\n  float m = map_1_0(t+(l), -3.0, 7.0, 0.2, 0.6);\n  vec3 hsl = hsl2rgb_2_2(m, 0.8, 0.5);\n  float alpha = smoothstep(0.1, 0.8, tex.r) * 0.005 * l;//smoothstep(1.0, 2.0, l);\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n  //gl_Position = vec4(position, 1.0);\n}\n"
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float random;\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform float rows;\nuniform float chance;\nuniform float intensity;\nuniform float abberations;\n\n//\n// Description : Array and textureless GLSL 2D/3D/4D simplex\n//               noise functions.\n//      Author : Ian McEwan, Ashima Arts.\n//  Maintainer : ijm\n//     Lastmod : 20110822 (ijm)\n//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.\n//               Distributed under the MIT License. See LICENSE file.\n//               https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x) {\n     return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nfloat snoise_1_3(vec3 v)\n  {\n  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;\n  const vec4  D_1_4 = vec4(0.0, 0.5, 1.0, 2.0);\n\n// First corner\n  vec3 i  = floor(v + dot(v, C.yyy) );\n  vec3 x0 =   v - i + dot(i, C.xxx) ;\n\n// Other corners\n  vec3 g_1_5 = step(x0.yzx, x0.xyz);\n  vec3 l = 1.0 - g_1_5;\n  vec3 i1 = min( g_1_5.xyz, l.zxy );\n  vec3 i2 = max( g_1_5.xyz, l.zxy );\n\n  //   x0 = x0 - 0.0 + 0.0 * C.xxx;\n  //   x1 = x0 - i1  + 1.0 * C.xxx;\n  //   x2 = x0 - i2  + 2.0 * C.xxx;\n  //   x3 = x0 - 1.0 + 3.0 * C.xxx;\n  vec3 x1 = x0 - i1 + C.xxx;\n  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y\n  vec3 x3 = x0 - D_1_4.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y\n\n// Permutations\n  i = mod289_1_0(i);\n  vec4 p = permute_1_1( permute_1_1( permute_1_1(\n             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))\n           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))\n           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));\n\n// Gradients: 7x7 points over a square, mapped onto an octahedron.\n// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)\n  float n_ = 0.142857142857; // 1.0/7.0\n  vec3  ns = n_ * D_1_4.wyz - D_1_4.xzx;\n\n  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)\n\n  vec4 x_ = floor(j * ns.z);\n  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)\n\n  vec4 x = x_ *ns.x + ns.yyyy;\n  vec4 y = y_ *ns.x + ns.yyyy;\n  vec4 h = 1.0 - abs(x) - abs(y);\n\n  vec4 b0 = vec4( x.xy, y.xy );\n  vec4 b1 = vec4( x.zw, y.zw );\n\n  //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;\n  //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;\n  vec4 s0 = floor(b0)*2.0 + 1.0;\n  vec4 s1 = floor(b1)*2.0 + 1.0;\n  vec4 sh = -step(h, vec4(0.0));\n\n  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;\n  vec4 a1_1_6 = b1.xzyw + s1.xzyw*sh.zzww ;\n\n  vec3 p0_1_7 = vec3(a0.xy,h.x);\n  vec3 p1 = vec3(a0.zw,h.y);\n  vec3 p2 = vec3(a1_1_6.xy,h.z);\n  vec3 p3 = vec3(a1_1_6.zw,h.w);\n\n//Normalise gradients\n  vec4 norm = taylorInvSqrt_1_2(vec4(dot(p0_1_7,p0_1_7), dot(p1,p1), dot(p2, p2), dot(p3,p3)));\n  p0_1_7 *= norm.x;\n  p1 *= norm.y;\n  p2 *= norm.z;\n  p3 *= norm.w;\n\n// Mix final noise value\n  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);\n  m = m * m;\n  return 42.0 * dot( m*m, vec4( dot(p0_1_7,x0), dot(p1,x1),\n                                dot(p2,x2), dot(p3,x3) ) );\n  }\n\n\n\n\nvec3 lerp(vec3 a, vec3 b, float value) {\n  return (a + value * (b - a));\n}\n\n\nvoid main() {\n  vec2 groupCoords = floor(vUv * rows) / rows;\n  float noise = smoothstep(-1.0, 0.3, snoise_1_3(vec3((groupCoords.y / 10.0), 0.5,\n    sin(time * 0.10) / 2.0 + 0.5)));\n  //float noise = snoise3(vec3(groupCoords.x/2.0, random*0.1, sin(time * 0.1)));\n  float lowProb = 1.0 - step(chance, random);\n  float lowProb2 = step(1.0 - chance, random);\n  float lowProb3 = 1.0 - step(chance, abs(random - 0.5));\n  float medProb = step(chance * 2.0, random);\n  float threshold = 1.0 - intensity;\n  float noiseProb = step((threshold + 0.01)* 2.0 , abs(noise));\n  float line = 1.0 - step(threshold + 0.02, abs(groupCoords.y - noise));\n  float column = 1.0 - step(threshold + 0.2, abs(vUv.x - noise));\n  float colorDisplacement = step(threshold+0.1, noise) * noise * 1.0;\n  float abby = abberations + (0.01 * sin(time * 0.1));\n  vec2 displacementCoords = fract(\n    vec2(lowProb3 * 0.1 + vUv.x + (noise* line) - column * 0.01,\n         vUv.y - lowProb * 0.1 + column * abby)\n  );\n  vec4 source = texture2D(tInput, vUv);\n  vec4 displacement = texture2D(tInput, displacementCoords);\n\n  vec4 color = vec4(source);\n\n  color.rgb = lerp(color.rgb,\n    vec3(\n      texture2D(tInput, fract(vUv - clamp(lowProb2*0.1 + (cos(time) / 2.0 +0.5) * random* abby*colorDisplacement, 0.0, 0.2))).r,\n      displacement.g,\n      texture2D(tInput, fract(vUv + clamp((sin(time) / 2.0 +0.5)* vUv.y* abby*colorDisplacement, 0.0, 0.1))).b),\n    colorDisplacement);\n\n  // color.r = clamp((lowProb * 3.0) + color.r, 0.0, 1.0);\n  gl_FragColor = vec4(color);\n}\n"
 
 /***/ })
 /******/ ]);

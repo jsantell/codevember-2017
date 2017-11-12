@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 51);
+/******/ 	return __webpack_require__(__webpack_require__.s = 55);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1024,7 +1024,11 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_25__;
 /* 48 */,
 /* 49 */,
 /* 50 */,
-/* 51 */
+/* 51 */,
+/* 52 */,
+/* 53 */,
+/* 54 */,
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1042,7 +1046,7 @@ var THREE = _interopRequireWildcard(_three);
 
 var _tween = __webpack_require__(25);
 
-var _threeAr = __webpack_require__(52);
+var _threeAr = __webpack_require__(56);
 
 var _ThreeApp2 = __webpack_require__(6);
 
@@ -1268,7 +1272,7 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 52 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*

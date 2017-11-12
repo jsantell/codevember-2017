@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 58);
+/******/ 	return __webpack_require__(__webpack_require__.s = 62);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -459,7 +459,148 @@ Composer.prototype.setSize = function(w, h) {
 
 /***/ }),
 
-/***/ 58:
+/***/ 6:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _three = __webpack_require__(0);
+
+var _stats = __webpack_require__(7);
+
+var _stats2 = _interopRequireDefault(_stats);
+
+var _inject = __webpack_require__(8);
+
+var _inject2 = _interopRequireDefault(_inject);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var CCAPTURE_OPTIONS = {
+  framerate: 60,
+  format: 'webm'
+};
+
+var App = function () {
+  function App() {
+    var _this = this;
+
+    _classCallCheck(this, App);
+
+    if (window.location.search) {
+      var params = window.location.search.substr(1).split('&');
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = params[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var param = _step.value;
+
+          var _param$split = param.split('='),
+              _param$split2 = _slicedToArray(_param$split, 2),
+              prop = _param$split2[0],
+              value = _param$split2[1];
+
+          if (prop === 'debug') {
+            this.stats = new _stats2.default();
+            this.stats.showPanel(0);
+            document.body.appendChild(this.stats.dom);
+          }
+          if (prop === 'record') {
+            (0, _inject2.default)('../scripts/CCapture.all.min.js').then(function () {
+              _this.capturer = new window.CCapture(CCAPTURE_OPTIONS);
+              _this.capturer.start();
+            });
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+    this.renderer = new _three.WebGLRenderer();
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.autoClear = false;
+    document.body.appendChild(this.renderer.domElement);
+
+    this.scene = new _three.Scene();
+
+    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
+
+    this.onResize = this.onResize.bind(this);
+    window.addEventListener('resize', this.onResize);
+
+    this.init();
+
+    this.lastTick = 0;
+    this.onTick = this.onTick.bind(this);
+    requestAnimationFrame(this.onTick);
+  }
+
+  _createClass(App, [{
+    key: 'onTick',
+    value: function onTick() {
+      var t = performance.now();
+      var delta = performance.now() - this.lastTick;
+      if (this.stats) {
+        this.stats.begin();
+      }
+      this.update(t, delta);
+      this.render(t, delta);
+      if (this.stats) {
+        this.stats.end();
+      }
+      this.lastTick = t;
+      requestAnimationFrame(this.onTick);
+      if (this.capturer) {
+        this.capturer.capture(this.renderer.domElement);
+      }
+    }
+  }, {
+    key: 'getAspect',
+    value: function getAspect() {
+      return window.innerWidth / window.innerHeight;
+    }
+  }, {
+    key: 'onResize',
+    value: function onResize() {
+      this.camera.aspect = this.getAspect();
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+  }]);
+
+  return App;
+}();
+
+exports.default = App;
+
+/***/ }),
+
+/***/ 62:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -477,7 +618,7 @@ var _ThreeApp2 = __webpack_require__(6);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _three2 = __webpack_require__(59);
+var _three2 = __webpack_require__(63);
 
 var _wagner = __webpack_require__(4);
 
@@ -604,7 +745,7 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 59:
+/***/ 63:
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function() {
@@ -1085,147 +1226,6 @@ else {
 }).call(this);
 
 
-
-/***/ }),
-
-/***/ 6:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _three = __webpack_require__(0);
-
-var _stats = __webpack_require__(7);
-
-var _stats2 = _interopRequireDefault(_stats);
-
-var _inject = __webpack_require__(8);
-
-var _inject2 = _interopRequireDefault(_inject);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var CCAPTURE_OPTIONS = {
-  framerate: 60,
-  format: 'webm'
-};
-
-var App = function () {
-  function App() {
-    var _this = this;
-
-    _classCallCheck(this, App);
-
-    if (window.location.search) {
-      var params = window.location.search.substr(1).split('&');
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = params[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var param = _step.value;
-
-          var _param$split = param.split('='),
-              _param$split2 = _slicedToArray(_param$split, 2),
-              prop = _param$split2[0],
-              value = _param$split2[1];
-
-          if (prop === 'debug') {
-            this.stats = new _stats2.default();
-            this.stats.showPanel(0);
-            document.body.appendChild(this.stats.dom);
-          }
-          if (prop === 'record') {
-            (0, _inject2.default)('../scripts/CCapture.all.min.js').then(function () {
-              _this.capturer = new window.CCapture(CCAPTURE_OPTIONS);
-              _this.capturer.start();
-            });
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-    this.renderer = new _three.WebGLRenderer();
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.autoClear = false;
-    document.body.appendChild(this.renderer.domElement);
-
-    this.scene = new _three.Scene();
-
-    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
-
-    this.onResize = this.onResize.bind(this);
-    window.addEventListener('resize', this.onResize);
-
-    this.init();
-
-    this.lastTick = 0;
-    this.onTick = this.onTick.bind(this);
-    requestAnimationFrame(this.onTick);
-  }
-
-  _createClass(App, [{
-    key: 'onTick',
-    value: function onTick() {
-      var t = performance.now();
-      var delta = performance.now() - this.lastTick;
-      if (this.stats) {
-        this.stats.begin();
-      }
-      this.update(t, delta);
-      this.render(t, delta);
-      if (this.stats) {
-        this.stats.end();
-      }
-      this.lastTick = t;
-      requestAnimationFrame(this.onTick);
-      if (this.capturer) {
-        this.capturer.capture(this.renderer.domElement);
-      }
-    }
-  }, {
-    key: 'getAspect',
-    value: function getAspect() {
-      return window.innerWidth / window.innerHeight;
-    }
-  }, {
-    key: 'onResize',
-    value: function onResize() {
-      this.camera.aspect = this.getAspect();
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-  }]);
-
-  return App;
-}();
-
-exports.default = App;
 
 /***/ }),
 
