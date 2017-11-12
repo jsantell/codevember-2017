@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 40);
+/******/ 	return __webpack_require__(__webpack_require__.s = 33);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -956,352 +956,7 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 /***/ }),
 /* 22 */,
 /* 23 */,
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.default = GPUComputationRenderer;
-/**
- * @author yomboprime https://github.com/yomboprime
- *
- * GPUComputationRenderer, based on SimulationRenderer by zz85
- *
- * The GPUComputationRenderer uses the concept of variables. These variables are RGBA float textures that hold 4 floats
- * for each compute element (texel)
- *
- * Each variable has a fragment shader that defines the computation made to obtain the variable in question.
- * You can use as many variables you need, and make dependencies so you can use textures of other variables in the shader
- * (the sampler uniforms are added automatically) Most of the variables will need themselves as dependency.
- *
- * The renderer has actually two render targets per variable, to make ping-pong. Textures from the current frame are used
- * as inputs to render the textures of the next frame.
- *
- * The render targets of the variables can be used as input textures for your visualization shaders.
- *
- * Variable names should be valid identifiers and should not collide with THREE GLSL used identifiers.
- * a common approach could be to use 'texture' prefixing the variable name; i.e texturePosition, textureVelocity...
- *
- * The size of the computation (sizeX * sizeY) is defined as 'resolution' automatically in the shader. For example:
- * #DEFINE resolution vec2( 1024.0, 1024.0 )
- *
- * -------------
- *
- * Basic use:
- *
- * // Initialization...
- *
- * // Create computation renderer
- * var gpuCompute = new GPUComputationRenderer( 1024, 1024, renderer );
- *
- * // Create initial state float textures
- * var pos0 = gpuCompute.createTexture();
- * var vel0 = gpuCompute.createTexture();
- * // and fill in here the texture data...
- *
- * // Add texture variables
- * var velVar = gpuCompute.addVariable( "textureVelocity", fragmentShaderVel, pos0 );
- * var posVar = gpuCompute.addVariable( "texturePosition", fragmentShaderPos, vel0 );
- *
- * // Add variable dependencies
- * gpuCompute.setVariableDependencies( velVar, [ velVar, posVar ] );
- * gpuCompute.setVariableDependencies( posVar, [ velVar, posVar ] );
- *
- * // Add custom uniforms
- * velVar.material.uniforms.time = { value: 0.0 };
- *
- * // Check for completeness
- * var error = gpuCompute.init();
- * if ( error !== null ) {
- *		console.error( error );
-  * }
- *
- *
- * // In each frame...
- *
- * // Compute!
- * gpuCompute.compute();
- *
- * // Update texture uniforms in your visualization materials with the gpu renderer output
- * myMaterial.uniforms.myTexture.value = gpuCompute.getCurrentRenderTarget( posVar ).texture;
- *
- * // Do your rendering
- * renderer.render( myScene, myCamera );
- *
- * -------------
- *
- * Also, you can use utility functions to create ShaderMaterial and perform computations (rendering between textures)
- * Note that the shaders can have multiple input textures.
- *
- * var myFilter1 = gpuCompute.createShaderMaterial( myFilterFragmentShader1, { theTexture: { value: null } } );
- * var myFilter2 = gpuCompute.createShaderMaterial( myFilterFragmentShader2, { theTexture: { value: null } } );
- *
- * var inputTexture = gpuCompute.createTexture();
- *
- * // Fill in here inputTexture...
- *
- * myFilter1.uniforms.theTexture.value = inputTexture;
- *
- * var myRenderTarget = gpuCompute.createRenderTarget();
- * myFilter2.uniforms.theTexture.value = myRenderTarget.texture;
- *
- * var outputRenderTarget = gpuCompute.createRenderTarget();
- *
- * // Now use the output texture where you want:
- * myMaterial.uniforms.map.value = outputRenderTarget.texture;
- *
- * // And compute each frame, before rendering to screen:
- * gpuCompute.doRenderTarget( myFilter1, myRenderTarget );
- * gpuCompute.doRenderTarget( myFilter2, outputRenderTarget );
- * 
- *
- *
- * @param {int} sizeX Computation problem size is always 2d: sizeX * sizeY elements.
- * @param {int} sizeY Computation problem size is always 2d: sizeX * sizeY elements.
- * @param {WebGLRenderer} renderer The renderer
-  */
-
-function GPUComputationRenderer(sizeX, sizeY, renderer) {
-
-	this.variables = [];
-
-	this.currentTextureIndex = 0;
-
-	var scene = new THREE.Scene();
-
-	var camera = new THREE.Camera();
-	camera.position.z = 1;
-
-	var passThruUniforms = {
-		texture: { value: null }
-	};
-
-	var passThruShader = createShaderMaterial(getPassThroughFragmentShader(), passThruUniforms);
-
-	var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), passThruShader);
-	scene.add(mesh);
-
-	this.addVariable = function (variableName, computeFragmentShader, initialValueTexture) {
-
-		var material = this.createShaderMaterial(computeFragmentShader);
-
-		var variable = {
-			name: variableName,
-			initialValueTexture: initialValueTexture,
-			material: material,
-			dependencies: null,
-			renderTargets: [],
-			wrapS: null,
-			wrapT: null,
-			minFilter: THREE.NearestFilter,
-			magFilter: THREE.NearestFilter
-		};
-
-		this.variables.push(variable);
-
-		return variable;
-	};
-
-	this.setVariableDependencies = function (variable, dependencies) {
-
-		variable.dependencies = dependencies;
-	};
-
-	this.init = function () {
-
-		if (!renderer.extensions.get("OES_texture_float")) {
-
-			return "No OES_texture_float support for float textures.";
-		}
-
-		if (renderer.capabilities.maxVertexTextures === 0) {
-
-			return "No support for vertex shader textures.";
-		}
-
-		for (var i = 0; i < this.variables.length; i++) {
-
-			var variable = this.variables[i];
-
-			// Creates rendertargets and initialize them with input texture
-			variable.renderTargets[0] = this.createRenderTarget(sizeX, sizeY, variable.wrapS, variable.wrapT, variable.minFilter, variable.magFilter);
-			variable.renderTargets[1] = this.createRenderTarget(sizeX, sizeY, variable.wrapS, variable.wrapT, variable.minFilter, variable.magFilter);
-			this.renderTexture(variable.initialValueTexture, variable.renderTargets[0]);
-			this.renderTexture(variable.initialValueTexture, variable.renderTargets[1]);
-
-			// Adds dependencies uniforms to the ShaderMaterial
-			var material = variable.material;
-			var uniforms = material.uniforms;
-			if (variable.dependencies !== null) {
-
-				for (var d = 0; d < variable.dependencies.length; d++) {
-
-					var depVar = variable.dependencies[d];
-
-					if (depVar.name !== variable.name) {
-
-						// Checks if variable exists
-						var found = false;
-						for (var j = 0; j < this.variables.length; j++) {
-
-							if (depVar.name === this.variables[j].name) {
-								found = true;
-								break;
-							}
-						}
-						if (!found) {
-							return "Variable dependency not found. Variable=" + variable.name + ", dependency=" + depVar.name;
-						}
-					}
-
-					uniforms[depVar.name] = { value: null };
-
-					material.fragmentShader = "\nuniform sampler2D " + depVar.name + ";\n" + material.fragmentShader;
-				}
-			}
-		}
-
-		this.currentTextureIndex = 0;
-
-		return null;
-	};
-
-	this.compute = function () {
-
-		var currentTextureIndex = this.currentTextureIndex;
-		var nextTextureIndex = this.currentTextureIndex === 0 ? 1 : 0;
-
-		for (var i = 0, il = this.variables.length; i < il; i++) {
-
-			var variable = this.variables[i];
-
-			// Sets texture dependencies uniforms
-			if (variable.dependencies !== null) {
-
-				var uniforms = variable.material.uniforms;
-				for (var d = 0, dl = variable.dependencies.length; d < dl; d++) {
-
-					var depVar = variable.dependencies[d];
-
-					uniforms[depVar.name].value = depVar.renderTargets[currentTextureIndex].texture;
-				}
-			}
-
-			// Performs the computation for this variable
-			this.doRenderTarget(variable.material, variable.renderTargets[nextTextureIndex]);
-		}
-
-		this.currentTextureIndex = nextTextureIndex;
-	};
-
-	this.getCurrentRenderTarget = function (variable) {
-
-		return variable.renderTargets[this.currentTextureIndex];
-	};
-
-	this.getAlternateRenderTarget = function (variable) {
-
-		return variable.renderTargets[this.currentTextureIndex === 0 ? 1 : 0];
-	};
-
-	function addResolutionDefine(materialShader) {
-
-		materialShader.defines.resolution = 'vec2( ' + sizeX.toFixed(1) + ', ' + sizeY.toFixed(1) + " )";
-	}
-	this.addResolutionDefine = addResolutionDefine;
-
-	// The following functions can be used to compute things manually
-
-	function createShaderMaterial(computeFragmentShader, uniforms) {
-
-		uniforms = uniforms || {};
-
-		var material = new THREE.ShaderMaterial({
-			uniforms: uniforms,
-			vertexShader: getPassThroughVertexShader(),
-			fragmentShader: computeFragmentShader
-		});
-
-		addResolutionDefine(material);
-
-		return material;
-	}
-	this.createShaderMaterial = createShaderMaterial;
-
-	this.createRenderTarget = function (sizeXTexture, sizeYTexture, wrapS, wrapT, minFilter, magFilter) {
-
-		sizeXTexture = sizeXTexture || sizeX;
-		sizeYTexture = sizeYTexture || sizeY;
-
-		wrapS = wrapS || THREE.ClampToEdgeWrapping;
-		wrapT = wrapT || THREE.ClampToEdgeWrapping;
-
-		minFilter = minFilter || THREE.NearestFilter;
-		magFilter = magFilter || THREE.NearestFilter;
-
-		var renderTarget = new THREE.WebGLRenderTarget(sizeXTexture, sizeYTexture, {
-			wrapS: wrapS,
-			wrapT: wrapT,
-			minFilter: minFilter,
-			magFilter: magFilter,
-			format: THREE.RGBAFormat,
-			type: /(iPad|iPhone|iPod)/g.test(navigator.userAgent) ? THREE.HalfFloatType : THREE.FloatType,
-			stencilBuffer: false
-		});
-
-		return renderTarget;
-	};
-
-	this.createTexture = function (sizeXTexture, sizeYTexture) {
-
-		sizeXTexture = sizeXTexture || sizeX;
-		sizeYTexture = sizeYTexture || sizeY;
-
-		var a = new Float32Array(sizeXTexture * sizeYTexture * 4);
-		var texture = new THREE.DataTexture(a, sizeX, sizeY, THREE.RGBAFormat, THREE.FloatType);
-		texture.needsUpdate = true;
-
-		return texture;
-	};
-
-	this.renderTexture = function (input, output) {
-
-		// Takes a texture, and render out in rendertarget
-		// input = Texture
-		// output = RenderTarget
-
-		passThruUniforms.texture.value = input;
-
-		this.doRenderTarget(passThruShader, output);
-
-		passThruUniforms.texture.value = null;
-	};
-
-	this.doRenderTarget = function (material, output) {
-
-		mesh.material = material;
-		renderer.render(scene, camera, output);
-		mesh.material = passThruShader;
-	};
-
-	// Shaders
-
-	function getPassThroughVertexShader() {
-
-		return "void main()	{\n" + "\n" + "	gl_Position = vec4( position, 1.0 );\n" + "\n" + "}\n";
-	}
-
-	function getPassThroughFragmentShader() {
-
-		return "uniform sampler2D texture;\n" + "\n" + "void main() {\n" + "\n" + "	vec2 uv = gl_FragCoord.xy / resolution.xy;\n" + "\n" + "	gl_FragColor = texture2D( texture, uv );\n" + "\n" + "}\n";
-	}
-}
-
-/***/ }),
+/* 24 */,
 /* 25 */,
 /* 26 */,
 /* 27 */,
@@ -1310,14 +965,7 @@ function GPUComputationRenderer(sizeX, sizeY, renderer) {
 /* 30 */,
 /* 31 */,
 /* 32 */,
-/* 33 */,
-/* 34 */,
-/* 35 */,
-/* 36 */,
-/* 37 */,
-/* 38 */,
-/* 39 */,
-/* 40 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1335,21 +983,17 @@ var _ThreeApp2 = __webpack_require__(6);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _GPUComputationRenderer = __webpack_require__(24);
+var _BarycentricMaterial = __webpack_require__(34);
 
-var _GPUComputationRenderer2 = _interopRequireDefault(_GPUComputationRenderer);
+var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
 
-var _vert = __webpack_require__(41);
+var _vert = __webpack_require__(38);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(42);
+var _frag = __webpack_require__(39);
 
 var _frag2 = _interopRequireDefault(_frag);
-
-var _computePosition = __webpack_require__(43);
-
-var _computePosition2 = _interopRequireDefault(_computePosition);
 
 var _wagner = __webpack_require__(4);
 
@@ -1359,10 +1003,6 @@ var _MultiPassBloomPass = __webpack_require__(13);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _godraypass = __webpack_require__(44);
-
-var _godraypass2 = _interopRequireDefault(_godraypass);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1371,12 +1011,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var scale = 60;
-var size = 12;
-var radius = 2;
-var radiusSpread = 5;
-var speed = 1;
-var speedSpread = 10;
+var PLANES = 15;
 
 var Experiment = function (_ThreeApp) {
   _inherits(Experiment, _ThreeApp);
@@ -1390,173 +1025,54 @@ var Experiment = function (_ThreeApp) {
   _createClass(Experiment, [{
     key: 'init',
     value: function init() {
-      var _this2 = this;
-
-      this.renderer.setClearColor(0x111111);
-      this.material = new _three.ShaderMaterial({
-        uniforms: {
-          size: { value: size },
-          time: { value: 0.0 },
-          tPosition: { value: null },
-          sprite: { value: null }
-        },
-        fragmentShader: _frag2.default,
-        vertexShader: _vert2.default,
-        transparent: true,
-        depthWrite: false
-      });
-      this.material.blending = _three.AdditiveBlending;
-      this.textureLoader = new _three.TextureLoader();
-      this.textureLoader.load('particle.jpg', function (texture) {
-        _this2.material.uniforms.sprite.value = texture;
-      });
-
-      this.setupGeometry();
-
-      this.mesh = new _three.Points(this.geometry, this.material);
-      this.mesh.position.set(0, 0, 0);
-
-      this.setupGPURenderer();
+      this.planes = [];
+      for (var i = 0; i < PLANES; i++) {
+        var plane = new _three.PlaneBufferGeometry(1, 1, 7, 7);
+        _BarycentricMaterial2.default.applyBarycentricCoordinates(plane);
+        var planeMaterial = new _BarycentricMaterial2.default({
+          width: 2.0
+        });
+        var planeMesh = new _three.Mesh(plane, planeMaterial);
+        planeMesh.position.z = -i * 0.5;
+        var scale = 1 + (i + 1) * 0.2;
+        planeMesh.scale.set(scale, scale, scale);
+        this.scene.add(planeMesh);
+        this.planes.push(planeMesh);
+      }
 
       this.pivot = new _three.Object3D();
       this.pivot.add(this.camera);
-      this.scene.add(this.mesh);
       this.scene.add(this.pivot);
-      this.camera.position.set(0, 0, 6);
-
+      this.camera.position.set(0, 0, 0.1);
+      this.renderer.render(this.scene, this.camera);
       this.composer = new _wagner2.default.Composer(this.renderer);
       this.pass = new _MultiPassBloomPass2.default({
-        zoomBlurStrength: 3,
-        applyZoomBlur: true,
-        blurAmount: 50
+        blurAmount: 3
       });
-
-      this.pass = new _godraypass2.default({});
-      this.pass.params.blurAmount = 0.3;
-      this.pass.params.fDensity = 3;
-      this.pass.params.fExposure = 1;
-    }
-  }, {
-    key: 'getTextureSize',
-    value: function getTextureSize() {
-      var count = this.geometry.getAttribute('position').count;
-
-      var size = 2;
-      while (size < Math.sqrt(count)) {
-        size *= 2;
-      }
-
-      return size;
-    }
-  }, {
-    key: 'setupGeometry',
-    value: function setupGeometry() {
-      this.geometry = new _three.SphereBufferGeometry(3, scale, scale);
-
-      var verticesCount = this.geometry.getAttribute('position').count;
-      console.log('Particle count: ', verticesCount);
-      var width = this.getTextureSize();
-      var uvs = new Float32Array(verticesCount * 2);
-      var count = 0;
-
-      for (var i = 0; i < width; i++) {
-        for (var j = 0; j < width; j++) {
-          uvs[count++] = i / (width - 1);
-          uvs[count++] = j / (width - 1);
-
-          if (count === verticesCount * 2) {
-            break;
-          }
-        }
-        if (count === verticesCount * 2) {
-          break;
-        }
-      }
-      this.geometry.addAttribute('uv', new _three.BufferAttribute(uvs, 2));
-    }
-  }, {
-    key: 'setupGPURenderer',
-    value: function setupGPURenderer() {
-      var textureSize = this.getTextureSize();
-      this.gpu = new _GPUComputationRenderer2.default(textureSize, textureSize, this.renderer);
-
-      this.rotTexture = this.gpu.createTexture();
-      this.posTexture = this.gpu.createTexture();
-
-      this.seedTextures();
-
-      this.posVar = this.gpu.addVariable('tPosition', _computePosition2.default, this.posTexture);
-      this.gpu.setVariableDependencies(this.posVar, [this.posVar]);
-      this.posVar.material.uniforms.delta = { value: 0.0 };
-      this.posVar.material.uniforms.time = { value: 0.0 };
-      this.posVar.material.uniforms.uRotationTexture = { value: this.rotTexture };
-
-      var error = this.gpu.init();
-      if (error) {
-        throw new Error(error);
-      }
-    }
-  }, {
-    key: 'seedTextures',
-    value: function seedTextures() {
-      var positionData = this.posTexture.image.data;
-      var rotationData = this.rotTexture.image.data;
-
-      // Use BoxBufferGeometry's position to start in
-      // the texture
-      var posCount = 0;
-      var geoPos = this.geometry.getAttribute('position');
-
-      for (var i = 0; i < positionData.length; i += 4) {
-        if (i / 4 >= geoPos.count) {
-          positionData[i] = positionData[i + 1] = positionData[i + 2] = positionData[i + 3] = 0;
-          rotationData[i] = rotationData[i + 1] = rotationData[i + 2] = rotationData[i + 3] = 0;
-        } else {
-
-          var u = Math.random() * Math.PI * 1;
-          var v = Math.random() * Math.PI * 0.5;
-          var theta = u * Math.PI * 2;
-          var phi = Math.acos(2 * v - 1);
-          var r = Math.random() * radiusSpread + radius;
-          positionData[i] = r * Math.sin(theta);
-          positionData[i + 1] = 0; //Math.cos(phi)
-          positionData[i + 2] = r * Math.cos(theta);
-          positionData[i + 3] = 1;
-
-          positionData[i] += (Math.random() * 2 - 1) * 2;
-          positionData[i + 1] += (Math.random() * 2 - 1) * 0.5;
-          positionData[i + 2] += (Math.random() * 2 - 1) * 2;
-
-          rotationData[i] = theta;
-          rotationData[i + 1] = phi;
-          rotationData[i + 2] = r;
-          rotationData[i + 3] = Math.random() * speedSpread + speed;
-          if (Math.random() < 0.03) {
-            rotationData[i + 3] *= 3;
-          }
-        }
-      }
     }
   }, {
     key: 'update',
     value: function update(t, delta) {
-      this.pivot.rotation.y = t * 0.0001;
-      this.material.uniforms.time.value = t;
-      this.posVar.material.uniforms.delta.value = delta / 1000;
-      this.posVar.material.uniforms.time.value = t / 1000;
+      // this.pivot.rotation.y = t * 0.001;
+      for (var i = 0; i < this.planes.length; i++) {
+        var plane = this.planes[i];
+        var lag = Math.PI * 2 * i / this.planes.length;
+        var r = Math.sin(lag + t * 0.005) / 2 + 0.5;
+        var g = Math.sin(lag + t * 0.005 + 4) / 2 + 0.5;
+        var b = Math.sin(lag + t * 0.005 + 2) / 2 + 0.5;
+        plane.material.uniforms.wireframeColor.value = new _three.Color(r, g, b);
+        plane.rotation.z = t * 0.0001 + lag / 2;
+        var scale = Math.cos(lag + t * 0.001) / 2 + 0.5 + lag / 2 + 1;
+        plane.scale.set(scale, scale, scale);
+      }
     }
   }, {
     key: 'render',
     value: function render() {
-      this.renderer.clearColor();
-      this.gpu.compute();
-      this.material.uniforms.tPosition.value = this.gpu.getCurrentRenderTarget(this.posVar).texture;
       this.composer.reset();
       this.composer.render(this.scene, this.camera);
       this.composer.pass(this.pass);
       this.composer.toScreen();
-      this.camera.lookAt(this.pivot.position);
-      // this.renderer.render(this.scene, this.camera);
     }
   }]);
 
@@ -1566,98 +1082,220 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 41 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float size;\nuniform sampler2D tPosition;\nvarying vec3 vPosition;\n\nvoid main() {\n  vec3 pos = texture2D(tPosition, uv).xyz;\n  vPosition = pos;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);\n  gl_PointSize = size;\n}\n"
-
-/***/ }),
-/* 42 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D sprite;\n\nvarying vec3 vPosition;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float l = length(vPosition);\n  float t = clamp(-1.0, 1.0, sin(time * 0.0005));\n  vec3 hsl = hsl2rgb_2_2(map_1_0(t+l, -1.0, 4.0, 0.3, 0.7), 0.8, 0.5);\n  float alpha = (tex.r * 0.1) * smoothstep(0.001,0.5, l);\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
-
-/***/ }),
-/* 43 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float delta;\nuniform float time;\nuniform sampler2D uRotationTexture;\n\n//\n// Description : Array and textureless GLSL 2D/3D/4D simplex\n//               noise functions.\n//      Author : Ian McEwan, Ashima Arts.\n//  Maintainer : ijm\n//     Lastmod : 20110822 (ijm)\n//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.\n//               Distributed under the MIT License. See LICENSE file.\n//               https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x) {\n     return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nfloat snoise_1_3(vec3 v)\n  {\n  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;\n  const vec4  D_1_4 = vec4(0.0, 0.5, 1.0, 2.0);\n\n// First corner\n  vec3 i  = floor(v + dot(v, C.yyy) );\n  vec3 x0 =   v - i + dot(i, C.xxx) ;\n\n// Other corners\n  vec3 g_1_5 = step(x0.yzx, x0.xyz);\n  vec3 l = 1.0 - g_1_5;\n  vec3 i1 = min( g_1_5.xyz, l.zxy );\n  vec3 i2 = max( g_1_5.xyz, l.zxy );\n\n  //   x0 = x0 - 0.0 + 0.0 * C.xxx;\n  //   x1 = x0 - i1  + 1.0 * C.xxx;\n  //   x2 = x0 - i2  + 2.0 * C.xxx;\n  //   x3 = x0 - 1.0 + 3.0 * C.xxx;\n  vec3 x1 = x0 - i1 + C.xxx;\n  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y\n  vec3 x3 = x0 - D_1_4.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y\n\n// Permutations\n  i = mod289_1_0(i);\n  vec4 p = permute_1_1( permute_1_1( permute_1_1(\n             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))\n           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))\n           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));\n\n// Gradients: 7x7 points over a square, mapped onto an octahedron.\n// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)\n  float n_ = 0.142857142857; // 1.0/7.0\n  vec3  ns = n_ * D_1_4.wyz - D_1_4.xzx;\n\n  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)\n\n  vec4 x_ = floor(j * ns.z);\n  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)\n\n  vec4 x = x_ *ns.x + ns.yyyy;\n  vec4 y = y_ *ns.x + ns.yyyy;\n  vec4 h = 1.0 - abs(x) - abs(y);\n\n  vec4 b0 = vec4( x.xy, y.xy );\n  vec4 b1 = vec4( x.zw, y.zw );\n\n  //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;\n  //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;\n  vec4 s0 = floor(b0)*2.0 + 1.0;\n  vec4 s1 = floor(b1)*2.0 + 1.0;\n  vec4 sh = -step(h, vec4(0.0));\n\n  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;\n  vec4 a1_1_6 = b1.xzyw + s1.xzyw*sh.zzww ;\n\n  vec3 p0_1_7 = vec3(a0.xy,h.x);\n  vec3 p1 = vec3(a0.zw,h.y);\n  vec3 p2 = vec3(a1_1_6.xy,h.z);\n  vec3 p3 = vec3(a1_1_6.zw,h.w);\n\n//Normalise gradients\n  vec4 norm = taylorInvSqrt_1_2(vec4(dot(p0_1_7,p0_1_7), dot(p1,p1), dot(p2, p2), dot(p3,p3)));\n  p0_1_7 *= norm.x;\n  p1 *= norm.y;\n  p2 *= norm.z;\n  p3 *= norm.w;\n\n// Mix final noise value\n  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);\n  m = m * m;\n  return 42.0 * dot( m*m, vec4( dot(p0_1_7,x0), dot(p1,x1),\n                                dot(p2,x2), dot(p3,x3) ) );\n  }\n\n\n\n#define PI 3.141592653589293264626\n\nfloat rand(vec2 co){\n    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);\n}\n\nconst float dampen = 0.01;\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / resolution.xy;\n  vec3 pos = texture2D(tPosition, uv).xyz;\n  vec4 rot = texture2D(uRotationTexture, uv);\n  float theta = rot.x;\n  float phi = rot.y;\n  float radius = rot.z;\n  float speed = rot.w;\n\n  float x = pos.x;\n  float y = pos.y;\n  float z = pos.z;\n\n  float rando = rand(vec2(x, z)) * 0.1;\n\n  theta = mod(theta + (speed * time * dampen), PI * 2.0);\n  x = radius * sin(theta);\n//  y = snoise3(pos * time * dampen) + (0.21 * y);\n  z = radius * cos(theta);\n  gl_FragColor = vec4(x, y, z, 1.0);\n  // gl_FragColor = vec4(pos, 1.0);\n}\n"
-
-/***/ }),
-/* 44 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-//  USAGE :
-//  https://gist.github.com/Samsy/7219c148e6cbd179883a
-
-//  Port by Samsy for Wagner from http://bkcore.com/blog/3d/webgl-three-js-volumetric-light-godrays.html
 
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var THREE = __webpack_require__(0);
-var Pass = __webpack_require__(1);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var FullBoxBlurPass = __webpack_require__(12);
+var _three = __webpack_require__(0);
 
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(45);
+var _barycentricVert = __webpack_require__(35);
 
-function Godray(options) {
+var _barycentricVert2 = _interopRequireDefault(_barycentricVert);
 
-  Pass.call(this);
+var _barycentricFrag = __webpack_require__(36);
 
-  options = options || {};
+var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
 
-  this.setShader(vertex, fragment);
+var _glslSolidWireframe = __webpack_require__(37);
 
-  this.blurPass = new FullBoxBlurPass(2);
+var _glslSolidWireframe2 = _interopRequireDefault(_glslSolidWireframe);
 
-  this.width = options.width || 512;
-  this.height = options.height || 512;
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-  this.params.blurAmount = options.blurAmount || 2;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  this.params.fX = 0.5;
-  this.params.fY = 0.5;
-  this.params.fExposure = 0.6;
-  this.params.fDecay = 0.93;
-  this.params.fDensity = 0.88
-  this.params.fWeight = 0.4
-  this.params.fClamp = 1.0
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-}
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-module.exports = Godray;
+var DEFAULTS = {
+  color: new _three.Color(0x333333),
+  wireframeColor: new _three.Color(0xeeeeee),
+  alpha: 0.0,
+  wireframeAlpha: 1.0,
+  width: 5.0
+};
 
-Godray.prototype = Object.create(Pass.prototype);
-Godray.prototype.constructor = Godray;
+var BarycentricMaterial = function (_ShaderMaterial) {
+  _inherits(BarycentricMaterial, _ShaderMaterial);
 
-Godray.prototype.run = function(composer) {
+  function BarycentricMaterial() {
+    var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-  this.shader.uniforms.fX.value = this.params.fX;
-  this.shader.uniforms.fY.value = this.params.fY;
-  this.shader.uniforms.fExposure.value = this.params.fExposure;
-  this.shader.uniforms.fDecay.value = this.params.fDecay;
-  this.shader.uniforms.fDensity.value = this.params.fDensity;
-  this.shader.uniforms.fWeight.value = this.params.fWeight;
-  this.shader.uniforms.fClamp.value = this.params.fClamp;
+    _classCallCheck(this, BarycentricMaterial);
 
-  this.blurPass.params.amount = this.params.blurAmount;
+    var props = Object.assign({}, DEFAULTS, config);
+    return _possibleConstructorReturn(this, (BarycentricMaterial.__proto__ || Object.getPrototypeOf(BarycentricMaterial)).call(this, {
+      uniforms: {
+        color: { value: props.color },
+        wireframeColor: { value: props.wireframeColor },
+        alpha: { value: props.alpha },
+        wireframeAlpha: { value: props.wireframeAlpha },
+        width: { value: props.width }
+      },
+      vertexShader: _barycentricVert2.default,
+      fragmentShader: _barycentricFrag2.default,
+      transparent: true,
+      side: _three.DoubleSide,
+      depthWrite: false
+    }));
+  }
 
-  composer.pass(this.blurPass);
-  composer.pass(this.blurPass);
+  _createClass(BarycentricMaterial, null, [{
+    key: 'applyBarycentricCoordinates',
+    value: function applyBarycentricCoordinates(geometry) {
+      var positions = [];
+      var cells = [];
+      var verts = geometry.attributes.position.array;
+      var vertCount = geometry.attributes.position.count;
+      var faces = []; //geometry.index ? geometry.index.array : [];
 
-  composer.pass(this.shader);
+      if (!faces.length) {
+        for (var i = 0; i < vertCount - 2; i++) {
+          faces.push(i);
+          faces.push(i + 1);
+          faces.push(i + 2);
+        }
+      }
 
+      var faceCount = faces.length / 3;
+
+      // Convert from long arrays to array-of-arrays
+      for (var _i = 0; _i < vertCount; _i++) {
+        positions.push([verts[_i * 3 + 0], verts[_i * 3 + 1], verts[_i * 3 + 2]]);
+      }
+      for (var _i2 = 0; _i2 < faceCount; _i2++) {
+        cells.push([faces[_i2 * 3 + 0], faces[_i2 * 3 + 1], faces[_i2 * 3 + 2]]);
+      }
+
+      var ret = (0, _glslSolidWireframe2.default)({
+        positions: positions,
+        cells: cells
+      });
+      // Convert back from array-of-arrays to long array
+      var barycentric = new Float32Array(ret.barycentric.length * 2);
+      var count = 0;
+      for (var _i3 = 0; _i3 < ret.barycentric.length; _i3++) {
+        barycentric[count++] = ret.barycentric[_i3][0];
+        barycentric[count++] = ret.barycentric[_i3][1];
+      }
+      /*
+          count = 0;
+          for (let i = 0; i < ret.positions.length; i++) {
+            verts[count++] = ret.positions[i][0];
+            verts[count++] = ret.positions[i][1];
+            verts[count++] = ret.positions[i][2];
+          }
+      
+          count = 0;
+          for (let i = 0; i < ret.cells.length; i++) {
+            faces[count++] = ret.cells[i][0];
+            faces[count++] = ret.cells[i][1];
+            faces[count++] = ret.cells[i][2];
+          }
+          geometry.attributes.position.needsUpdate = true;
+          geometry.index.needsUpdate = true;
+      */
+      geometry.addAttribute('barycentric', new _three.BufferAttribute(barycentric, 2));
+    }
+  }]);
+
+  return BarycentricMaterial;
+}(_three.ShaderMaterial);
+
+exports.default = BarycentricMaterial;
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports) {
+
+module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  vec3 color = mix(wireframeColor, color, factor);\n  float a = mix(wireframeAlpha, alpha, factor);\n  gl_FragColor = vec4(color, a);\n}\n"
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports) {
+
+module.exports = function (mesh, opts) {
+  if (!opts) opts = {};
+  var vars = opts.attributes ? {} : null;
+  var vkeys = vars && Object.keys(opts.attributes)
+  if (vars) {
+    for (var k = 0; k < vkeys.length; k++) {
+      vars[vkeys[k]] = []
+    }
+  }
+
+  var i, j;
+  var pts = [];
+  var cells = [];
+  var barycentricAttrs = [];
+
+  var mpts = mesh.positions;
+  var mcells = mesh.cells;
+
+  var c = 0;
+  for (i = 0; i < mesh.cells.length; i++) {
+    var cell = mcells[i];
+    if (cell.length === 3) {
+      pts.push(mpts[cell[0]]);
+      pts.push(mpts[cell[1]]);
+      pts.push(mpts[cell[2]]);
+      barycentricAttrs.push([0, 0]);
+      barycentricAttrs.push([1, 0]);
+      barycentricAttrs.push([0, 1]);
+      cells.push(c++);
+      cells.push(c++);
+      cells.push(c++);
+      if (vkeys) {
+        for (j = 0; j < vkeys.length; j++) {
+          var vkey = vkeys[j];
+          vars[vkey].push(opts.attributes[vkey][cell[0]]);
+          vars[vkey].push(opts.attributes[vkey][cell[1]]);
+          vars[vkey].push(opts.attributes[vkey][cell[2]]);
+        }
+      }
+    }
+  }
+
+  var ret = {
+    positions: pts,
+    attributes: vars,
+    barycentric: barycentricAttrs
+  };
+
+  if (mesh.cells) {
+    ret.cells = cells;
+  }
+
+  return ret;
 };
 
 
 /***/ }),
-/* 45 */
+/* 38 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nuniform float fX;\nuniform float fY;\nuniform float fExposure;\nuniform float fDecay;\nuniform float fDensity;\nuniform float fWeight;\nuniform float fClamp;\n\nconst int iSamples = 20;\n\nvoid main()\n{\n\tvec2 deltaTextCoord = vec2(vUv - vec2(fX,fY));\n\tdeltaTextCoord *= 1.0 /  float(iSamples) * fDensity;\n\tvec2 coord = vUv;\n\tfloat illuminationDecay = 1.0;\n\tvec4 FragColor = vec4(0.0);\n\tfor(int i=0; i < iSamples ; i++)\n\t{\n\t\tcoord -= deltaTextCoord;\n\t\tvec4 texel = texture2D(tInput, coord);\n\t\ttexel *= illuminationDecay * fWeight;\n\t\tFragColor += texel;\n\t\tilluminationDecay *= fDecay;\n\t}\n\tFragColor *= fExposure;\n\tFragColor = clamp(FragColor, 0.0, fClamp);\n\tgl_FragColor = FragColor;\n}"
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n  //gl_Position = vec4(position, 1.0);\n}\n"
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float uTime;\nuniform float uDelta;\nuniform vec2 uResolution;\nuniform float uPixelRatio;\nvarying vec2 vUv;\n\nvoid main() {\n  float stripes = sin(uTime * 0.001)mod(floor(fract(sin(uTime * 0.1 + vUv.y)) * 10.0), 2.0);\n  gl_FragColor = vec4(stripes);\n}\n"
 
 /***/ })
 /******/ ]);

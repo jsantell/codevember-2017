@@ -81,6 +81,13 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "12": {
+      "title": "rainbow zebra",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
