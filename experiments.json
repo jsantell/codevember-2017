@@ -74,6 +74,13 @@
       "subtitle": "",
       "dependencies": [
       ]
+    },
+    "11": {
+      "title": "glitch post processing",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
