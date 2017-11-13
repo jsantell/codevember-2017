@@ -88,6 +88,13 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "13": {
+      "title": "hyrax",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
