@@ -1,3 +1,4 @@
+import '../lib/configure';
 import { AdditiveBlending, BoxBufferGeometry, Points, Raycaster, Vector2, TextureLoader, BufferGeometry, BufferAttribute, ShaderMaterial, Color, TextGeometry, FontLoader, MeshBasicMaterial, Mesh, Object3D } from 'three';
 import ThreeApp from '../ThreeApp';
 import WAGNER from '@alex_toudic/wagner';
@@ -16,7 +17,7 @@ const TWINKLE_OFFSET = 100;
 const SCALE = 0.02;
 const SCROLL_RATE = 0.001;
 const ROTATION_SPEED = 0.0002;
-const ROTATION_LIMIT_Y = 0.9;
+const ROTATION_LIMIT_Y = 0.1;
 const ROTATION_LIMIT_X = 0.2;
 const FONT_DEPTH = 5;
 const FONT_PATH = '../assets/hyrax-regular.typeface.json' || '../assets/droidsans.typeface.json';
@@ -121,28 +122,32 @@ class Experiment extends ThreeApp {
   }
 
   update(t, delta) {
-    const MOUSE_LOOK_SPEED = 1;
-    const targetY = (this.mouseX * 2.0 - 1.0) * ROTATION_LIMIT_Y;
-    const targetX = (this.mouseY * 2.0 - 1.0) * ROTATION_LIMIT_X;
-    const currentY = this.pivot.rotation.y;
-    const currentX = this.pivot.rotation.x;
-    if (Math.abs(targetY - currentY) < 0.01) {
-      // do nothing
-    } else if (currentY > targetY) {
-      this.pivot.rotation.y -= delta * MOUSE_LOOK_SPEED * 0.0001;
-    } else if (currentY < targetY) {
-      this.pivot.rotation.y += delta * MOUSE_LOOK_SPEED * 0.0001;
+    const USE_MOUSE = false;
+    if (USE_MOUSE) {
+      const MOUSE_LOOK_SPEED = 1;
+      const targetY = (this.mouseX * 2.0 - 1.0) * ROTATION_LIMIT_Y;
+      const targetX = (this.mouseY * 2.0 - 1.0) * ROTATION_LIMIT_X;
+      const currentY = this.pivot.rotation.y;
+      const currentX = this.pivot.rotation.x;
+      if (Math.abs(targetY - currentY) < 0.01) {
+        // do nothing
+      } else if (currentY > targetY) {
+        this.pivot.rotation.y -= delta * MOUSE_LOOK_SPEED * 0.0001;
+      } else if (currentY < targetY) {
+        this.pivot.rotation.y += delta * MOUSE_LOOK_SPEED * 0.0001;
+      }
+
+      if (Math.abs(targetX - currentX) < 0.01) {
+        // do nothing
+      } else if (currentX > targetX) {
+        this.pivot.rotation.x -= delta * MOUSE_LOOK_SPEED * 0.0001;
+      } else if (currentX < targetX) {
+        this.pivot.rotation.x += delta * MOUSE_LOOK_SPEED * 0.0001;
+      }
+    } else {
+      this.pivot.rotation.y = Math.sin(t * ROTATION_SPEED) * ROTATION_LIMIT_Y;
     }
-    
-    if (Math.abs(targetX - currentX) < 0.01) {
-      // do nothing
-    } else if (currentX > targetX) {
-      this.pivot.rotation.x -= delta * MOUSE_LOOK_SPEED * 0.0001;
-    } else if (currentX < targetX) {
-      this.pivot.rotation.x += delta * MOUSE_LOOK_SPEED * 0.0001;
-    }
-    // this.pivot.rotation.y = Math.sin(t * ROTATION_SPEED) * ROTATION_LIMIT;
-    // this.pivot.rotation.y = Math.sin(t * ROTATION_SPEED) * ROTATION_LIMIT;
+
     if (this.material) {
       this.material.uniforms.time.value = t * 0.001;
     }

@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 34);
+/******/ 	return __webpack_require__(__webpack_require__.s = 38);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1000,135 +1000,7 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 /***/ }),
 /* 23 */,
 /* 24 */,
-/* 25 */,
-/* 26 */,
-/* 27 */,
-/* 28 */,
-/* 29 */,
-/* 30 */,
-/* 31 */,
-/* 32 */,
-/* 33 */,
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-__webpack_require__(6);
-
-var _three = __webpack_require__(0);
-
-var _ThreeApp2 = __webpack_require__(7);
-
-var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
-
-var _BarycentricMaterial = __webpack_require__(35);
-
-var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
-
-var _vert = __webpack_require__(39);
-
-var _vert2 = _interopRequireDefault(_vert);
-
-var _frag = __webpack_require__(40);
-
-var _frag2 = _interopRequireDefault(_frag);
-
-var _wagner = __webpack_require__(4);
-
-var _wagner2 = _interopRequireDefault(_wagner);
-
-var _MultiPassBloomPass = __webpack_require__(14);
-
-var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var PLANES = 15;
-
-var Experiment = function (_ThreeApp) {
-  _inherits(Experiment, _ThreeApp);
-
-  function Experiment() {
-    _classCallCheck(this, Experiment);
-
-    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
-  }
-
-  _createClass(Experiment, [{
-    key: 'init',
-    value: function init() {
-      this.planes = [];
-      for (var i = 0; i < PLANES; i++) {
-        var plane = new _three.PlaneBufferGeometry(1, 1, 7, 7);
-        _BarycentricMaterial2.default.applyBarycentricCoordinates(plane);
-        var planeMaterial = new _BarycentricMaterial2.default({
-          width: 2.0
-        });
-        var planeMesh = new _three.Mesh(plane, planeMaterial);
-        planeMesh.position.z = -i * 0.5;
-        var scale = 1 + (i + 1) * 0.2;
-        planeMesh.scale.set(scale, scale, scale);
-        this.scene.add(planeMesh);
-        this.planes.push(planeMesh);
-      }
-
-      this.pivot = new _three.Object3D();
-      this.pivot.add(this.camera);
-      this.scene.add(this.pivot);
-      this.camera.position.set(0, 0, 0.1);
-      this.renderer.render(this.scene, this.camera);
-      this.composer = new _wagner2.default.Composer(this.renderer);
-      this.pass = new _MultiPassBloomPass2.default({
-        blurAmount: 3
-      });
-    }
-  }, {
-    key: 'update',
-    value: function update(t, delta) {
-      // this.pivot.rotation.y = t * 0.001;
-      for (var i = 0; i < this.planes.length; i++) {
-        var plane = this.planes[i];
-        var lag = Math.PI * 2 * i / this.planes.length;
-        var r = Math.sin(lag + t * 0.005) / 2 + 0.5;
-        var g = Math.sin(lag + t * 0.005 + 4) / 2 + 0.5;
-        var b = Math.sin(lag + t * 0.005 + 2) / 2 + 0.5;
-        plane.material.uniforms.wireframeColor.value = new _three.Color(r, g, b);
-        plane.rotation.z = t * 0.0001 + lag / 2;
-        var scale = Math.cos(lag + t * 0.001) / 2 + 0.5 + lag / 2 + 1;
-        plane.scale.set(scale, scale, scale);
-      }
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      this.composer.reset();
-      this.composer.render(this.scene, this.camera);
-      this.composer.pass(this.pass);
-      this.composer.toScreen();
-    }
-  }]);
-
-  return Experiment;
-}(_ThreeApp3.default);
-
-exports.default = new Experiment();
-
-/***/ }),
-/* 35 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1142,15 +1014,15 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _barycentricVert = __webpack_require__(36);
+var _barycentricVert = __webpack_require__(26);
 
 var _barycentricVert2 = _interopRequireDefault(_barycentricVert);
 
-var _barycentricFrag = __webpack_require__(37);
+var _barycentricFrag = __webpack_require__(27);
 
 var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
 
-var _glslSolidWireframe = __webpack_require__(38);
+var _glslSolidWireframe = __webpack_require__(28);
 
 var _glslSolidWireframe2 = _interopRequireDefault(_glslSolidWireframe);
 
@@ -1260,19 +1132,19 @@ var BarycentricMaterial = function (_ShaderMaterial) {
 exports.default = BarycentricMaterial;
 
 /***/ }),
-/* 36 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
 
 /***/ }),
-/* 37 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  vec3 color = mix(wireframeColor, color, factor);\n  float a = mix(wireframeAlpha, alpha, factor);\n  gl_FragColor = vec4(color, a);\n}\n"
 
 /***/ }),
-/* 38 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = function (mesh, opts) {
@@ -1330,6 +1202,134 @@ module.exports = function (mesh, opts) {
   return ret;
 };
 
+
+/***/ }),
+/* 29 */,
+/* 30 */,
+/* 31 */,
+/* 32 */,
+/* 33 */,
+/* 34 */,
+/* 35 */,
+/* 36 */,
+/* 37 */,
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+__webpack_require__(6);
+
+var _three = __webpack_require__(0);
+
+var _ThreeApp2 = __webpack_require__(7);
+
+var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
+
+var _BarycentricMaterial = __webpack_require__(25);
+
+var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
+
+var _vert = __webpack_require__(39);
+
+var _vert2 = _interopRequireDefault(_vert);
+
+var _frag = __webpack_require__(40);
+
+var _frag2 = _interopRequireDefault(_frag);
+
+var _wagner = __webpack_require__(4);
+
+var _wagner2 = _interopRequireDefault(_wagner);
+
+var _MultiPassBloomPass = __webpack_require__(14);
+
+var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var PLANES = 15;
+
+var Experiment = function (_ThreeApp) {
+  _inherits(Experiment, _ThreeApp);
+
+  function Experiment() {
+    _classCallCheck(this, Experiment);
+
+    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
+  }
+
+  _createClass(Experiment, [{
+    key: 'init',
+    value: function init() {
+      this.planes = [];
+      for (var i = 0; i < PLANES; i++) {
+        var plane = new _three.PlaneBufferGeometry(1, 1, 7, 7);
+        _BarycentricMaterial2.default.applyBarycentricCoordinates(plane);
+        var planeMaterial = new _BarycentricMaterial2.default({
+          width: 2.0
+        });
+        var planeMesh = new _three.Mesh(plane, planeMaterial);
+        planeMesh.position.z = -i * 0.5;
+        var scale = 1 + (i + 1) * 0.2;
+        planeMesh.scale.set(scale, scale, scale);
+        this.scene.add(planeMesh);
+        this.planes.push(planeMesh);
+      }
+
+      this.pivot = new _three.Object3D();
+      this.pivot.add(this.camera);
+      this.scene.add(this.pivot);
+      this.camera.position.set(0, 0, 0.1);
+      this.renderer.render(this.scene, this.camera);
+      this.composer = new _wagner2.default.Composer(this.renderer);
+      this.pass = new _MultiPassBloomPass2.default({
+        blurAmount: 3
+      });
+    }
+  }, {
+    key: 'update',
+    value: function update(t, delta) {
+      // this.pivot.rotation.y = t * 0.001;
+      for (var i = 0; i < this.planes.length; i++) {
+        var plane = this.planes[i];
+        var lag = Math.PI * 2 * i / this.planes.length;
+        var r = Math.sin(lag + t * 0.005) / 2 + 0.5;
+        var g = Math.sin(lag + t * 0.005 + 4) / 2 + 0.5;
+        var b = Math.sin(lag + t * 0.005 + 2) / 2 + 0.5;
+        plane.material.uniforms.wireframeColor.value = new _three.Color(r, g, b);
+        plane.rotation.z = t * 0.0001 + lag / 2;
+        var scale = Math.cos(lag + t * 0.001) / 2 + 0.5 + lag / 2 + 1;
+        plane.scale.set(scale, scale, scale);
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      this.composer.reset();
+      this.composer.render(this.scene, this.camera);
+      this.composer.pass(this.pass);
+      this.composer.toScreen();
+    }
+  }]);
+
+  return Experiment;
+}(_ThreeApp3.default);
+
+exports.default = new Experiment();
 
 /***/ }),
 /* 39 */
