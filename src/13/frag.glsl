@@ -11,9 +11,9 @@ varying float vAlphaOffset;
 
 void main() {
   vec4 tex = texture2D(alphaMap, gl_PointCoord);
-  float l = length(vPosition) / 8.0;
-  float t = fract(time * colorSpeed * 0.01);
-  float m = map(t + l, 0.0, 3.0, 0.2, 0.5);
+  float l = clamp(0.0, 1.0, length(vPosition) / 8.0);
+  float t = fract(l * time * colorSpeed * 0.1);
+  float m = map(t, 0.0, 1.0, 0.2, 0.5);
   vec3 hsl = hsl2rgb(m, 0.8, 0.5);
   float alpha = smoothstep(0.1, 0.9, tex.r) * vAlphaOffset;
   gl_FragColor = vec4(hsl, alpha);

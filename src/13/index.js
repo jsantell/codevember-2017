@@ -7,27 +7,30 @@ import vertexShader from './vert.glsl';
 import BarycentricMaterial from '../12/BarycentricMaterial';
 
 const TEXT = 'hyrax';
+const TEXT_OFFSET = -TEXT.length;
 const POINTS = 1000;
-const P_SIZE = 4;
-const COLOR_SPEED = 0.1;
-const TWINKLE_SPEED = 1;
+const P_SIZE = 5;
+const COLOR_SPEED = 10;
+const TWINKLE_SPEED = 3;
 const TWINKLE_OFFSET = 100;
 const SCALE = 0.02;
 const SCROLL_RATE = 0.001;
 const ROTATION_SPEED = 0.0002;
-const ROTATION_LIMIT = 0.2;
-const FONT_DEPTH = 10;
+const ROTATION_LIMIT_Y = 0.9;
+const ROTATION_LIMIT_X = 0.2;
+const FONT_DEPTH = 5;
+const FONT_PATH = '../assets/hyrax-regular.typeface.json' || '../assets/droidsans.typeface.json';
 class Experiment extends ThreeApp {
   init() {
     this.renderer.setClearColor(0x111111);
     this.loader = new FontLoader();
-    this.loader.load('../assets/droidsans.typeface.json', font => {
+    this.loader.load(FONT_PATH, font => {
       this.font = font;
       this.textGeometry = new TextGeometry(TEXT, {
         font: this.font,
         size: 150,
         height: 2,
-        curveSegments: 1,
+        curveSegments: 5,
         bevelThickness: 1.5,
         bevelSegments: 1,
         bevelEnabled: true,
@@ -39,11 +42,12 @@ class Experiment extends ThreeApp {
         wireframeAlpha: 0.3,
         color: new Color(0xffffff),
       });
+      this.wireframeMaterial.blending = AdditiveBlending;
       this.textGeometry = new BufferGeometry().fromGeometry(this.textGeometry);
       this.textMesh = new Mesh(this.textGeometry, this.wireframeMaterial);
       BarycentricMaterial.applyBarycentricCoordinates(this.textGeometry);
       this.textMesh.scale.set(SCALE, SCALE, SCALE * -FONT_DEPTH);
-      this.textMesh.position.x = -5;
+      this.textMesh.position.x = TEXT_OFFSET;
       this.textMesh.updateMatrixWorld();
       this.scene.add(this.textMesh);
       const raycaster = new Raycaster();
@@ -93,10 +97,7 @@ class Experiment extends ThreeApp {
 
 
       this.points = new Points(this.geometry, this.material);
-      this.pointPivot = new Object3D();
-      this.pointPivot.add(this.points);
-      this.scene.add(this.pointPivot);
-      //this.scene.add(this.pointPivot2);
+      this.scene.add(this.points);
     });
 
     this.pivot = new Object3D();
@@ -106,19 +107,47 @@ class Experiment extends ThreeApp {
     this.renderer.render(this.scene, this.camera);
     this.composer = new WAGNER.Composer(this.renderer);
     this.pass = new BloomPass({
-      zoomBlurStrength: 2,
+      zoomBlurStrength: 0.2,
       enableZoomBlur: true,
-      blurAmount: 2,
+      blurAmount: 0.9,
+    });
+
+    this.mouseX = 0.5;
+    this.mouseY = 0.5;
+    window.addEventListener('mousemove', e => {
+      this.mouseX = e.clientX / window.innerWidth;
+      this.mouseY = e.clientY / window.innerWidth;
     });
   }
 
   update(t, delta) {
-    this.pivot.rotation.y = Math.sin(t * ROTATION_SPEED) * ROTATION_LIMIT;
+    const MOUSE_LOOK_SPEED = 1;
+    const targetY = (this.mouseX * 2.0 - 1.0) * ROTATION_LIMIT_Y;
+    const targetX = (this.mouseY * 2.0 - 1.0) * ROTATION_LIMIT_X;
+    const currentY = this.pivot.rotation.y;
+    const currentX = this.pivot.rotation.x;
+    if (Math.abs(targetY - currentY) < 0.01) {
+      // do nothing
+    } else if (currentY > targetY) {
+      this.pivot.rotation.y -= delta * MOUSE_LOOK_SPEED * 0.0001;
+    } else if (currentY < targetY) {
+      this.pivot.rotation.y += delta * MOUSE_LOOK_SPEED * 0.0001;
+    }
+    
+    if (Math.abs(targetX - currentX) < 0.01) {
+      // do nothing
+    } else if (currentX > targetX) {
+      this.pivot.rotation.x -= delta * MOUSE_LOOK_SPEED * 0.0001;
+    } else if (currentX < targetX) {
+      this.pivot.rotation.x += delta * MOUSE_LOOK_SPEED * 0.0001;
+    }
+    // this.pivot.rotation.y = Math.sin(t * ROTATION_SPEED) * ROTATION_LIMIT;
+    // this.pivot.rotation.y = Math.sin(t * ROTATION_SPEED) * ROTATION_LIMIT;
     if (this.material) {
       this.material.uniforms.time.value = t * 0.001;
     }
     if (this.wireframeMaterial) {
-      this.wireframeMaterial.uniforms.wireframeAlpha.value = 0.05 + (Math.sin(t * 0.001) * 0.5 + 0.5) * 0.1;
+      this.wireframeMaterial.uniforms.wireframeAlpha.value = 0.02 + (Math.sin(t * 0.001) * 0.5 + 0.5) * 0.1;
     }
   }
 
