@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 59);
+/******/ 	return __webpack_require__(__webpack_require__.s = 60);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -82,7 +82,52 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
 
 /***/ }),
 
-/***/ 59:
+/***/ 6:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+if (window.location.search) {
+  var params = window.location.search.substr(1).split('&');
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = params[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var param = _step.value;
+
+      var _param$split = param.split('='),
+          _param$split2 = _slicedToArray(_param$split, 2),
+          prop = _param$split2[0],
+          value = _param$split2[1];
+
+      if (prop === 'video') {
+        document.querySelector('#info').style.display = 'none';
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+}
+
+/***/ }),
+
+/***/ 60:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -96,17 +141,19 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
+__webpack_require__(6);
+
 var _three = __webpack_require__(0);
 
-var _ThreeApp2 = __webpack_require__(6);
+var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _vert = __webpack_require__(60);
+var _vert = __webpack_require__(61);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(61);
+var _frag = __webpack_require__(62);
 
 var _frag2 = _interopRequireDefault(_frag);
 
@@ -172,7 +219,21 @@ exports.default = new Experiment002();
 
 /***/ }),
 
-/***/ 6:
+/***/ 61:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nvoid main() {\n  gl_Position = vec4(position, 1.0);\n}\n"
+
+/***/ }),
+
+/***/ 62:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float uTime;\nuniform float uDelta;\nuniform vec2 uResolution;\nuniform float uPixelRatio;\nfloat when_lt_1_0(float x, float y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec2 when_lt_1_0(vec2 x, vec2 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec3 when_lt_1_0(vec3 x, vec3 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec4 when_lt_1_0(vec4 x, vec4 y) {\n  return max(sign(y - x), 0.0);\n}\n\n\n\nfloat when_gt_2_1(float x, float y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec2 when_gt_2_1(vec2 x, vec2 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec3 when_gt_2_1(vec3 x, vec3 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec4 when_gt_2_1(vec4 x, vec4 y) {\n  return max(sign(x - y), 0.0);\n}\n\n\n\nfloat map_5_2(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_5_2(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_5_2(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_5_2(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat qinticIn_3_3(float t) {\n  return pow(t, 5.0);\n}\n\n\n\nfloat qinticOut_4_4(float t) {\n  return 1.0 - (pow(t - 1.0, 5.0));\n}\n\n\n\n\n// https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83\nfloat rand(float n){return fract(sin(n) * 43758.5453123);}\n\nfloat noise(float p){\n  float fl = floor(p);\n  float fc = fract(p);\n  return mix(rand(fl), rand(fl + 1.0), fc);\n}\n\nconst float PI = 3.141592653589793;\nconst float LOOP = 1000.0;\nconst float LENGTH = 0.7;\nconst float SPEED = 3.0;\nconst float MOD = 1.0;\nconst float WAVE_SPEED = 0.001;\nconst float WAVE_DEPTH = 0.03;\nconst float COLUMNS = 30.0;\nconst float ROWS = 30.0;\nconst float F = 6.0;\n\nvoid main() {\n  // magic number 2.0 here because I didn't take into account pixel\n  // ratio during development on a devicePixelRatio === 2 machine\n  // so a quick hack to make it consistent\n  vec2 st = gl_FragCoord.xy / uResolution.xy / uPixelRatio * 2.0;\n  vec2 pos = st / -2.0 + 1.0;\n  float x = gl_FragCoord.x; //floor(pos.x * COLUMNS);\n  float y = pos.y; // floor(pos.y * ROWS) / ROWS;\n  float n = noise(x * MOD);\n  float speed = clamp(n, 0.1, 20.0);\n\n  float elapsed = qinticIn_3_3(mod((uTime * SPEED*speed*0.5) + (LOOP * n), LOOP) * 0.001) * 1.0;\n  vec3 color = vec3(0.0);\n  \n  float length = map_5_2(sin(0.5 * pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH, LENGTH + WAVE_DEPTH);\n\n  // lines\n  float aboveLine = when_lt_1_0(y, elapsed + length);\n  float belowLine = when_lt_1_0(elapsed, y);\n  float smooth = smoothstep(elapsed - y, elapsed, y);\n  float isLine = aboveLine * belowLine;\n \n  // color\n  color = when_lt_1_0(0.0, isLine) * vec3(0.6, 1.0 - pos.y, 0.5);\n  color.r *= when_lt_1_0(length, pos.y) * 1.0;\n \n  float diff = 0.1;\n  float length2 = map_5_2(sin(2.0+0.8*pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH - diff, LENGTH + WAVE_DEPTH - diff);\n  color -= when_lt_1_0(y, elapsed+length2) * when_lt_1_0(elapsed,y) * vec3(0.1);\n  \n  diff = 0.15;\n  length2 = map_5_2(sin(0.7*pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH - diff, LENGTH + WAVE_DEPTH - diff);\n  color -= when_lt_1_0(y, elapsed+length2) * when_lt_1_0(elapsed,y) * vec3(0.1);\n\n  color *= vec3(qinticOut_4_4(pos.y)) * 2.0;\n  gl_FragColor = vec4(color, 1.0);\n}\n"
+
+/***/ }),
+
+/***/ 7:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -188,11 +249,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _stats = __webpack_require__(7);
+var _stats = __webpack_require__(8);
 
 var _stats2 = _interopRequireDefault(_stats);
 
-var _inject = __webpack_require__(8);
+var _inject = __webpack_require__(9);
 
 var _inject2 = _interopRequireDefault(_inject);
 
@@ -313,21 +374,7 @@ exports.default = App;
 
 /***/ }),
 
-/***/ 60:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvoid main() {\n  gl_Position = vec4(position, 1.0);\n}\n"
-
-/***/ }),
-
-/***/ 61:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float uTime;\nuniform float uDelta;\nuniform vec2 uResolution;\nuniform float uPixelRatio;\nfloat when_lt_1_0(float x, float y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec2 when_lt_1_0(vec2 x, vec2 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec3 when_lt_1_0(vec3 x, vec3 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec4 when_lt_1_0(vec4 x, vec4 y) {\n  return max(sign(y - x), 0.0);\n}\n\n\n\nfloat when_gt_2_1(float x, float y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec2 when_gt_2_1(vec2 x, vec2 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec3 when_gt_2_1(vec3 x, vec3 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec4 when_gt_2_1(vec4 x, vec4 y) {\n  return max(sign(x - y), 0.0);\n}\n\n\n\nfloat map_5_2(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_5_2(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_5_2(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_5_2(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat qinticIn_3_3(float t) {\n  return pow(t, 5.0);\n}\n\n\n\nfloat qinticOut_4_4(float t) {\n  return 1.0 - (pow(t - 1.0, 5.0));\n}\n\n\n\n\n// https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83\nfloat rand(float n){return fract(sin(n) * 43758.5453123);}\n\nfloat noise(float p){\n  float fl = floor(p);\n  float fc = fract(p);\n  return mix(rand(fl), rand(fl + 1.0), fc);\n}\n\nconst float PI = 3.141592653589793;\nconst float LOOP = 1000.0;\nconst float LENGTH = 0.7;\nconst float SPEED = 3.0;\nconst float MOD = 1.0;\nconst float WAVE_SPEED = 0.001;\nconst float WAVE_DEPTH = 0.03;\nconst float COLUMNS = 30.0;\nconst float ROWS = 30.0;\nconst float F = 6.0;\n\nvoid main() {\n  // magic number 2.0 here because I didn't take into account pixel\n  // ratio during development on a devicePixelRatio === 2 machine\n  // so a quick hack to make it consistent\n  vec2 st = gl_FragCoord.xy / uResolution.xy / uPixelRatio * 2.0;\n  vec2 pos = st / -2.0 + 1.0;\n  float x = gl_FragCoord.x; //floor(pos.x * COLUMNS);\n  float y = pos.y; // floor(pos.y * ROWS) / ROWS;\n  float n = noise(x * MOD);\n  float speed = clamp(n, 0.1, 20.0);\n\n  float elapsed = qinticIn_3_3(mod((uTime * SPEED*speed*0.5) + (LOOP * n), LOOP) * 0.001) * 1.0;\n  vec3 color = vec3(0.0);\n  \n  float length = map_5_2(sin(0.5 * pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH, LENGTH + WAVE_DEPTH);\n\n  // lines\n  float aboveLine = when_lt_1_0(y, elapsed + length);\n  float belowLine = when_lt_1_0(elapsed, y);\n  float smooth = smoothstep(elapsed - y, elapsed, y);\n  float isLine = aboveLine * belowLine;\n \n  // color\n  color = when_lt_1_0(0.0, isLine) * vec3(0.6, 1.0 - pos.y, 0.5);\n  color.r *= when_lt_1_0(length, pos.y) * 1.0;\n \n  float diff = 0.1;\n  float length2 = map_5_2(sin(2.0+0.8*pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH - diff, LENGTH + WAVE_DEPTH - diff);\n  color -= when_lt_1_0(y, elapsed+length2) * when_lt_1_0(elapsed,y) * vec3(0.1);\n  \n  diff = 0.15;\n  length2 = map_5_2(sin(0.7*pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH - diff, LENGTH + WAVE_DEPTH - diff);\n  color -= when_lt_1_0(y, elapsed+length2) * when_lt_1_0(elapsed,y) * vec3(0.1);\n\n  color *= vec3(qinticOut_4_4(pos.y)) * 2.0;\n  gl_FragColor = vec4(color, 1.0);\n}\n"
-
-/***/ }),
-
-/***/ 7:
+/***/ 8:
 /***/ (function(module, exports, __webpack_require__) {
 
 // stats.js - http://github.com/mrdoob/stats.js
@@ -339,7 +386,7 @@ b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{do
 
 /***/ }),
 
-/***/ 8:
+/***/ 9:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

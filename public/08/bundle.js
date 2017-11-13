@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 64);
+/******/ 	return __webpack_require__(__webpack_require__.s = 65);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -89,7 +89,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
 
 
 var THREE = __webpack_require__(0);
-var processShader = __webpack_require__(9);
+var processShader = __webpack_require__(10);
 
 function Pass() {
   this.shader = null;
@@ -120,13 +120,107 @@ Pass.prototype.getOfflineTexture = function(w, h, useRGBA) {
 /***/ }),
 
 /***/ 10:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var THREE = __webpack_require__(0);
+
+module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
+
+  var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi;
+  var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
+
+  var typesMap = {
+    sampler2D: { type: 't', value: function() { return new THREE.Texture(); } },
+    samplerCube: { type: 't', value: function() {} },
+
+    bool: { type: 'b', value: function() { return 0; } },
+    int: { type: 'i', value: function() { return 0; } },
+    float: { type: 'f', value: function() { return 0; } },
+
+    vec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
+    vec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
+    vec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
+
+    bvec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
+    bvec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
+    bvec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
+
+    ivec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
+    ivec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
+    ivec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
+
+    mat2: { type: 'v2', value: function() { return new THREE.Matrix2(); } },
+    mat3: { type: 'v3', value: function() { return new THREE.Matrix3(); } },
+    mat4: { type: 'v4', value: function() { return new THREE.Matrix4(); } }
+  };
+
+  var arrayTypesMap = {
+    float: { type: 'fv', value: function() { return []; } },
+    vec3: { type: 'v3v', value: function() { return []; } }
+  };
+
+  var matches;
+  var uniforms = {
+    resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ), default: true },
+    time: { type: 'f', value: Date.now(), default: true },
+    tInput: { type: 't', value: new THREE.Texture(), default: true }
+  };
+
+  var uniformType, uniformName, arraySize;
+
+  while ((matches = regExp.exec(fragmentShaderCode)) !== null) {
+    if (matches.index === regExp.lastIndex) {
+      regExp.lastIndex++;
+    }
+    uniformType = matches[1];
+    uniformName = matches[2];
+
+    uniforms[uniformName] = {
+      type: typesMap[uniformType].type,
+      value: typesMap[uniformType].value()
+    };
+  }
+
+  while ((matches = regExp2.exec(fragmentShaderCode)) !== null) {
+    if (matches.index === regExp.lastIndex) {
+      regExp.lastIndex++;
+    }
+    uniformType = matches[1];
+    uniformName = matches[2];
+    arraySize = matches[3];
+
+    uniforms[uniformName] = {
+      type: arrayTypesMap[uniformType].type,
+      value: arrayTypesMap[uniformType].value()
+    };
+  }
+
+  var shader = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShaderCode,
+    fragmentShader: fragmentShaderCode,
+    shading: THREE.FlatShading,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true
+  });
+
+  return shader;
+};
+
+/***/ }),
+
+/***/ 11:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nvoid main() {\n  gl_FragColor = texture2D( tInput, vUv );\n\n}"
 
 /***/ }),
 
-/***/ 11:
+/***/ 12:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -219,7 +313,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 /***/ }),
 
-/***/ 22:
+/***/ 23:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -227,7 +321,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 var Pass = __webpack_require__(1);
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(23);
+var fragment = __webpack_require__(24);
 
 function VignettePass(boost, reduction) {
   Pass.call(this);
@@ -252,7 +346,7 @@ VignettePass.prototype.run = function(composer) {
 
 /***/ }),
 
-/***/ 23:
+/***/ 24:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
@@ -267,7 +361,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 
 var Pass = __webpack_require__(1);
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(10);
+var fragment = __webpack_require__(11);
 
 function CopyPass() {
   Pass.call(this);
@@ -327,7 +421,7 @@ module.exports.BlendMode = {
 
 var THREE = __webpack_require__(0);
 var CopyPass = __webpack_require__(3);
-var Stack = __webpack_require__(11);
+var Stack = __webpack_require__(12);
 var Pass = __webpack_require__(1);
 
 function Composer(renderer, settings) {
@@ -465,142 +559,46 @@ Composer.prototype.setSize = function(w, h) {
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+if (window.location.search) {
+  var params = window.location.search.substr(1).split('&');
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
 
-var _three = __webpack_require__(0);
+  try {
+    for (var _iterator = params[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var param = _step.value;
 
-var _stats = __webpack_require__(7);
+      var _param$split = param.split('='),
+          _param$split2 = _slicedToArray(_param$split, 2),
+          prop = _param$split2[0],
+          value = _param$split2[1];
 
-var _stats2 = _interopRequireDefault(_stats);
-
-var _inject = __webpack_require__(8);
-
-var _inject2 = _interopRequireDefault(_inject);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var CCAPTURE_OPTIONS = {
-  framerate: 60,
-  format: 'webm'
-};
-
-var App = function () {
-  function App() {
-    var _this = this;
-
-    _classCallCheck(this, App);
-
-    if (window.location.search) {
-      var params = window.location.search.substr(1).split('&');
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = params[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var param = _step.value;
-
-          var _param$split = param.split('='),
-              _param$split2 = _slicedToArray(_param$split, 2),
-              prop = _param$split2[0],
-              value = _param$split2[1];
-
-          if (prop === 'debug') {
-            this.stats = new _stats2.default();
-            this.stats.showPanel(0);
-            document.body.appendChild(this.stats.dom);
-          }
-          if (prop === 'record') {
-            (0, _inject2.default)('../scripts/CCapture.all.min.js').then(function () {
-              _this.capturer = new window.CCapture(CCAPTURE_OPTIONS);
-              _this.capturer.start();
-            });
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
+      if (prop === 'video') {
+        document.querySelector('#info').style.display = 'none';
       }
     }
-    this.renderer = new _three.WebGLRenderer();
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.autoClear = false;
-    document.body.appendChild(this.renderer.domElement);
-
-    this.scene = new _three.Scene();
-
-    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
-
-    this.onResize = this.onResize.bind(this);
-    window.addEventListener('resize', this.onResize);
-
-    this.init();
-
-    this.lastTick = 0;
-    this.onTick = this.onTick.bind(this);
-    requestAnimationFrame(this.onTick);
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
   }
-
-  _createClass(App, [{
-    key: 'onTick',
-    value: function onTick() {
-      var t = performance.now();
-      var delta = performance.now() - this.lastTick;
-      if (this.stats) {
-        this.stats.begin();
-      }
-      this.update(t, delta);
-      this.render(t, delta);
-      if (this.stats) {
-        this.stats.end();
-      }
-      this.lastTick = t;
-      requestAnimationFrame(this.onTick);
-      if (this.capturer) {
-        this.capturer.capture(this.renderer.domElement);
-      }
-    }
-  }, {
-    key: 'getAspect',
-    value: function getAspect() {
-      return window.innerWidth / window.innerHeight;
-    }
-  }, {
-    key: 'onResize',
-    value: function onResize() {
-      this.camera.aspect = this.getAspect();
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-  }]);
-
-  return App;
-}();
-
-exports.default = App;
+}
 
 /***/ }),
 
-/***/ 64:
+/***/ 65:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -612,25 +610,27 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+__webpack_require__(6);
+
 var _three = __webpack_require__(0);
 
-var _ThreeApp2 = __webpack_require__(6);
+var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _vert = __webpack_require__(65);
+var _vert = __webpack_require__(66);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(66);
+var _frag = __webpack_require__(67);
 
 var _frag2 = _interopRequireDefault(_frag);
 
-var _pointsFrag = __webpack_require__(67);
+var _pointsFrag = __webpack_require__(68);
 
 var _pointsFrag2 = _interopRequireDefault(_pointsFrag);
 
-var _pointsVert = __webpack_require__(68);
+var _pointsVert = __webpack_require__(69);
 
 var _pointsVert2 = _interopRequireDefault(_pointsVert);
 
@@ -638,7 +638,7 @@ var _wagner = __webpack_require__(4);
 
 var _wagner2 = _interopRequireDefault(_wagner);
 
-var _VignettePass = __webpack_require__(22);
+var _VignettePass = __webpack_require__(23);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
@@ -779,28 +779,28 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 65:
+/***/ 66:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float size;\nvarying vec3 vBC;\nattribute vec3 barycentric;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
 
 /***/ }),
 
-/***/ 66:
+/***/ 67:
 /***/ (function(module, exports) {
 
 module.exports = "#extension GL_OES_standard_derivatives : enable\n#define GLSLIFY 1\n\nuniform vec3 color;\nuniform vec3 wireframeColor;\nuniform float rms;\nvarying vec3 vBC;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\nfloat edgeFactor(vec3 bc){\n  vec3 d = fwidth(bc);\n  vec3 a3 = smoothstep(vec3(0.0), d*1.5, bc);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  vec3 c = mix(wireframeColor, color, edgeFactor(vBC));\n  gl_FragColor = vec4(c, 1.0);\n}\n"
 
 /***/ }),
 
-/***/ 67:
+/***/ 68:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform sampler2D sprite;\nuniform vec3 color;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float alpha = smoothstep(0.1, 0.9, tex.r);\n  gl_FragColor = vec4(color, alpha);\n}\n"
 
 /***/ }),
 
-/***/ 68:
+/***/ 69:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float size;\nuniform float rms;\n\nvoid main() {\n  //vec3 p = position + (smoothstep(0.2, 0.5, rms) * 0.1 * position);\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size;\n}\n"
@@ -808,6 +808,147 @@ module.exports = "#define GLSLIFY 1\nuniform float size;\nuniform float rms;\n\n
 /***/ }),
 
 /***/ 7:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _three = __webpack_require__(0);
+
+var _stats = __webpack_require__(8);
+
+var _stats2 = _interopRequireDefault(_stats);
+
+var _inject = __webpack_require__(9);
+
+var _inject2 = _interopRequireDefault(_inject);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var CCAPTURE_OPTIONS = {
+  framerate: 60,
+  format: 'webm'
+};
+
+var App = function () {
+  function App() {
+    var _this = this;
+
+    _classCallCheck(this, App);
+
+    if (window.location.search) {
+      var params = window.location.search.substr(1).split('&');
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = params[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var param = _step.value;
+
+          var _param$split = param.split('='),
+              _param$split2 = _slicedToArray(_param$split, 2),
+              prop = _param$split2[0],
+              value = _param$split2[1];
+
+          if (prop === 'debug') {
+            this.stats = new _stats2.default();
+            this.stats.showPanel(0);
+            document.body.appendChild(this.stats.dom);
+          }
+          if (prop === 'record') {
+            (0, _inject2.default)('../scripts/CCapture.all.min.js').then(function () {
+              _this.capturer = new window.CCapture(CCAPTURE_OPTIONS);
+              _this.capturer.start();
+            });
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+    this.renderer = new _three.WebGLRenderer();
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.autoClear = false;
+    document.body.appendChild(this.renderer.domElement);
+
+    this.scene = new _three.Scene();
+
+    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
+
+    this.onResize = this.onResize.bind(this);
+    window.addEventListener('resize', this.onResize);
+
+    this.init();
+
+    this.lastTick = 0;
+    this.onTick = this.onTick.bind(this);
+    requestAnimationFrame(this.onTick);
+  }
+
+  _createClass(App, [{
+    key: 'onTick',
+    value: function onTick() {
+      var t = performance.now();
+      var delta = performance.now() - this.lastTick;
+      if (this.stats) {
+        this.stats.begin();
+      }
+      this.update(t, delta);
+      this.render(t, delta);
+      if (this.stats) {
+        this.stats.end();
+      }
+      this.lastTick = t;
+      requestAnimationFrame(this.onTick);
+      if (this.capturer) {
+        this.capturer.capture(this.renderer.domElement);
+      }
+    }
+  }, {
+    key: 'getAspect',
+    value: function getAspect() {
+      return window.innerWidth / window.innerHeight;
+    }
+  }, {
+    key: 'onResize',
+    value: function onResize() {
+      this.camera.aspect = this.getAspect();
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+  }]);
+
+  return App;
+}();
+
+exports.default = App;
+
+/***/ }),
+
+/***/ 8:
 /***/ (function(module, exports, __webpack_require__) {
 
 // stats.js - http://github.com/mrdoob/stats.js
@@ -819,7 +960,7 @@ b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{do
 
 /***/ }),
 
-/***/ 8:
+/***/ 9:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -837,100 +978,6 @@ function inject(url) {
     document.body.appendChild(script);
   });
 }
-
-/***/ }),
-
-/***/ 9:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var THREE = __webpack_require__(0);
-
-module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
-
-  var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi;
-  var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
-
-  var typesMap = {
-    sampler2D: { type: 't', value: function() { return new THREE.Texture(); } },
-    samplerCube: { type: 't', value: function() {} },
-
-    bool: { type: 'b', value: function() { return 0; } },
-    int: { type: 'i', value: function() { return 0; } },
-    float: { type: 'f', value: function() { return 0; } },
-
-    vec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
-    vec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
-    vec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
-
-    bvec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
-    bvec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
-    bvec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
-
-    ivec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
-    ivec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
-    ivec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
-
-    mat2: { type: 'v2', value: function() { return new THREE.Matrix2(); } },
-    mat3: { type: 'v3', value: function() { return new THREE.Matrix3(); } },
-    mat4: { type: 'v4', value: function() { return new THREE.Matrix4(); } }
-  };
-
-  var arrayTypesMap = {
-    float: { type: 'fv', value: function() { return []; } },
-    vec3: { type: 'v3v', value: function() { return []; } }
-  };
-
-  var matches;
-  var uniforms = {
-    resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ), default: true },
-    time: { type: 'f', value: Date.now(), default: true },
-    tInput: { type: 't', value: new THREE.Texture(), default: true }
-  };
-
-  var uniformType, uniformName, arraySize;
-
-  while ((matches = regExp.exec(fragmentShaderCode)) !== null) {
-    if (matches.index === regExp.lastIndex) {
-      regExp.lastIndex++;
-    }
-    uniformType = matches[1];
-    uniformName = matches[2];
-
-    uniforms[uniformName] = {
-      type: typesMap[uniformType].type,
-      value: typesMap[uniformType].value()
-    };
-  }
-
-  while ((matches = regExp2.exec(fragmentShaderCode)) !== null) {
-    if (matches.index === regExp.lastIndex) {
-      regExp.lastIndex++;
-    }
-    uniformType = matches[1];
-    uniformName = matches[2];
-    arraySize = matches[3];
-
-    uniforms[uniformName] = {
-      type: arrayTypesMap[uniformType].type,
-      value: arrayTypesMap[uniformType].value()
-    };
-  }
-
-  var shader = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    vertexShader: vertexShaderCode,
-    fragmentShader: fragmentShaderCode,
-    shading: THREE.FlatShading,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true
-  });
-
-  return shader;
-};
 
 /***/ })
 

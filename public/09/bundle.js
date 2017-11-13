@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 69);
+/******/ 	return __webpack_require__(__webpack_require__.s = 70);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -89,7 +89,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
 
 
 var THREE = __webpack_require__(0);
-var processShader = __webpack_require__(9);
+var processShader = __webpack_require__(10);
 
 function Pass() {
   this.shader = null;
@@ -120,13 +120,107 @@ Pass.prototype.getOfflineTexture = function(w, h, useRGBA) {
 /***/ }),
 
 /***/ 10:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var THREE = __webpack_require__(0);
+
+module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
+
+  var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi;
+  var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
+
+  var typesMap = {
+    sampler2D: { type: 't', value: function() { return new THREE.Texture(); } },
+    samplerCube: { type: 't', value: function() {} },
+
+    bool: { type: 'b', value: function() { return 0; } },
+    int: { type: 'i', value: function() { return 0; } },
+    float: { type: 'f', value: function() { return 0; } },
+
+    vec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
+    vec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
+    vec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
+
+    bvec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
+    bvec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
+    bvec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
+
+    ivec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
+    ivec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
+    ivec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
+
+    mat2: { type: 'v2', value: function() { return new THREE.Matrix2(); } },
+    mat3: { type: 'v3', value: function() { return new THREE.Matrix3(); } },
+    mat4: { type: 'v4', value: function() { return new THREE.Matrix4(); } }
+  };
+
+  var arrayTypesMap = {
+    float: { type: 'fv', value: function() { return []; } },
+    vec3: { type: 'v3v', value: function() { return []; } }
+  };
+
+  var matches;
+  var uniforms = {
+    resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ), default: true },
+    time: { type: 'f', value: Date.now(), default: true },
+    tInput: { type: 't', value: new THREE.Texture(), default: true }
+  };
+
+  var uniformType, uniformName, arraySize;
+
+  while ((matches = regExp.exec(fragmentShaderCode)) !== null) {
+    if (matches.index === regExp.lastIndex) {
+      regExp.lastIndex++;
+    }
+    uniformType = matches[1];
+    uniformName = matches[2];
+
+    uniforms[uniformName] = {
+      type: typesMap[uniformType].type,
+      value: typesMap[uniformType].value()
+    };
+  }
+
+  while ((matches = regExp2.exec(fragmentShaderCode)) !== null) {
+    if (matches.index === regExp.lastIndex) {
+      regExp.lastIndex++;
+    }
+    uniformType = matches[1];
+    uniformName = matches[2];
+    arraySize = matches[3];
+
+    uniforms[uniformName] = {
+      type: arrayTypesMap[uniformType].type,
+      value: arrayTypesMap[uniformType].value()
+    };
+  }
+
+  var shader = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShaderCode,
+    fragmentShader: fragmentShaderCode,
+    shading: THREE.FlatShading,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true
+  });
+
+  return shader;
+};
+
+/***/ }),
+
+/***/ 11:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nvoid main() {\n  gl_FragColor = texture2D( tInput, vUv );\n\n}"
 
 /***/ }),
 
-/***/ 11:
+/***/ 12:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -219,7 +313,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 /***/ }),
 
-/***/ 22:
+/***/ 23:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -227,7 +321,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 var Pass = __webpack_require__(1);
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(23);
+var fragment = __webpack_require__(24);
 
 function VignettePass(boost, reduction) {
   Pass.call(this);
@@ -252,7 +346,7 @@ VignettePass.prototype.run = function(composer) {
 
 /***/ }),
 
-/***/ 23:
+/***/ 24:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
@@ -267,7 +361,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 
 var Pass = __webpack_require__(1);
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(10);
+var fragment = __webpack_require__(11);
 
 function CopyPass() {
   Pass.call(this);
@@ -327,7 +421,7 @@ module.exports.BlendMode = {
 
 var THREE = __webpack_require__(0);
 var CopyPass = __webpack_require__(3);
-var Stack = __webpack_require__(11);
+var Stack = __webpack_require__(12);
 var Pass = __webpack_require__(1);
 
 function Composer(renderer, settings) {
@@ -465,6 +559,51 @@ Composer.prototype.setSize = function(w, h) {
 "use strict";
 
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+if (window.location.search) {
+  var params = window.location.search.substr(1).split('&');
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = params[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var param = _step.value;
+
+      var _param$split = param.split('='),
+          _param$split2 = _slicedToArray(_param$split, 2),
+          prop = _param$split2[0],
+          value = _param$split2[1];
+
+      if (prop === 'video') {
+        document.querySelector('#info').style.display = 'none';
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+}
+
+/***/ }),
+
+/***/ 7:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -475,11 +614,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _stats = __webpack_require__(7);
+var _stats = __webpack_require__(8);
 
 var _stats2 = _interopRequireDefault(_stats);
 
-var _inject = __webpack_require__(8);
+var _inject = __webpack_require__(9);
 
 var _inject2 = _interopRequireDefault(_inject);
 
@@ -600,7 +739,7 @@ exports.default = App;
 
 /***/ }),
 
-/***/ 69:
+/***/ 70:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -612,19 +751,21 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+__webpack_require__(6);
+
 var _three = __webpack_require__(0);
 
-var _ThreeApp2 = __webpack_require__(6);
+var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _three2 = __webpack_require__(70);
+var _three2 = __webpack_require__(71);
 
 var _wagner = __webpack_require__(4);
 
 var _wagner2 = _interopRequireDefault(_wagner);
 
-var _VignettePass = __webpack_require__(22);
+var _VignettePass = __webpack_require__(23);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
@@ -745,19 +886,7 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 7:
-/***/ (function(module, exports, __webpack_require__) {
-
-// stats.js - http://github.com/mrdoob/stats.js
-(function(f,e){ true?module.exports=e():"function"===typeof define&&define.amd?define(e):f.Stats=e()})(this,function(){var f=function(){function e(a){c.appendChild(a.dom);return a}function u(a){for(var d=0;d<c.children.length;d++)c.children[d].style.display=d===a?"block":"none";l=a}var l=0,c=document.createElement("div");c.style.cssText="position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000";c.addEventListener("click",function(a){a.preventDefault();
-u(++l%c.children.length)},!1);var k=(performance||Date).now(),g=k,a=0,r=e(new f.Panel("FPS","#0ff","#002")),h=e(new f.Panel("MS","#0f0","#020"));if(self.performance&&self.performance.memory)var t=e(new f.Panel("MB","#f08","#201"));u(0);return{REVISION:16,dom:c,addPanel:e,showPanel:u,begin:function(){k=(performance||Date).now()},end:function(){a++;var c=(performance||Date).now();h.update(c-k,200);if(c>g+1E3&&(r.update(1E3*a/(c-g),100),g=c,a=0,t)){var d=performance.memory;t.update(d.usedJSHeapSize/
-1048576,d.jsHeapSizeLimit/1048576)}return c},update:function(){k=this.end()},domElement:c,setMode:u}};f.Panel=function(e,f,l){var c=Infinity,k=0,g=Math.round,a=g(window.devicePixelRatio||1),r=80*a,h=48*a,t=3*a,v=2*a,d=3*a,m=15*a,n=74*a,p=30*a,q=document.createElement("canvas");q.width=r;q.height=h;q.style.cssText="width:80px;height:48px";var b=q.getContext("2d");b.font="bold "+9*a+"px Helvetica,Arial,sans-serif";b.textBaseline="top";b.fillStyle=l;b.fillRect(0,0,r,h);b.fillStyle=f;b.fillText(e,t,v);
-b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{dom:q,update:function(h,w){c=Math.min(c,h);k=Math.max(k,h);b.fillStyle=l;b.globalAlpha=1;b.fillRect(0,0,r,m);b.fillStyle=f;b.fillText(g(h)+" "+e+" ("+g(c)+"-"+g(k)+")",t,v);b.drawImage(q,d+a,m,n-a,p,d,m,n-a,p);b.fillRect(d+n-a,m,a,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d+n-a,m,a,g((1-h/w)*p))}}};return f});
-
-
-/***/ }),
-
-/***/ 70:
+/***/ 71:
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function() {
@@ -1244,6 +1373,18 @@ else {
 /***/ 8:
 /***/ (function(module, exports, __webpack_require__) {
 
+// stats.js - http://github.com/mrdoob/stats.js
+(function(f,e){ true?module.exports=e():"function"===typeof define&&define.amd?define(e):f.Stats=e()})(this,function(){var f=function(){function e(a){c.appendChild(a.dom);return a}function u(a){for(var d=0;d<c.children.length;d++)c.children[d].style.display=d===a?"block":"none";l=a}var l=0,c=document.createElement("div");c.style.cssText="position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000";c.addEventListener("click",function(a){a.preventDefault();
+u(++l%c.children.length)},!1);var k=(performance||Date).now(),g=k,a=0,r=e(new f.Panel("FPS","#0ff","#002")),h=e(new f.Panel("MS","#0f0","#020"));if(self.performance&&self.performance.memory)var t=e(new f.Panel("MB","#f08","#201"));u(0);return{REVISION:16,dom:c,addPanel:e,showPanel:u,begin:function(){k=(performance||Date).now()},end:function(){a++;var c=(performance||Date).now();h.update(c-k,200);if(c>g+1E3&&(r.update(1E3*a/(c-g),100),g=c,a=0,t)){var d=performance.memory;t.update(d.usedJSHeapSize/
+1048576,d.jsHeapSizeLimit/1048576)}return c},update:function(){k=this.end()},domElement:c,setMode:u}};f.Panel=function(e,f,l){var c=Infinity,k=0,g=Math.round,a=g(window.devicePixelRatio||1),r=80*a,h=48*a,t=3*a,v=2*a,d=3*a,m=15*a,n=74*a,p=30*a,q=document.createElement("canvas");q.width=r;q.height=h;q.style.cssText="width:80px;height:48px";var b=q.getContext("2d");b.font="bold "+9*a+"px Helvetica,Arial,sans-serif";b.textBaseline="top";b.fillStyle=l;b.fillRect(0,0,r,h);b.fillStyle=f;b.fillText(e,t,v);
+b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{dom:q,update:function(h,w){c=Math.min(c,h);k=Math.max(k,h);b.fillStyle=l;b.globalAlpha=1;b.fillRect(0,0,r,m);b.fillStyle=f;b.fillText(g(h)+" "+e+" ("+g(c)+"-"+g(k)+")",t,v);b.drawImage(q,d+a,m,n-a,p,d,m,n-a,p);b.fillRect(d+n-a,m,a,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d+n-a,m,a,g((1-h/w)*p))}}};return f});
+
+
+/***/ }),
+
+/***/ 9:
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 
 
@@ -1259,100 +1400,6 @@ function inject(url) {
     document.body.appendChild(script);
   });
 }
-
-/***/ }),
-
-/***/ 9:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var THREE = __webpack_require__(0);
-
-module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
-
-  var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi;
-  var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
-
-  var typesMap = {
-    sampler2D: { type: 't', value: function() { return new THREE.Texture(); } },
-    samplerCube: { type: 't', value: function() {} },
-
-    bool: { type: 'b', value: function() { return 0; } },
-    int: { type: 'i', value: function() { return 0; } },
-    float: { type: 'f', value: function() { return 0; } },
-
-    vec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
-    vec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
-    vec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
-
-    bvec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
-    bvec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
-    bvec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
-
-    ivec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
-    ivec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
-    ivec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
-
-    mat2: { type: 'v2', value: function() { return new THREE.Matrix2(); } },
-    mat3: { type: 'v3', value: function() { return new THREE.Matrix3(); } },
-    mat4: { type: 'v4', value: function() { return new THREE.Matrix4(); } }
-  };
-
-  var arrayTypesMap = {
-    float: { type: 'fv', value: function() { return []; } },
-    vec3: { type: 'v3v', value: function() { return []; } }
-  };
-
-  var matches;
-  var uniforms = {
-    resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ), default: true },
-    time: { type: 'f', value: Date.now(), default: true },
-    tInput: { type: 't', value: new THREE.Texture(), default: true }
-  };
-
-  var uniformType, uniformName, arraySize;
-
-  while ((matches = regExp.exec(fragmentShaderCode)) !== null) {
-    if (matches.index === regExp.lastIndex) {
-      regExp.lastIndex++;
-    }
-    uniformType = matches[1];
-    uniformName = matches[2];
-
-    uniforms[uniformName] = {
-      type: typesMap[uniformType].type,
-      value: typesMap[uniformType].value()
-    };
-  }
-
-  while ((matches = regExp2.exec(fragmentShaderCode)) !== null) {
-    if (matches.index === regExp.lastIndex) {
-      regExp.lastIndex++;
-    }
-    uniformType = matches[1];
-    uniformName = matches[2];
-    arraySize = matches[3];
-
-    uniforms[uniformName] = {
-      type: arrayTypesMap[uniformType].type,
-      value: arrayTypesMap[uniformType].value()
-    };
-  }
-
-  var shader = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    vertexShader: vertexShaderCode,
-    fragmentShader: fragmentShaderCode,
-    shading: THREE.FlatShading,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true
-  });
-
-  return shader;
-};
 
 /***/ })
 

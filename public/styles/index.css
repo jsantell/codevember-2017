@@ -1,0 +1,60 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  color: white;
+  font-weight: 300;
+  background-color: #333;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  z-index: -1;
+}
+
+#container {
+  margin: 400px auto;
+  width: 80%;
+  height: 100%;
+}
+
+#container a {
+  display: block;
+  margin: 10px;
+}
+
+.experiment video {
+  display: block;
+  max-width: 300px;
+}
+
+.experiment .tag {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  text-decoration: none;
+  padding: 10px;
+}
+.experiment .tag span {
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+@media screen and (min-width: 600px) {
+  #grid {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .experiment {
+    width: 50%;
+  }
+}
+
+@media screen and (min-width: 1000px) {
+  .experiment {
+    width: calc(100% / 3);
+  }
+}

@@ -8,14 +8,16 @@ const data = {
   entries: {},
   html: [],
 };
+
 Object.keys(experiments).map(id => {
   data.entries[id] = `./src/${id}/index.js`;
 
   const meta = experiments[id];
+
   const config = Object.assign({
     title: 'untitled',
     subtitle: '',
-    template: './src/templates/index.hbs',
+    template: `./src/templates/experiment.hbs`,
     id: id,
     filename: `${id}/index.html`,
     inject: false,
@@ -23,6 +25,17 @@ Object.keys(experiments).map(id => {
 
   data.html.push(new html(config));
 });
+
+// Add index
+data.entries.index = `./src/landing/index.js`;
+data.html.push(new html({
+  template: `./src/templates/index.hbs`,
+  filename: `index.html`,
+  inject: false,
+  experiments: Object.keys(experiments)
+    .sort((a, b) => Number(b) - Number(a))
+    .map(id => ({ title: experiments[id].title, id })),
+}));
 
 module.exports = {
   entry: data.entries,
