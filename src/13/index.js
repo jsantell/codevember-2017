@@ -4,17 +4,22 @@ import WAGNER from '@alex_toudic/wagner';
 import BloomPass from '@alex_toudic/wagner/src/passes/bloom/MultiPassBloomPass';
 import fragmentShader from './frag.glsl';
 import vertexShader from './vert.glsl';
+import BarycentricMaterial from '../12/BarycentricMaterial';
 
 const TEXT = 'hyrax';
 const POINTS = 1000;
-const P_SIZE = 8;
-const COLOR_SPEED = 2;
-const TWINKLE_SPEED = 5;
+const P_SIZE = 4;
+const COLOR_SPEED = 0.1;
+const TWINKLE_SPEED = 1;
 const TWINKLE_OFFSET = 100;
 const SCALE = 0.02;
 const SCROLL_RATE = 0.001;
+const ROTATION_SPEED = 0.0002;
+const ROTATION_LIMIT = 0.2;
+const FONT_DEPTH = 10;
 class Experiment extends ThreeApp {
   init() {
+    this.renderer.setClearColor(0x111111);
     this.loader = new FontLoader();
     this.loader.load('../assets/droidsans.typeface.json', font => {
       this.font = font;
@@ -24,16 +29,23 @@ class Experiment extends ThreeApp {
         height: 2,
         curveSegments: 1,
         bevelThickness: 1.5,
-        bevelSegments: 10,
+        bevelSegments: 1,
         bevelEnabled: true,
       });
 
 
-      this.textMesh = new Mesh(this.textGeometry, new MeshBasicMaterial());
-      this.textMesh.scale.set(SCALE, SCALE, SCALE);
+      this.wireframeMaterial = new BarycentricMaterial({
+        width: 0.7,
+        wireframeAlpha: 0.3,
+        color: new Color(0xffffff),
+      });
+      this.textGeometry = new BufferGeometry().fromGeometry(this.textGeometry);
+      this.textMesh = new Mesh(this.textGeometry, this.wireframeMaterial);
+      BarycentricMaterial.applyBarycentricCoordinates(this.textGeometry);
+      this.textMesh.scale.set(SCALE, SCALE, SCALE * -FONT_DEPTH);
       this.textMesh.position.x = -5;
       this.textMesh.updateMatrixWorld();
-
+      this.scene.add(this.textMesh);
       const raycaster = new Raycaster();
       const points = new Float32Array(POINTS * 3);
       const offset = new Float32Array(POINTS);
@@ -94,14 +106,19 @@ class Experiment extends ThreeApp {
     this.renderer.render(this.scene, this.camera);
     this.composer = new WAGNER.Composer(this.renderer);
     this.pass = new BloomPass({
-      blurAmount: 3,
+      zoomBlurStrength: 2,
+      enableZoomBlur: true,
+      blurAmount: 2,
     });
   }
 
   update(t, delta) {
-    this.pivot.rotation.y = Math.sin(t * 0.0002) * 0.2;
+    this.pivot.rotation.y = Math.sin(t * ROTATION_SPEED) * ROTATION_LIMIT;
     if (this.material) {
       this.material.uniforms.time.value = t * 0.001;
+    }
+    if (this.wireframeMaterial) {
+      this.wireframeMaterial.uniforms.wireframeAlpha.value = 0.05 + (Math.sin(t * 0.001) * 0.5 + 0.5) * 0.1;
     }
   }
 
