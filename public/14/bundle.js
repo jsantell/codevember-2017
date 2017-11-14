@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 40);
+/******/ 	return __webpack_require__(__webpack_require__.s = 46);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1060,7 +1060,238 @@ module.exports = function (mesh, opts) {
 
 
 /***/ }),
-/* 26 */
+/* 26 */,
+/* 27 */,
+/* 28 */,
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+//  USAGE :
+//  https://gist.github.com/Samsy/7219c148e6cbd179883a
+
+//  Port by Samsy for Wagner from http://bkcore.com/blog/3d/webgl-three-js-volumetric-light-godrays.html
+
+
+
+var THREE = __webpack_require__(0);
+var Pass = __webpack_require__(1);
+
+var FullBoxBlurPass = __webpack_require__(13);
+
+var vertex = __webpack_require__(2);
+var fragment = __webpack_require__(30);
+
+function Godray(options) {
+
+  Pass.call(this);
+
+  options = options || {};
+
+  this.setShader(vertex, fragment);
+
+  this.blurPass = new FullBoxBlurPass(2);
+
+  this.width = options.width || 512;
+  this.height = options.height || 512;
+
+  this.params.blurAmount = options.blurAmount || 2;
+
+  this.params.fX = 0.5;
+  this.params.fY = 0.5;
+  this.params.fExposure = 0.6;
+  this.params.fDecay = 0.93;
+  this.params.fDensity = 0.88
+  this.params.fWeight = 0.4
+  this.params.fClamp = 1.0
+
+}
+
+module.exports = Godray;
+
+Godray.prototype = Object.create(Pass.prototype);
+Godray.prototype.constructor = Godray;
+
+Godray.prototype.run = function(composer) {
+
+  this.shader.uniforms.fX.value = this.params.fX;
+  this.shader.uniforms.fY.value = this.params.fY;
+  this.shader.uniforms.fExposure.value = this.params.fExposure;
+  this.shader.uniforms.fDecay.value = this.params.fDecay;
+  this.shader.uniforms.fDensity.value = this.params.fDensity;
+  this.shader.uniforms.fWeight.value = this.params.fWeight;
+  this.shader.uniforms.fClamp.value = this.params.fClamp;
+
+  this.blurPass.params.amount = this.params.blurAmount;
+
+  composer.pass(this.blurPass);
+  composer.pass(this.blurPass);
+
+  composer.pass(this.shader);
+
+};
+
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nuniform float fX;\nuniform float fY;\nuniform float fExposure;\nuniform float fDecay;\nuniform float fDensity;\nuniform float fWeight;\nuniform float fClamp;\n\nconst int iSamples = 20;\n\nvoid main()\n{\n\tvec2 deltaTextCoord = vec2(vUv - vec2(fX,fY));\n\tdeltaTextCoord *= 1.0 /  float(iSamples) * fDensity;\n\tvec2 coord = vUv;\n\tfloat illuminationDecay = 1.0;\n\tvec4 FragColor = vec4(0.0);\n\tfor(int i=0; i < iSamples ; i++)\n\t{\n\t\tcoord -= deltaTextCoord;\n\t\tvec4 texel = texture2D(tInput, coord);\n\t\ttexel *= illuminationDecay * fWeight;\n\t\tFragColor += texel;\n\t\tilluminationDecay *= fDecay;\n\t}\n\tFragColor *= fExposure;\n\tFragColor = clamp(FragColor, 0.0, fClamp);\n\tgl_FragColor = FragColor;\n}"
+
+/***/ }),
+/* 31 */,
+/* 32 */,
+/* 33 */,
+/* 34 */,
+/* 35 */,
+/* 36 */,
+/* 37 */,
+/* 38 */,
+/* 39 */,
+/* 40 */,
+/* 41 */,
+/* 42 */,
+/* 43 */,
+/* 44 */,
+/* 45 */,
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+__webpack_require__(6);
+
+var _three = __webpack_require__(0);
+
+var _ThreeApp2 = __webpack_require__(7);
+
+var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
+
+var _BarycentricMaterial = __webpack_require__(47);
+
+var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
+
+var _vert = __webpack_require__(50);
+
+var _vert2 = _interopRequireDefault(_vert);
+
+var _frag = __webpack_require__(51);
+
+var _frag2 = _interopRequireDefault(_frag);
+
+var _wagner = __webpack_require__(4);
+
+var _wagner2 = _interopRequireDefault(_wagner);
+
+var _MultiPassBloomPass = __webpack_require__(14);
+
+var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
+
+var _godraypass = __webpack_require__(29);
+
+var _godraypass2 = _interopRequireDefault(_godraypass);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var COUNT = 40;
+var SCALE = 0.6;
+
+var Experiment = function (_ThreeApp) {
+  _inherits(Experiment, _ThreeApp);
+
+  function Experiment() {
+    _classCallCheck(this, Experiment);
+
+    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
+  }
+
+  _createClass(Experiment, [{
+    key: 'init',
+    value: function init() {
+      this.renderer.setClearColor(0x222222);
+      this.objects = [];
+      for (var i = 0; i < COUNT; i++) {
+        var rot = i / COUNT * Math.PI * 2;
+        var obj = new _three.OctahedronBufferGeometry(1, 0);
+        //const obj = new TetrahedronBufferGeometry(1, 0);
+        _BarycentricMaterial2.default.applyBarycentricCoordinates(obj);
+        var material = new _BarycentricMaterial2.default({
+          width: 2.0
+        });
+        var mesh = new _three.Mesh(obj, material);
+        material.blending = _three.AdditiveBlending;
+        var pivot = new _three.Object3D();
+        pivot.add(mesh);
+        pivot.rotation.z = rot;
+        mesh.position.y = 2;
+        mesh.scale.set(SCALE, SCALE, SCALE);
+        this.scene.add(pivot);
+        this.objects.push(mesh);
+      }
+
+      this.pivot = new _three.Object3D();
+      this.pivot.add(this.camera);
+      this.scene.add(this.pivot);
+      this.camera.position.set(0, 0, 6);
+      this.renderer.render(this.scene, this.camera);
+      this.composer = new _wagner2.default.Composer(this.renderer);
+      this.pass = new _MultiPassBloomPass2.default({
+        blurAmount: 1
+      });
+      this.pass = new _godraypass2.default({});
+      this.pass.params.blurAmount = 0.0;
+      this.pass.params.fDensity = 0.12;
+      this.pass.params.fExposure = 0.2;
+      this.pass.params.fWeight = 0.8;
+    }
+  }, {
+    key: 'update',
+    value: function update(t, delta) {
+      var offsetBoost = (Math.sin(t * 0.00001) * 0.5 + 0.5) * COUNT - 1 + 1;
+      for (var i = 0; i < COUNT; i++) {
+        var offset = i / COUNT * Math.PI * 2 * (1 + 6 * Math.sin(t * 0.0001 - Math.PI / 2) * 0.5 + 0.5);
+        var object = this.objects[i];
+        var time = offset + t * 0.001;
+        //object.position.y = Math.sin((offset ) + t * 0.001) + 1.2;
+        var val = Math.sin(time) * 0.5 + 0.5;
+        object.rotation.y = time % Math.PI * 2;
+        //object.rotation.y = Math.PI * 2 * val;
+        object.scale.y = val * SCALE * 2 + SCALE;
+        object.scale.z = val * SCALE * 2 + SCALE;
+        object.rotation.y = time % Math.PI * 2;
+      }
+      //this.pivot.rotation.y = t * 0.001;
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      this.composer.reset();
+      this.composer.render(this.scene, this.camera);
+      this.composer.pass(this.pass);
+      this.composer.toScreen();
+    }
+  }]);
+
+  return Experiment;
+}(_ThreeApp3.default);
+
+exports.default = new Experiment();
+
+/***/ }),
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1074,11 +1305,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _barycentricVert = __webpack_require__(27);
+var _barycentricVert = __webpack_require__(48);
 
 var _barycentricVert2 = _interopRequireDefault(_barycentricVert);
 
-var _barycentricFrag = __webpack_require__(28);
+var _barycentricFrag = __webpack_require__(49);
 
 var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
 
@@ -1192,155 +1423,25 @@ var BarycentricMaterial = function (_ShaderMaterial) {
 exports.default = BarycentricMaterial;
 
 /***/ }),
-/* 27 */
+/* 48 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
+module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\nvarying vec3 vPosition;\nvarying vec3 wPosition;\n\nvoid main() {\n  vBC = barycentric;\n  vPosition = position;\n  wPosition = (modelMatrix * vec4(position, 1.0)).xyz;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
 
 /***/ }),
-/* 28 */
+/* 49 */
 /***/ (function(module, exports) {
 
-module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  vec3 color = mix(wireframeColor, color, factor);\n  float a = mix(wireframeAlpha, alpha, factor);\n  gl_FragColor = vec4(color, a);\n}\n"
+module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\nvarying vec3 vPosition;\nvarying vec3 wPosition;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  float a = mix(wireframeAlpha, alpha, factor);\n  float l = length(vPosition);\n  float wl = length(wPosition);\n  float h = map_1_0(wl, 0.0, 5.0, 0.3, 0.8);\n  h = vPosition.x * 0.5 + h;\n  float s = map_1_0(vPosition.y, -1.0, 1.0, 0.5, 1.0);\n//  vec3 c = hsl2rgb(h, abs(vPosition.z)*2.0, 0.5);\n  vec3 c = hsl2rgb_2_2(h, s, 0.5);\n  gl_FragColor = vec4(c, a);\n}\n"
 
 /***/ }),
-/* 29 */,
-/* 30 */,
-/* 31 */,
-/* 32 */,
-/* 33 */,
-/* 34 */,
-/* 35 */,
-/* 36 */,
-/* 37 */,
-/* 38 */,
-/* 39 */,
-/* 40 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-__webpack_require__(6);
-
-var _three = __webpack_require__(0);
-
-var _ThreeApp2 = __webpack_require__(7);
-
-var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
-
-var _BarycentricMaterial = __webpack_require__(26);
-
-var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
-
-var _vert = __webpack_require__(41);
-
-var _vert2 = _interopRequireDefault(_vert);
-
-var _frag = __webpack_require__(42);
-
-var _frag2 = _interopRequireDefault(_frag);
-
-var _wagner = __webpack_require__(4);
-
-var _wagner2 = _interopRequireDefault(_wagner);
-
-var _MultiPassBloomPass = __webpack_require__(14);
-
-var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var PLANES = 15;
-
-var Experiment = function (_ThreeApp) {
-  _inherits(Experiment, _ThreeApp);
-
-  function Experiment() {
-    _classCallCheck(this, Experiment);
-
-    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
-  }
-
-  _createClass(Experiment, [{
-    key: 'init',
-    value: function init() {
-      this.planes = [];
-      for (var i = 0; i < PLANES; i++) {
-        var plane = new _three.PlaneBufferGeometry(1, 1, 7, 7);
-        _BarycentricMaterial2.default.applyBarycentricCoordinates(plane);
-        var planeMaterial = new _BarycentricMaterial2.default({
-          width: 2.0
-        });
-        var planeMesh = new _three.Mesh(plane, planeMaterial);
-        planeMesh.position.z = -i * 0.5;
-        var scale = 1 + (i + 1) * 0.2;
-        planeMesh.scale.set(scale, scale, scale);
-        this.scene.add(planeMesh);
-        this.planes.push(planeMesh);
-      }
-
-      this.pivot = new _three.Object3D();
-      this.pivot.add(this.camera);
-      this.scene.add(this.pivot);
-      this.camera.position.set(0, 0, 0.1);
-      this.renderer.render(this.scene, this.camera);
-      this.composer = new _wagner2.default.Composer(this.renderer);
-      this.pass = new _MultiPassBloomPass2.default({
-        blurAmount: 3
-      });
-    }
-  }, {
-    key: 'update',
-    value: function update(t, delta) {
-      // this.pivot.rotation.y = t * 0.001;
-      for (var i = 0; i < this.planes.length; i++) {
-        var plane = this.planes[i];
-        var lag = Math.PI * 2 * i / this.planes.length;
-        var r = Math.sin(lag + t * 0.005) / 2 + 0.5;
-        var g = Math.sin(lag + t * 0.005 + 4) / 2 + 0.5;
-        var b = Math.sin(lag + t * 0.005 + 2) / 2 + 0.5;
-        plane.material.uniforms.wireframeColor.value = new _three.Color(r, g, b);
-        plane.rotation.z = t * 0.0001 + lag / 2;
-        var scale = Math.cos(lag + t * 0.001) / 2 + 0.5 + lag / 2 + 1;
-        plane.scale.set(scale, scale, scale);
-      }
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      this.composer.reset();
-      this.composer.render(this.scene, this.camera);
-      this.composer.pass(this.pass);
-      this.composer.toScreen();
-    }
-  }]);
-
-  return Experiment;
-}(_ThreeApp3.default);
-
-exports.default = new Experiment();
-
-/***/ }),
-/* 41 */
+/* 50 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n  //gl_Position = vec4(position, 1.0);\n}\n"
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nvarying vec3 vPosition;\n\nvoid main() {\n  vUv = uv;\n  vPosition = position;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n  //gl_Position = vec4(position, 1.0);\n}\n"
 
 /***/ }),
-/* 42 */
+/* 51 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float uTime;\nuniform float uDelta;\nuniform vec2 uResolution;\nuniform float uPixelRatio;\nvarying vec2 vUv;\n\nvoid main() {\n  float stripes = sin(uTime * 0.001)mod(floor(fract(sin(uTime * 0.1 + vUv.y)) * 10.0), 2.0);\n  gl_FragColor = vec4(stripes);\n}\n"
