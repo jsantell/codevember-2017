@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 74);
+/******/ 	return __webpack_require__(__webpack_require__.s = 78);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -313,7 +313,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 /***/ }),
 
-/***/ 23:
+/***/ 24:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -321,7 +321,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 var Pass = __webpack_require__(1);
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(24);
+var fragment = __webpack_require__(25);
 
 function VignettePass(boost, reduction) {
   Pass.call(this);
@@ -346,7 +346,7 @@ VignettePass.prototype.run = function(composer) {
 
 /***/ }),
 
-/***/ 24:
+/***/ 25:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
@@ -739,7 +739,7 @@ exports.default = App;
 
 /***/ }),
 
-/***/ 74:
+/***/ 78:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -759,19 +759,19 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _vert = __webpack_require__(75);
+var _vert = __webpack_require__(79);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(76);
+var _frag = __webpack_require__(80);
 
 var _frag2 = _interopRequireDefault(_frag);
 
-var _pointsFrag = __webpack_require__(77);
+var _pointsFrag = __webpack_require__(81);
 
 var _pointsFrag2 = _interopRequireDefault(_pointsFrag);
 
-var _pointsVert = __webpack_require__(78);
+var _pointsVert = __webpack_require__(82);
 
 var _pointsVert2 = _interopRequireDefault(_pointsVert);
 
@@ -779,7 +779,7 @@ var _wagner = __webpack_require__(4);
 
 var _wagner2 = _interopRequireDefault(_wagner);
 
-var _VignettePass = __webpack_require__(23);
+var _VignettePass = __webpack_require__(24);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
@@ -920,31 +920,10 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 75:
+/***/ 79:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float size;\nvarying vec3 vBC;\nattribute vec3 barycentric;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
-
-/***/ }),
-
-/***/ 76:
-/***/ (function(module, exports) {
-
-module.exports = "#extension GL_OES_standard_derivatives : enable\n#define GLSLIFY 1\n\nuniform vec3 color;\nuniform vec3 wireframeColor;\nuniform float rms;\nvarying vec3 vBC;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\nfloat edgeFactor(vec3 bc){\n  vec3 d = fwidth(bc);\n  vec3 a3 = smoothstep(vec3(0.0), d*1.5, bc);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  vec3 c = mix(wireframeColor, color, edgeFactor(vBC));\n  gl_FragColor = vec4(c, 1.0);\n}\n"
-
-/***/ }),
-
-/***/ 77:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform sampler2D sprite;\nuniform vec3 color;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float alpha = smoothstep(0.1, 0.9, tex.r);\n  gl_FragColor = vec4(color, alpha);\n}\n"
-
-/***/ }),
-
-/***/ 78:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float size;\nuniform float rms;\n\nvoid main() {\n  //vec3 p = position + (smoothstep(0.2, 0.5, rms) * 0.1 * position);\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size;\n}\n"
 
 /***/ }),
 
@@ -957,6 +936,27 @@ u(++l%c.children.length)},!1);var k=(performance||Date).now(),g=k,a=0,r=e(new f.
 1048576,d.jsHeapSizeLimit/1048576)}return c},update:function(){k=this.end()},domElement:c,setMode:u}};f.Panel=function(e,f,l){var c=Infinity,k=0,g=Math.round,a=g(window.devicePixelRatio||1),r=80*a,h=48*a,t=3*a,v=2*a,d=3*a,m=15*a,n=74*a,p=30*a,q=document.createElement("canvas");q.width=r;q.height=h;q.style.cssText="width:80px;height:48px";var b=q.getContext("2d");b.font="bold "+9*a+"px Helvetica,Arial,sans-serif";b.textBaseline="top";b.fillStyle=l;b.fillRect(0,0,r,h);b.fillStyle=f;b.fillText(e,t,v);
 b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{dom:q,update:function(h,w){c=Math.min(c,h);k=Math.max(k,h);b.fillStyle=l;b.globalAlpha=1;b.fillRect(0,0,r,m);b.fillStyle=f;b.fillText(g(h)+" "+e+" ("+g(c)+"-"+g(k)+")",t,v);b.drawImage(q,d+a,m,n-a,p,d,m,n-a,p);b.fillRect(d+n-a,m,a,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d+n-a,m,a,g((1-h/w)*p))}}};return f});
 
+
+/***/ }),
+
+/***/ 80:
+/***/ (function(module, exports) {
+
+module.exports = "#extension GL_OES_standard_derivatives : enable\n#define GLSLIFY 1\n\nuniform vec3 color;\nuniform vec3 wireframeColor;\nuniform float rms;\nvarying vec3 vBC;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\nfloat edgeFactor(vec3 bc){\n  vec3 d = fwidth(bc);\n  vec3 a3 = smoothstep(vec3(0.0), d*1.5, bc);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  vec3 c = mix(wireframeColor, color, edgeFactor(vBC));\n  gl_FragColor = vec4(c, 1.0);\n}\n"
+
+/***/ }),
+
+/***/ 81:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform sampler2D sprite;\nuniform vec3 color;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float alpha = smoothstep(0.1, 0.9, tex.r);\n  gl_FragColor = vec4(color, alpha);\n}\n"
+
+/***/ }),
+
+/***/ 82:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float size;\nuniform float rms;\n\nvoid main() {\n  //vec3 p = position + (smoothstep(0.2, 0.5, rms) * 0.1 * position);\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size;\n}\n"
 
 /***/ }),
 

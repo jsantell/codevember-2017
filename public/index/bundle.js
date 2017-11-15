@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 81);
+/******/ 	return __webpack_require__(__webpack_require__.s = 85);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -319,7 +319,50 @@ Composer.prototype.setSize = function(w, h) {
 
 
 /***/ }),
-/* 6 */,
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+if (window.location.search) {
+  var params = window.location.search.substr(1).split('&');
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = params[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var param = _step.value;
+
+      var _param$split = param.split('='),
+          _param$split2 = _slicedToArray(_param$split, 2),
+          prop = _param$split2[0],
+          value = _param$split2[1];
+
+      if (prop === 'video') {
+        document.querySelector('#info').style.display = 'none';
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+}
+
+/***/ }),
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -955,12 +998,212 @@ BrightnessContrastPass.prototype.run = function(composer) {
 module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float contrast;\nuniform sampler2D tInput;\n\nvarying vec2 vUv;\n\nvoid main() {\n\n  vec3 color = texture2D(tInput, vUv).rgb;\n  vec3 colorContrasted = (color) * contrast;\n  vec3 bright = colorContrasted + vec3(brightness,brightness,brightness);\n  gl_FragColor.rgb = bright;\n  gl_FragColor.a = 1.;\n\n}"
 
 /***/ }),
-/* 23 */,
+/* 23 */
+/***/ (function(module, exports) {
+
+module.exports = function (mesh, opts) {
+  if (!opts) opts = {};
+  var vars = opts.attributes ? {} : null;
+  var vkeys = vars && Object.keys(opts.attributes)
+  if (vars) {
+    for (var k = 0; k < vkeys.length; k++) {
+      vars[vkeys[k]] = []
+    }
+  }
+
+  var i, j;
+  var pts = [];
+  var cells = [];
+  var barycentricAttrs = [];
+
+  var mpts = mesh.positions;
+  var mcells = mesh.cells;
+
+  var c = 0;
+  for (i = 0; i < mesh.cells.length; i++) {
+    var cell = mcells[i];
+    if (cell.length === 3) {
+      pts.push(mpts[cell[0]]);
+      pts.push(mpts[cell[1]]);
+      pts.push(mpts[cell[2]]);
+      barycentricAttrs.push([0, 0]);
+      barycentricAttrs.push([1, 0]);
+      barycentricAttrs.push([0, 1]);
+      cells.push(c++);
+      cells.push(c++);
+      cells.push(c++);
+      if (vkeys) {
+        for (j = 0; j < vkeys.length; j++) {
+          var vkey = vkeys[j];
+          vars[vkey].push(opts.attributes[vkey][cell[0]]);
+          vars[vkey].push(opts.attributes[vkey][cell[1]]);
+          vars[vkey].push(opts.attributes[vkey][cell[2]]);
+        }
+      }
+    }
+  }
+
+  var ret = {
+    positions: pts,
+    attributes: vars,
+    barycentric: barycentricAttrs
+  };
+
+  if (mesh.cells) {
+    ret.cells = cells;
+  }
+
+  return ret;
+};
+
+
+/***/ }),
 /* 24 */,
 /* 25 */,
-/* 26 */,
-/* 27 */,
-/* 28 */,
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _three = __webpack_require__(0);
+
+var _barycentricVert = __webpack_require__(27);
+
+var _barycentricVert2 = _interopRequireDefault(_barycentricVert);
+
+var _barycentricFrag = __webpack_require__(28);
+
+var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
+
+var _glslSolidWireframe = __webpack_require__(23);
+
+var _glslSolidWireframe2 = _interopRequireDefault(_glslSolidWireframe);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var DEFAULTS = {
+  color: new _three.Color(0x333333),
+  wireframeColor: new _three.Color(0xeeeeee),
+  alpha: 0.0,
+  wireframeAlpha: 1.0,
+  width: 5.0
+};
+
+var BarycentricMaterial = function (_ShaderMaterial) {
+  _inherits(BarycentricMaterial, _ShaderMaterial);
+
+  function BarycentricMaterial() {
+    var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, BarycentricMaterial);
+
+    var props = Object.assign({}, DEFAULTS, config);
+    return _possibleConstructorReturn(this, (BarycentricMaterial.__proto__ || Object.getPrototypeOf(BarycentricMaterial)).call(this, {
+      uniforms: {
+        color: { value: props.color },
+        wireframeColor: { value: props.wireframeColor },
+        alpha: { value: props.alpha },
+        wireframeAlpha: { value: props.wireframeAlpha },
+        width: { value: props.width }
+      },
+      vertexShader: _barycentricVert2.default,
+      fragmentShader: _barycentricFrag2.default,
+      transparent: true,
+      side: _three.DoubleSide,
+      depthWrite: false
+    }));
+  }
+
+  _createClass(BarycentricMaterial, null, [{
+    key: 'applyBarycentricCoordinates',
+    value: function applyBarycentricCoordinates(geometry) {
+      var positions = [];
+      var cells = [];
+      var verts = geometry.attributes.position.array;
+      var vertCount = geometry.attributes.position.count;
+      var faces = []; //geometry.index ? geometry.index.array : [];
+
+      if (!faces.length) {
+        for (var i = 0; i < vertCount - 2; i++) {
+          faces.push(i);
+          faces.push(i + 1);
+          faces.push(i + 2);
+        }
+      }
+
+      var faceCount = faces.length / 3;
+
+      // Convert from long arrays to array-of-arrays
+      for (var _i = 0; _i < vertCount; _i++) {
+        positions.push([verts[_i * 3 + 0], verts[_i * 3 + 1], verts[_i * 3 + 2]]);
+      }
+      for (var _i2 = 0; _i2 < faceCount; _i2++) {
+        cells.push([faces[_i2 * 3 + 0], faces[_i2 * 3 + 1], faces[_i2 * 3 + 2]]);
+      }
+
+      var ret = (0, _glslSolidWireframe2.default)({
+        positions: positions,
+        cells: cells
+      });
+      // Convert back from array-of-arrays to long array
+      var barycentric = new Float32Array(ret.barycentric.length * 2);
+      var count = 0;
+      for (var _i3 = 0; _i3 < ret.barycentric.length; _i3++) {
+        barycentric[count++] = ret.barycentric[_i3][0];
+        barycentric[count++] = ret.barycentric[_i3][1];
+      }
+      /*
+          count = 0;
+          for (let i = 0; i < ret.positions.length; i++) {
+            verts[count++] = ret.positions[i][0];
+            verts[count++] = ret.positions[i][1];
+            verts[count++] = ret.positions[i][2];
+          }
+      
+          count = 0;
+          for (let i = 0; i < ret.cells.length; i++) {
+            faces[count++] = ret.cells[i][0];
+            faces[count++] = ret.cells[i][1];
+            faces[count++] = ret.cells[i][2];
+          }
+          geometry.attributes.position.needsUpdate = true;
+          geometry.index.needsUpdate = true;
+      */
+      geometry.addAttribute('barycentric', new _three.BufferAttribute(barycentric, 2));
+    }
+  }]);
+
+  return BarycentricMaterial;
+}(_three.ShaderMaterial);
+
+exports.default = BarycentricMaterial;
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports) {
+
+module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  vec3 color = mix(wireframeColor, color, factor);\n  float a = mix(wireframeAlpha, alpha, factor);\n  gl_FragColor = vec4(color, a);\n}\n"
+
+/***/ }),
 /* 29 */,
 /* 30 */,
 /* 31 */,
@@ -1013,7 +1256,11 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 /* 78 */,
 /* 79 */,
 /* 80 */,
-/* 81 */
+/* 81 */,
+/* 82 */,
+/* 83 */,
+/* 84 */,
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1024,6 +1271,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+__webpack_require__(6);
 
 var _three = __webpack_require__(0);
 
@@ -1039,13 +1288,17 @@ var _MultiPassBloomPass = __webpack_require__(14);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _frag = __webpack_require__(82);
+var _frag = __webpack_require__(86);
 
 var _frag2 = _interopRequireDefault(_frag);
 
-var _vert = __webpack_require__(83);
+var _vert = __webpack_require__(87);
 
 var _vert2 = _interopRequireDefault(_vert);
+
+var _BarycentricMaterial = __webpack_require__(26);
+
+var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1055,11 +1308,21 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var TEXT = 'Codevember';
-var TEXT2 = '2017';
+var TEXT = 'codevember';
+var TEXT_OFFSET = -TEXT.length + 0.5;
+var POINTS = 1000;
 var P_SIZE = 10;
+var COLOR_SPEED = 10;
+var TWINKLE_SPEED = 3;
+var TWINKLE_OFFSET = 100;
 var SCALE = 0.02;
 var SCROLL_RATE = 0.001;
+var ROTATION_SPEED = 0.0002;
+var ROTATION_LIMIT_Y = 0.1;
+var ROTATION_LIMIT_X = 0.2;
+var FONT_DEPTH = 5;
+var CAMERA_Y = 0;
+var FONT_PATH = '../assets/hyrax-regular.typeface.json' || '../assets/droidsans.typeface.json';
 
 var Experiment = function (_ThreeApp) {
   _inherits(Experiment, _ThreeApp);
@@ -1078,83 +1341,133 @@ var Experiment = function (_ThreeApp) {
       // Set the video tiles to be almost "below the fold"
       document.querySelector('#container').style.marginTop = window.innerHeight - 100 + 'px';
 
+      this.renderer.setClearColor(0x111111);
       this.loader = new _three.FontLoader();
-      this.loader.load('assets/droidsans.typeface.json', function (font) {
-        console.log('loade font');
+      this.loader.load(FONT_PATH, function (font) {
         _this2.font = font;
-        _this2.geometry = new _three.TextGeometry(TEXT, {
+        _this2.textGeometry = new _three.TextGeometry(TEXT, {
           font: _this2.font,
           size: 150,
           height: 2,
-          curveSegments: 1,
+          curveSegments: 5,
           bevelThickness: 1.5,
-          bevelSegments: 10,
-          bevelEnabled: true
-        });
-        _this2.geometry2 = new _three.TextGeometry(TEXT2, {
-          font: _this2.font,
-          size: 90,
-          height: 2,
-          curveSegments: 4,
-          bevelThickness: 1.5,
-          bevelSegments: 3,
+          bevelSegments: 1,
           bevelEnabled: true
         });
 
+        _this2.wireframeMaterial = new _BarycentricMaterial2.default({
+          width: 0.7,
+          wireframeAlpha: 0.3,
+          color: new _three.Color(0xffffff)
+        });
+        _this2.wireframeMaterial.blending = _three.AdditiveBlending;
+        _this2.textGeometry = new _three.BufferGeometry().fromGeometry(_this2.textGeometry);
+        _this2.textMesh = new _three.Mesh(_this2.textGeometry, _this2.wireframeMaterial);
+        _BarycentricMaterial2.default.applyBarycentricCoordinates(_this2.textGeometry);
+        _this2.textMesh.scale.set(SCALE, SCALE, SCALE * -FONT_DEPTH);
+        _this2.textMesh.position.x = TEXT_OFFSET;
+        _this2.textMesh.updateMatrixWorld();
+        var raycaster = new _three.Raycaster();
+        var points = new Float32Array(POINTS * 3);
+        var offset = new Float32Array(POINTS);
+        var vec = new _three.Vector2();
+        var i = 0;
+        var bailout = 0;
+        var t = performance.now();
+        while (i < POINTS * 3) {
+          vec.set(Math.random() * 2 - 1, Math.random() * 2 - 1);
+          raycaster.setFromCamera(vec, _this2.camera);
+          var intersects = raycaster.intersectObject(_this2.textMesh);
+
+          var _iteratorNormalCompletion = true;
+          var _didIteratorError = false;
+          var _iteratorError = undefined;
+
+          try {
+            for (var _iterator = intersects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+              var intersect = _step.value;
+
+              offset[i / 3] = Math.random();
+              points[i++] = intersect.point.x;
+              points[i++] = intersect.point.y;
+              points[i++] = intersect.point.z;
+            }
+          } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion && _iterator.return) {
+                _iterator.return();
+              }
+            } finally {
+              if (_didIteratorError) {
+                throw _iteratorError;
+              }
+            }
+          }
+        }
+        console.log('Generated ' + POINTS + ' intersections in ' + (performance.now() - t) / 1000 + 's');
+        _this2.geometry = new _three.BufferGeometry();
+        _this2.geometry.addAttribute('position', new _three.BufferAttribute(points, 3));
+        _this2.geometry.addAttribute('offset', new _three.BufferAttribute(offset, 1));
         _this2.material = new _three.ShaderMaterial({
           transparent: true,
           fragmentShader: _frag2.default,
           vertexShader: _vert2.default,
           uniforms: {
             time: { value: 0 },
+            twinkleSpeed: { value: TWINKLE_SPEED },
+            twinkleOffset: { value: TWINKLE_OFFSET },
             size: { value: P_SIZE },
+            colorSpeed: { value: COLOR_SPEED },
             alphaMap: { value: 0 }
           },
           depthWrite: false
         });
-
         _this2.material.blending = _three.AdditiveBlending;
+
         _this2.textureLoader = new _three.TextureLoader();
-        _this2.textureLoader.load('assets/particle.jpg', function (texture) {
+        _this2.textureLoader.load('../assets/particle.jpg', function (texture) {
           _this2.material.uniforms.alphaMap.value = texture;
         });
+
         _this2.points = new _three.Points(_this2.geometry, _this2.material);
-        _this2.points.scale.set(SCALE, SCALE, SCALE);
-        _this2.points.position.set(-7, 1, 0);
-        _this2.pointPivot = new _three.Object3D();
-        _this2.pointPivot.add(_this2.points);
-        //this.scene.add(this.pointPivot);
-        _this2.points2 = new _three.Points(_this2.geometry2, _this2.material);
-        _this2.points2.scale.set(SCALE, SCALE, SCALE);
-        _this2.points2.position.set(-1, -1, 0);
-        _this2.pointPivot2 = new _three.Object3D();
-        _this2.pointPivot2.add(_this2.points2);
-        //this.scene.add(this.pointPivot2);
+        _this2.pointsPivot = new _three.Object3D();
+        _this2.scene.add(_this2.pointsPivot);
+        _this2.pointsPivot.add(_this2.textMesh);
+        _this2.pointsPivot.add(_this2.points);
       });
 
       this.pivot = new _three.Object3D();
       this.pivot.add(this.camera);
-      this.pivot.rotation.x = 0.05;
       this.scene.add(this.pivot);
-      this.camera.position.set(0, 0, 10);
+      this.camera.position.set(0, CAMERA_Y, 15);
       this.renderer.render(this.scene, this.camera);
       this.composer = new _wagner2.default.Composer(this.renderer);
       this.pass = new _MultiPassBloomPass2.default({
-        blurAmount: 3
+        zoomBlurStrength: 0.2,
+        enableZoomBlur: true,
+        blurAmount: 0.9
       });
 
       window.addEventListener('scroll', function (e) {
         var scroll = window.pageYOffset || document.documentElement.scrollTop;
-        if (_this2.points) {
-          _this2.pointPivot.rotation.y = -scroll * SCROLL_RATE;
-          _this2.pointPivot2.rotation.y = scroll * SCROLL_RATE;
-        }
+        _this2.camera.position.y = CAMERA_Y + scroll * SCROLL_RATE;
       }, supportsPassive() ? { passive: true } : false);
     }
   }, {
     key: 'update',
     value: function update(t, delta) {
-      this.pivot.rotation.y = t * 0.0001;
+      if (!this.pointsPivot) {
+        this.offset = t;
+        return;
+      }
+      t = t - this.offset;
+      this.camera.lookAt(this.scene.position);
+      this.material.uniforms.time.value = t * 0.001;
+      this.wireframeMaterial.uniforms.wireframeAlpha.value = 0.05 + (Math.sin(t * 0.001) * 0.5 + 0.5) * 0.1;
+      this.pointsPivot.rotation.y = t * 0.00005;
     }
   }, {
     key: 'render',
@@ -1190,16 +1503,16 @@ function supportsPassive() {
 }
 
 /***/ }),
-/* 82 */
+/* 86 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D alphaMap;\nvarying vec3 vPosition;\nuniform vec3 color;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(alphaMap, gl_PointCoord);\n  float l = length(vPosition) * 2.0;\n  float t = sin(time*2.0) * 2.0;\n  float m = map_1_0(t+(l), -3.0, 7.0, 0.2, 0.6);\n  vec3 hsl = hsl2rgb_2_2(m, 0.8, 0.5);\n  float alpha = smoothstep(0.1, 0.8, tex.r) * 0.005 * l;//smoothstep(1.0, 2.0, l);\n  gl_FragColor = vec4(vec3(1.0), alpha);\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform sampler2D alphaMap;\nuniform vec3 color;\nuniform float colorSpeed;\nuniform float time;\n\nvarying vec3 vPosition;\nvarying float vAlphaOffset;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(alphaMap, gl_PointCoord);\n  float l = clamp(length(vPosition) / 16.0, 0.0, 0.5);\n  float t = fract(l +  (time * colorSpeed * 0.001));\n  float m = t;//map(t, 0.0, 1.0, 0.3, 0.8);\n  vec3 hsl = hsl2rgb_2_2(m, 0.8, 0.5);\n  float alpha = smoothstep(0.1, 0.9, tex.r) * vAlphaOffset;\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
 
 /***/ }),
-/* 83 */
+/* 87 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float size;\nvarying vec3 vPosition;\n\nvoid main() {\n  vPosition = position;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size * length(modelViewMatrix * vec4(position, 1.0)) / 4.0;\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float twinkleSpeed;\nuniform float twinkleOffset;\nuniform float size;\nuniform float time;\n\nattribute float offset;\n\nvarying vec3 vPosition;\nvarying float vAlphaOffset;\n\nvoid main() {\n  vAlphaOffset = sin((time * twinkleSpeed) + offset * twinkleOffset) * 0.5 + 0.5;\n  vPosition = position;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size;// length(modelViewMatrix * vec4(position, 1.0));\n}\n"
 
 /***/ })
 /******/ ]);

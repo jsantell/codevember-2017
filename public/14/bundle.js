@@ -998,9 +998,7 @@ BrightnessContrastPass.prototype.run = function(composer) {
 module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float contrast;\nuniform sampler2D tInput;\n\nvarying vec2 vUv;\n\nvoid main() {\n\n  vec3 color = texture2D(tInput, vUv).rgb;\n  vec3 colorContrasted = (color) * contrast;\n  vec3 bright = colorContrasted + vec3(brightness,brightness,brightness);\n  gl_FragColor.rgb = bright;\n  gl_FragColor.a = 1.;\n\n}"
 
 /***/ }),
-/* 23 */,
-/* 24 */,
-/* 25 */
+/* 23 */
 /***/ (function(module, exports) {
 
 module.exports = function (mesh, opts) {
@@ -1060,6 +1058,8 @@ module.exports = function (mesh, opts) {
 
 
 /***/ }),
+/* 24 */,
+/* 25 */,
 /* 26 */,
 /* 27 */,
 /* 28 */,
@@ -1313,7 +1313,7 @@ var _barycentricFrag = __webpack_require__(49);
 
 var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
 
-var _glslSolidWireframe = __webpack_require__(25);
+var _glslSolidWireframe = __webpack_require__(23);
 
 var _glslSolidWireframe2 = _interopRequireDefault(_glslSolidWireframe);
 
