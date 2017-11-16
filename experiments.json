@@ -112,6 +112,14 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "16": {
+      "title": "waves",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" },
+        { "name": "tween" }
+      ]
     }
   }
 }

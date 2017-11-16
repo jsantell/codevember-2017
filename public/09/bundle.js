@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 83);
+/******/ 	return __webpack_require__(__webpack_require__.s = 89);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -751,7 +751,7 @@ b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{do
 
 /***/ }),
 
-/***/ 83:
+/***/ 89:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -771,7 +771,7 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _three2 = __webpack_require__(84);
+var _three2 = __webpack_require__(90);
 
 var _wagner = __webpack_require__(4);
 
@@ -898,7 +898,28 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 84:
+/***/ 9:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = inject;
+function inject(url) {
+  return new Promise(function (resolve) {
+    var script = document.createElement('script');
+    script.src = url;
+    script.onload = resolve;
+    document.body.appendChild(script);
+  });
+}
+
+/***/ }),
+
+/***/ 90:
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function() {
@@ -1379,27 +1400,6 @@ else {
 }).call(this);
 
 
-
-/***/ }),
-
-/***/ 9:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = inject;
-function inject(url) {
-  return new Promise(function (resolve) {
-    var script = document.createElement('script');
-    script.src = url;
-    script.onload = resolve;
-    document.body.appendChild(script);
-  });
-}
 
 /***/ })
 

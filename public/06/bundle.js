@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 73);
+/******/ 	return __webpack_require__(__webpack_require__.s = 79);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -268,7 +268,7 @@ exports.default = App;
 
 /***/ }),
 
-/***/ 73:
+/***/ 79:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -290,11 +290,11 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _vert = __webpack_require__(74);
+var _vert = __webpack_require__(80);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(75);
+var _frag = __webpack_require__(81);
 
 var _frag2 = _interopRequireDefault(_frag);
 
@@ -360,20 +360,6 @@ exports.default = new Experiment002();
 
 /***/ }),
 
-/***/ 74:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvoid main() {\n  gl_Position = vec4(position, 1.0);\n}\n"
-
-/***/ }),
-
-/***/ 75:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float uTime;\nuniform float uDelta;\nuniform vec2 uResolution;\nuniform float uPixelRatio;\nfloat when_lt_1_0(float x, float y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec2 when_lt_1_0(vec2 x, vec2 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec3 when_lt_1_0(vec3 x, vec3 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec4 when_lt_1_0(vec4 x, vec4 y) {\n  return max(sign(y - x), 0.0);\n}\n\n\n\nfloat when_gt_2_1(float x, float y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec2 when_gt_2_1(vec2 x, vec2 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec3 when_gt_2_1(vec3 x, vec3 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec4 when_gt_2_1(vec4 x, vec4 y) {\n  return max(sign(x - y), 0.0);\n}\n\n\n\nfloat map_5_2(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_5_2(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_5_2(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_5_2(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat qinticIn_4_3(float t) {\n  return pow(t, 5.0);\n}\n\n\n\nfloat qinticOut_3_4(float t) {\n  return 1.0 - (pow(t - 1.0, 5.0));\n}\n\n\n\n\n// https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83\nfloat rand(float n){return fract(sin(n) * 43758.5453123);}\n\nfloat noise(float p){\n  float fl = floor(p);\n  float fc = fract(p);\n  return mix(rand(fl), rand(fl + 1.0), fc);\n}\n\nconst float PI = 3.141592653589793;\nconst float LOOP = 1000.0;\nconst float LENGTH = 0.7;\nconst float SPEED = 3.0;\nconst float MOD = 1.0;\nconst float WAVE_SPEED = 0.001;\nconst float WAVE_DEPTH = 0.03;\nconst float COLUMNS = 30.0;\nconst float ROWS = 30.0;\nconst float F = 6.0;\n\nvoid main() {\n  // magic number 2.0 here because I didn't take into account pixel\n  // ratio during development on a devicePixelRatio === 2 machine\n  // so a quick hack to make it consistent\n  vec2 st = gl_FragCoord.xy / uResolution.xy / uPixelRatio * 2.0;\n  vec2 pos = st / -2.0 + 1.0;\n  float x = gl_FragCoord.x; //floor(pos.x * COLUMNS);\n  float y = pos.y; // floor(pos.y * ROWS) / ROWS;\n  float n = noise(x * MOD);\n  float speed = clamp(n, 0.1, 20.0);\n\n  float elapsed = qinticIn_4_3(mod((uTime * SPEED*speed*0.5) + (LOOP * n), LOOP) * 0.001) * 1.0;\n  vec3 color = vec3(0.0);\n  \n  float length = map_5_2(sin(0.5 * pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH, LENGTH + WAVE_DEPTH);\n\n  // lines\n  float aboveLine = when_lt_1_0(y, elapsed + length);\n  float belowLine = when_lt_1_0(elapsed, y);\n  float smooth = smoothstep(elapsed - y, elapsed, y);\n  float isLine = aboveLine * belowLine;\n \n  // color\n  color = when_lt_1_0(0.0, isLine) * vec3(0.6, 1.0 - pos.y, 0.5);\n  color.r *= when_lt_1_0(length, pos.y) * 1.0;\n \n  float diff = 0.1;\n  float length2 = map_5_2(sin(2.0+0.8*pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH - diff, LENGTH + WAVE_DEPTH - diff);\n  color -= when_lt_1_0(y, elapsed+length2) * when_lt_1_0(elapsed,y) * vec3(0.1);\n  \n  diff = 0.15;\n  length2 = map_5_2(sin(0.7*pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH - diff, LENGTH + WAVE_DEPTH - diff);\n  color -= when_lt_1_0(y, elapsed+length2) * when_lt_1_0(elapsed,y) * vec3(0.1);\n\n  color *= vec3(qinticOut_3_4(pos.y)) * 2.0;\n  gl_FragColor = vec4(color, 1.0);\n}\n"
-
-/***/ }),
-
 /***/ 8:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -383,6 +369,20 @@ u(++l%c.children.length)},!1);var k=(performance||Date).now(),g=k,a=0,r=e(new f.
 1048576,d.jsHeapSizeLimit/1048576)}return c},update:function(){k=this.end()},domElement:c,setMode:u}};f.Panel=function(e,f,l){var c=Infinity,k=0,g=Math.round,a=g(window.devicePixelRatio||1),r=80*a,h=48*a,t=3*a,v=2*a,d=3*a,m=15*a,n=74*a,p=30*a,q=document.createElement("canvas");q.width=r;q.height=h;q.style.cssText="width:80px;height:48px";var b=q.getContext("2d");b.font="bold "+9*a+"px Helvetica,Arial,sans-serif";b.textBaseline="top";b.fillStyle=l;b.fillRect(0,0,r,h);b.fillStyle=f;b.fillText(e,t,v);
 b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{dom:q,update:function(h,w){c=Math.min(c,h);k=Math.max(k,h);b.fillStyle=l;b.globalAlpha=1;b.fillRect(0,0,r,m);b.fillStyle=f;b.fillText(g(h)+" "+e+" ("+g(c)+"-"+g(k)+")",t,v);b.drawImage(q,d+a,m,n-a,p,d,m,n-a,p);b.fillRect(d+n-a,m,a,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d+n-a,m,a,g((1-h/w)*p))}}};return f});
 
+
+/***/ }),
+
+/***/ 80:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nvoid main() {\n  gl_Position = vec4(position, 1.0);\n}\n"
+
+/***/ }),
+
+/***/ 81:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float uTime;\nuniform float uDelta;\nuniform vec2 uResolution;\nuniform float uPixelRatio;\nfloat when_lt_1_0(float x, float y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec2 when_lt_1_0(vec2 x, vec2 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec3 when_lt_1_0(vec3 x, vec3 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec4 when_lt_1_0(vec4 x, vec4 y) {\n  return max(sign(y - x), 0.0);\n}\n\n\n\nfloat when_gt_2_1(float x, float y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec2 when_gt_2_1(vec2 x, vec2 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec3 when_gt_2_1(vec3 x, vec3 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec4 when_gt_2_1(vec4 x, vec4 y) {\n  return max(sign(x - y), 0.0);\n}\n\n\n\nfloat map_5_2(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_5_2(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_5_2(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_5_2(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat qinticIn_3_3(float t) {\n  return pow(t, 5.0);\n}\n\n\n\nfloat qinticOut_4_4(float t) {\n  return 1.0 - (pow(t - 1.0, 5.0));\n}\n\n\n\n\n// https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83\nfloat rand(float n){return fract(sin(n) * 43758.5453123);}\n\nfloat noise(float p){\n  float fl = floor(p);\n  float fc = fract(p);\n  return mix(rand(fl), rand(fl + 1.0), fc);\n}\n\nconst float PI = 3.141592653589793;\nconst float LOOP = 1000.0;\nconst float LENGTH = 0.7;\nconst float SPEED = 3.0;\nconst float MOD = 1.0;\nconst float WAVE_SPEED = 0.001;\nconst float WAVE_DEPTH = 0.03;\nconst float COLUMNS = 30.0;\nconst float ROWS = 30.0;\nconst float F = 6.0;\n\nvoid main() {\n  // magic number 2.0 here because I didn't take into account pixel\n  // ratio during development on a devicePixelRatio === 2 machine\n  // so a quick hack to make it consistent\n  vec2 st = gl_FragCoord.xy / uResolution.xy / uPixelRatio * 2.0;\n  vec2 pos = st / -2.0 + 1.0;\n  float x = gl_FragCoord.x; //floor(pos.x * COLUMNS);\n  float y = pos.y; // floor(pos.y * ROWS) / ROWS;\n  float n = noise(x * MOD);\n  float speed = clamp(n, 0.1, 20.0);\n\n  float elapsed = qinticIn_3_3(mod((uTime * SPEED*speed*0.5) + (LOOP * n), LOOP) * 0.001) * 1.0;\n  vec3 color = vec3(0.0);\n  \n  float length = map_5_2(sin(0.5 * pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH, LENGTH + WAVE_DEPTH);\n\n  // lines\n  float aboveLine = when_lt_1_0(y, elapsed + length);\n  float belowLine = when_lt_1_0(elapsed, y);\n  float smooth = smoothstep(elapsed - y, elapsed, y);\n  float isLine = aboveLine * belowLine;\n \n  // color\n  color = when_lt_1_0(0.0, isLine) * vec3(0.6, 1.0 - pos.y, 0.5);\n  color.r *= when_lt_1_0(length, pos.y) * 1.0;\n \n  float diff = 0.1;\n  float length2 = map_5_2(sin(2.0+0.8*pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH - diff, LENGTH + WAVE_DEPTH - diff);\n  color -= when_lt_1_0(y, elapsed+length2) * when_lt_1_0(elapsed,y) * vec3(0.1);\n  \n  diff = 0.15;\n  length2 = map_5_2(sin(0.7*pos.x*F+(uTime * WAVE_SPEED) + x * PI * 2.0 - PI), 0.0, 1.0, LENGTH - diff, LENGTH + WAVE_DEPTH - diff);\n  color -= when_lt_1_0(y, elapsed+length2) * when_lt_1_0(elapsed,y) * vec3(0.1);\n\n  color *= vec3(qinticOut_4_4(pos.y)) * 2.0;\n  gl_FragColor = vec4(color, 1.0);\n}\n"
 
 /***/ }),
 
