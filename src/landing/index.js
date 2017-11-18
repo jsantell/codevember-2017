@@ -6,6 +6,7 @@ import BloomPass from '@alex_toudic/wagner/src/passes/bloom/MultiPassBloomPass';
 import fragmentShader from './frag.glsl';
 import vertexShader from './vert.glsl';
 import BarycentricMaterial from '../12/BarycentricMaterial';
+import pointsData from './points';
 
 const TEXT = 'codevember';
 const TEXT_OFFSET = -TEXT.length + 0.5;
@@ -27,7 +28,13 @@ class Experiment extends ThreeApp {
     // Set the video tiles to be almost "below the fold"
     document.querySelector('#container').style.marginTop = `${window.innerHeight - 100}px`;
 
-    this.renderer.setClearColor(0x111111);
+    const experiments = document.querySelectorAll('a.experiment');
+    for (let el of experiments) {
+      el.addEventListener('mouseenter', e => this.onMouseEnter(e));
+      el.addEventListener('mouseleave', e => this.onMouseLeave(e));
+    }
+
+    this.renderer.setClearColor(0x101010);
     this.loader = new FontLoader();
     this.loader.load(FONT_PATH, font => {
       this.font = font;
@@ -54,26 +61,16 @@ class Experiment extends ThreeApp {
       this.textMesh.scale.set(SCALE, SCALE, SCALE * -FONT_DEPTH);
       this.textMesh.position.x = TEXT_OFFSET;
       this.textMesh.updateMatrixWorld();
-      const raycaster = new Raycaster();
-      const points = new Float32Array(POINTS * 3);
+     
+      // Call this function to generate points; pasted into a cache at ./points.js
+      // so use that unless we want to generate different results
+      // const points = this.generatePoints();
+      const points = new Float32Array(pointsData);
       const offset = new Float32Array(POINTS);
-      const vec = new Vector2();
-      let i = 0;
-      let bailout = 0;
-      let t = performance.now();
-      while (i < POINTS * 3) {
-        vec.set(Math.random() * 2 - 1, Math.random() * 2 - 1);
-        raycaster.setFromCamera(vec, this.camera);
-        const intersects = raycaster.intersectObject(this.textMesh);
-
-        for (let intersect of intersects) {
-          offset[i/3] = Math.random();
-          points[i++] = intersect.point.x;
-          points[i++] = intersect.point.y;
-          points[i++] = intersect.point.z;
-        }
+      for (let i = 0; i < points.length / 3; i++) {
+        offset[i] = Math.random();
       }
-      console.log(`Generated ${POINTS} intersections in ${(performance.now() - t) / 1000}s`);
+
       this.geometry = new BufferGeometry();
       this.geometry.addAttribute('position', new BufferAttribute(points, 3));
       this.geometry.addAttribute('offset', new BufferAttribute(offset, 1));
@@ -124,6 +121,28 @@ class Experiment extends ThreeApp {
     }, supportsPassive() ? { passive: true } : false);
   }
 
+  generatePoints() {
+    const raycaster = new Raycaster();
+    const points = new Float32Array(POINTS * 3);
+    const vec = new Vector2();
+    let i = 0;
+    let bailout = 0;
+    let t = performance.now();
+    while (i < POINTS * 3) {
+      vec.set(Math.random() * 2 - 1, Math.random() * 2 - 1);
+      raycaster.setFromCamera(vec, this.camera);
+      const intersects = raycaster.intersectObject(this.textMesh);
+
+      for (let intersect of intersects) {
+        points[i++] = intersect.point.x;
+        points[i++] = intersect.point.y;
+        points[i++] = intersect.point.z;
+      }
+    }
+    console.log(`Generated ${POINTS} intersections in ${(performance.now() - t) / 1000}s`);
+    return points;
+  }
+
   update(t, delta) {
     if (!this.pointsPivot) {
       this.offset = t;
@@ -141,6 +160,14 @@ class Experiment extends ThreeApp {
     this.composer.render(this.scene, this.camera);
     this.composer.pass(this.pass);
     this.composer.toScreen();
+  }
+
+  onMouseEnter(e) {
+    e.target.querySelector('video').play();
+  }
+
+  onMouseLeave(e) {
+    e.target.querySelector('video').pause();
   }
 }
 

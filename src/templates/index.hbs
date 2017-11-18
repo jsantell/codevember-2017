@@ -11,8 +11,8 @@
   <div id="container">
     <div id="grid">  
       {{#each htmlWebpackPlugin.options.experiments}}
-      <a href="{{id}}/" title="Codevember 2017 Day {{id}}: {{title}}">
-          <div class="experiment">
+      <a class="experiment" href="{{id}}/" title="Codevember 2017 Day {{id}}: {{title}}">
+          <div>
               <span class="tag"><span>Day {{id}}:</span> {{title}}</span>
               <video src='assets/{{id}}.mp4' loop />
           </div>

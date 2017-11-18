@@ -48,13 +48,13 @@ canvas {
     flex-direction: row;
     justify-content: center;
   }
-  .experiment {
+  .experiment > div {
     width: 50%;
   }
 }
 
 @media screen and (min-width: 1000px) {
-  .experiment {
+  .experiment > div {
     width: calc(100% / 3);
   }
 }
