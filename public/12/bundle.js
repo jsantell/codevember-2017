@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 41);
+/******/ 	return __webpack_require__(__webpack_require__.s = 47);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1061,7 +1061,9 @@ module.exports = function (mesh, opts) {
 /* 24 */,
 /* 25 */,
 /* 26 */,
-/* 27 */
+/* 27 */,
+/* 28 */,
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1075,11 +1077,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _barycentricVert = __webpack_require__(28);
+var _barycentricVert = __webpack_require__(30);
 
 var _barycentricVert2 = _interopRequireDefault(_barycentricVert);
 
-var _barycentricFrag = __webpack_require__(29);
+var _barycentricFrag = __webpack_require__(31);
 
 var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
 
@@ -1193,20 +1195,18 @@ var BarycentricMaterial = function (_ShaderMaterial) {
 exports.default = BarycentricMaterial;
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  vec3 color = mix(wireframeColor, color, factor);\n  float a = mix(wireframeAlpha, alpha, factor);\n  gl_FragColor = vec4(color, a);\n}\n"
 
 /***/ }),
-/* 30 */,
-/* 31 */,
 /* 32 */,
 /* 33 */,
 /* 34 */,
@@ -1216,7 +1216,13 @@ module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision h
 /* 38 */,
 /* 39 */,
 /* 40 */,
-/* 41 */
+/* 41 */,
+/* 42 */,
+/* 43 */,
+/* 44 */,
+/* 45 */,
+/* 46 */,
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1236,15 +1242,15 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _BarycentricMaterial = __webpack_require__(27);
+var _BarycentricMaterial = __webpack_require__(29);
 
 var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
 
-var _vert = __webpack_require__(42);
+var _vert = __webpack_require__(48);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(43);
+var _frag = __webpack_require__(49);
 
 var _frag2 = _interopRequireDefault(_frag);
 
@@ -1335,13 +1341,13 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 42 */
+/* 48 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n  //gl_Position = vec4(position, 1.0);\n}\n"
 
 /***/ }),
-/* 43 */
+/* 49 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float uTime;\nuniform float uDelta;\nuniform vec2 uResolution;\nuniform float uPixelRatio;\nvarying vec2 vUv;\n\nvoid main() {\n  float stripes = sin(uTime * 0.001)mod(floor(fract(sin(uTime * 0.1 + vUv.y)) * 10.0), 2.0);\n  gl_FragColor = vec4(stripes);\n}\n"

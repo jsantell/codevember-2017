@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 99);
+/******/ 	return __webpack_require__(__webpack_require__.s = 103);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -213,7 +213,154 @@ module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
 
 /***/ }),
 
-/***/ 100:
+/***/ 103:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+__webpack_require__(6);
+
+var _three = __webpack_require__(0);
+
+var _ThreeApp2 = __webpack_require__(7);
+
+var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
+
+var _three2 = __webpack_require__(104);
+
+var _wagner = __webpack_require__(4);
+
+var _wagner2 = _interopRequireDefault(_wagner);
+
+var _VignettePass = __webpack_require__(27);
+
+var _VignettePass2 = _interopRequireDefault(_VignettePass);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var CURVE_POINTS = 500;
+var ITERATIONS = 9;
+var BACKGROUND = new _three.Color(0x222222);
+var FOREGROUND = new _three.Color(0xeeeeee);
+var FREQUENCY = 100;
+
+Object.assign(_three2.MeshLine.prototype, _three.EventDispatcher.prototype);
+
+var Experiment = function (_ThreeApp) {
+  _inherits(Experiment, _ThreeApp);
+
+  function Experiment() {
+    _classCallCheck(this, Experiment);
+
+    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
+  }
+
+  _createClass(Experiment, [{
+    key: 'init',
+    value: function init() {
+      this.renderer.setClearColor(BACKGROUND);
+      this.verts = [];
+      this.geometry = new _three.Geometry();
+
+      this.line = new _three2.MeshLine();
+
+      this.updateGeometry();
+      this.mesh = new _three.Mesh(this.line.geometry, new _three2.MeshLineMaterial({
+        color: new _three.Color(0xeeeeee),
+        lineWidth: 0.03,
+        resolution: new _three.Vector2(window.innerWidth, window.innerHeight)
+      }));
+      this.mesh.frustumCulled = false;
+      this.scene.add(this.mesh);
+      this.pivot = new _three.Object3D();
+      this.pivot.position.set(0, 0, 0);
+      this.pivot.add(this.camera);
+      this.scene.add(this.pivot);
+
+      this.camera.position.set(0, 0, 0.9);
+      this.composer = new _wagner2.default.Composer(this.renderer);
+      this.pass = new _VignettePass2.default(1.0, 0.5);
+      this.flipClip = 0;
+      this.lastFlip = -Infinity;
+    }
+  }, {
+    key: 'flip',
+    value: function flip() {
+      if (this.flipCount++ % 2) {
+        this.renderer.setClearColor(FOREGROUND);
+        this.mesh.material.uniforms.color.value = BACKGROUND;
+      } else {
+        this.renderer.setClearColor(BACKGROUND);
+        this.mesh.material.uniforms.color.value = FOREGROUND;
+      }
+      this.updateGeometry(Math.random() + 1.2);
+    }
+  }, {
+    key: 'updateGeometry',
+    value: function updateGeometry() {
+      var mod = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+      for (var i = 0; i < CURVE_POINTS; i++) {
+        var vert = this.geometry.vertices[i];
+        if (!vert) {
+          vert = new _three.Vector3();
+          this.geometry.vertices.push(vert);
+        }
+        var val = ITERATIONS * i / CURVE_POINTS * Math.PI * 2 + Math.random() * mod;
+        var scale = 1 - i / CURVE_POINTS;
+        var x = Math.cos(val) * scale;
+        var y = Math.sin(val) * scale;
+        if (Math.floor(mod) % 2) {
+          var tmp = x;
+          x = y;
+          y = tmp;
+        }
+        vert.set(x, y, i / CURVE_POINTS * scale);
+      }
+      this.line.setGeometry(this.geometry);
+    }
+  }, {
+    key: 'update',
+    value: function update(t, delta) {
+      this.pivot.rotation.z = t * 0.00009;
+      if (this.lastFlip + FREQUENCY < t) {
+        this.flip();
+        this.lastFlip = t;
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      this.renderer.clear();
+      this.composer.reset();
+      this.composer.render(this.scene, this.camera);
+      this.composer.pass(this.pass);
+      this.composer.toScreen();
+      //    this.renderer.render(this.scene, this.camera);
+    }
+  }]);
+
+  return Experiment;
+}(_ThreeApp3.default);
+
+exports.default = new Experiment();
+
+/***/ }),
+
+/***/ 104:
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function() {
@@ -797,7 +944,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 /***/ }),
 
-/***/ 25:
+/***/ 27:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -805,7 +952,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 var Pass = __webpack_require__(1);
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(26);
+var fragment = __webpack_require__(28);
 
 function VignettePass(boost, reduction) {
   Pass.call(this);
@@ -830,7 +977,7 @@ VignettePass.prototype.run = function(composer) {
 
 /***/ }),
 
-/***/ 26:
+/***/ 28:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
@@ -1253,153 +1400,6 @@ function inject(url) {
     document.body.appendChild(script);
   });
 }
-
-/***/ }),
-
-/***/ 99:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-__webpack_require__(6);
-
-var _three = __webpack_require__(0);
-
-var _ThreeApp2 = __webpack_require__(7);
-
-var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
-
-var _three2 = __webpack_require__(100);
-
-var _wagner = __webpack_require__(4);
-
-var _wagner2 = _interopRequireDefault(_wagner);
-
-var _VignettePass = __webpack_require__(25);
-
-var _VignettePass2 = _interopRequireDefault(_VignettePass);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var CURVE_POINTS = 500;
-var ITERATIONS = 9;
-var BACKGROUND = new _three.Color(0x222222);
-var FOREGROUND = new _three.Color(0xeeeeee);
-var FREQUENCY = 100;
-
-Object.assign(_three2.MeshLine.prototype, _three.EventDispatcher.prototype);
-
-var Experiment = function (_ThreeApp) {
-  _inherits(Experiment, _ThreeApp);
-
-  function Experiment() {
-    _classCallCheck(this, Experiment);
-
-    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
-  }
-
-  _createClass(Experiment, [{
-    key: 'init',
-    value: function init() {
-      this.renderer.setClearColor(BACKGROUND);
-      this.verts = [];
-      this.geometry = new _three.Geometry();
-
-      this.line = new _three2.MeshLine();
-
-      this.updateGeometry();
-      this.mesh = new _three.Mesh(this.line.geometry, new _three2.MeshLineMaterial({
-        color: new _three.Color(0xeeeeee),
-        lineWidth: 0.03,
-        resolution: new _three.Vector2(window.innerWidth, window.innerHeight)
-      }));
-      this.mesh.frustumCulled = false;
-      this.scene.add(this.mesh);
-      this.pivot = new _three.Object3D();
-      this.pivot.position.set(0, 0, 0);
-      this.pivot.add(this.camera);
-      this.scene.add(this.pivot);
-
-      this.camera.position.set(0, 0, 0.9);
-      this.composer = new _wagner2.default.Composer(this.renderer);
-      this.pass = new _VignettePass2.default(1.0, 0.5);
-      this.flipClip = 0;
-      this.lastFlip = -Infinity;
-    }
-  }, {
-    key: 'flip',
-    value: function flip() {
-      if (this.flipCount++ % 2) {
-        this.renderer.setClearColor(FOREGROUND);
-        this.mesh.material.uniforms.color.value = BACKGROUND;
-      } else {
-        this.renderer.setClearColor(BACKGROUND);
-        this.mesh.material.uniforms.color.value = FOREGROUND;
-      }
-      this.updateGeometry(Math.random() + 1.2);
-    }
-  }, {
-    key: 'updateGeometry',
-    value: function updateGeometry() {
-      var mod = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-
-      for (var i = 0; i < CURVE_POINTS; i++) {
-        var vert = this.geometry.vertices[i];
-        if (!vert) {
-          vert = new _three.Vector3();
-          this.geometry.vertices.push(vert);
-        }
-        var val = ITERATIONS * i / CURVE_POINTS * Math.PI * 2 + Math.random() * mod;
-        var scale = 1 - i / CURVE_POINTS;
-        var x = Math.cos(val) * scale;
-        var y = Math.sin(val) * scale;
-        if (Math.floor(mod) % 2) {
-          var tmp = x;
-          x = y;
-          y = tmp;
-        }
-        vert.set(x, y, i / CURVE_POINTS * scale);
-      }
-      this.line.setGeometry(this.geometry);
-    }
-  }, {
-    key: 'update',
-    value: function update(t, delta) {
-      this.pivot.rotation.z = t * 0.00009;
-      if (this.lastFlip + FREQUENCY < t) {
-        this.flip();
-        this.lastFlip = t;
-      }
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      this.renderer.clear();
-      this.composer.reset();
-      this.composer.render(this.scene, this.camera);
-      this.composer.pass(this.pass);
-      this.composer.toScreen();
-      //    this.renderer.render(this.scene, this.camera);
-    }
-  }]);
-
-  return Experiment;
-}(_ThreeApp3.default);
-
-exports.default = new Experiment();
 
 /***/ })
 

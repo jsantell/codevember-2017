@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 44);
+/******/ 	return __webpack_require__(__webpack_require__.s = 50);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1061,7 +1061,9 @@ module.exports = function (mesh, opts) {
 /* 24 */,
 /* 25 */,
 /* 26 */,
-/* 27 */
+/* 27 */,
+/* 28 */,
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1075,11 +1077,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _barycentricVert = __webpack_require__(28);
+var _barycentricVert = __webpack_require__(30);
 
 var _barycentricVert2 = _interopRequireDefault(_barycentricVert);
 
-var _barycentricFrag = __webpack_require__(29);
+var _barycentricFrag = __webpack_require__(31);
 
 var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
 
@@ -1193,20 +1195,18 @@ var BarycentricMaterial = function (_ShaderMaterial) {
 exports.default = BarycentricMaterial;
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  vec3 color = mix(wireframeColor, color, factor);\n  float a = mix(wireframeAlpha, alpha, factor);\n  gl_FragColor = vec4(color, a);\n}\n"
 
 /***/ }),
-/* 30 */,
-/* 31 */,
 /* 32 */,
 /* 33 */,
 /* 34 */,
@@ -1219,7 +1219,13 @@ module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision h
 /* 41 */,
 /* 42 */,
 /* 43 */,
-/* 44 */
+/* 44 */,
+/* 45 */,
+/* 46 */,
+/* 47 */,
+/* 48 */,
+/* 49 */,
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1247,15 +1253,15 @@ var _MultiPassBloomPass = __webpack_require__(14);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _frag = __webpack_require__(45);
+var _frag = __webpack_require__(51);
 
 var _frag2 = _interopRequireDefault(_frag);
 
-var _vert = __webpack_require__(46);
+var _vert = __webpack_require__(52);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _BarycentricMaterial = __webpack_require__(27);
+var _BarycentricMaterial = __webpack_require__(29);
 
 var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
 
@@ -1464,13 +1470,13 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 45 */
+/* 51 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform sampler2D alphaMap;\nuniform vec3 color;\nuniform float colorSpeed;\nuniform float time;\n\nvarying vec3 vPosition;\nvarying float vAlphaOffset;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(alphaMap, gl_PointCoord);\n  float l = clamp(0.0, 1.0, length(vPosition) / 8.0);\n  float t = fract(l * time * colorSpeed * 0.1);\n  float m = map_1_0(t, 0.0, 1.0, 0.2, 0.5);\n  vec3 hsl = hsl2rgb_2_2(m, 0.8, 0.5);\n  float alpha = smoothstep(0.1, 0.9, tex.r) * vAlphaOffset;\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform sampler2D alphaMap;\nuniform vec3 color;\nuniform float colorSpeed;\nuniform float time;\n\nvarying vec3 vPosition;\nvarying float vAlphaOffset;\n\nfloat map_2_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_2_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_2_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_2_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_1_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_1_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_1_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_1_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_1_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_1_2(float h, float s, float l) {\n    return hsl2rgb_1_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(alphaMap, gl_PointCoord);\n  float l = clamp(0.0, 1.0, length(vPosition) / 8.0);\n  float t = fract(l * time * colorSpeed * 0.1);\n  float m = map_2_0(t, 0.0, 1.0, 0.2, 0.5);\n  vec3 hsl = hsl2rgb_1_2(m, 0.8, 0.5);\n  float alpha = smoothstep(0.1, 0.9, tex.r) * vAlphaOffset;\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
 
 /***/ }),
-/* 46 */
+/* 52 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float twinkleSpeed;\nuniform float twinkleOffset;\nuniform float size;\nuniform float time;\n\nattribute float offset;\n\nvarying vec3 vPosition;\nvarying float vAlphaOffset;\n\nvoid main() {\n  vAlphaOffset = sin((time * twinkleSpeed) + offset * twinkleOffset) * 0.5 + 0.5;\n  vPosition = position;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size * length(modelViewMatrix * vec4(position, 1.0)) / 4.0;\n}\n"
