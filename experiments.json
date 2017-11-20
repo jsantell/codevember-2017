@@ -148,6 +148,14 @@
         { "name": "Fan Model", "url": "https://poly.google.com/view/4oADs8d3Bj3" },
         { "name": "Luigi Model", "url": "https://www.turbosquid.com/3d-models/3d-mario-character/549454" }
       ]
+    },
+    "20": {
+      "title": "paper",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" },
+        { "name": "tween" }
+      ]
     }
   }
 }
