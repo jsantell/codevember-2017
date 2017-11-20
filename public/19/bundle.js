@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 72);
+/******/ 	return __webpack_require__(__webpack_require__.s = 73);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -999,7 +999,8 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 
 /***/ }),
 /* 23 */,
-/* 24 */
+/* 24 */,
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1016,7 +1017,7 @@ var Pass = __webpack_require__(1);
 var FullBoxBlurPass = __webpack_require__(13);
 
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(25);
+var fragment = __webpack_require__(26);
 
 function Godray(options) {
 
@@ -1069,13 +1070,12 @@ Godray.prototype.run = function(composer) {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nuniform float fX;\nuniform float fY;\nuniform float fExposure;\nuniform float fDecay;\nuniform float fDensity;\nuniform float fWeight;\nuniform float fClamp;\n\nconst int iSamples = 20;\n\nvoid main()\n{\n\tvec2 deltaTextCoord = vec2(vUv - vec2(fX,fY));\n\tdeltaTextCoord *= 1.0 /  float(iSamples) * fDensity;\n\tvec2 coord = vUv;\n\tfloat illuminationDecay = 1.0;\n\tvec4 FragColor = vec4(0.0);\n\tfor(int i=0; i < iSamples ; i++)\n\t{\n\t\tcoord -= deltaTextCoord;\n\t\tvec4 texel = texture2D(tInput, coord);\n\t\ttexel *= illuminationDecay * fWeight;\n\t\tFragColor += texel;\n\t\tilluminationDecay *= fDecay;\n\t}\n\tFragColor *= fExposure;\n\tFragColor = clamp(FragColor, 0.0, fClamp);\n\tgl_FragColor = FragColor;\n}"
 
 /***/ }),
-/* 26 */,
 /* 27 */,
 /* 28 */,
 /* 29 */,
@@ -1501,379 +1501,7 @@ module.exports = function(THREE) {
 };
 
 /***/ }),
-/* 39 */,
-/* 40 */,
-/* 41 */,
-/* 42 */,
-/* 43 */,
-/* 44 */,
-/* 45 */,
-/* 46 */,
-/* 47 */,
-/* 48 */,
-/* 49 */,
-/* 50 */,
-/* 51 */,
-/* 52 */,
-/* 53 */,
-/* 54 */,
-/* 55 */,
-/* 56 */,
-/* 57 */,
-/* 58 */,
-/* 59 */,
-/* 60 */,
-/* 61 */,
-/* 62 */,
-/* 63 */,
-/* 64 */,
-/* 65 */,
-/* 66 */,
-/* 67 */,
-/* 68 */,
-/* 69 */,
-/* 70 */,
-/* 71 */,
-/* 72 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-__webpack_require__(6);
-
-var _three = __webpack_require__(0);
-
-var _ThreeApp2 = __webpack_require__(7);
-
-var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
-
-var _vert = __webpack_require__(73);
-
-var _vert2 = _interopRequireDefault(_vert);
-
-var _frag = __webpack_require__(74);
-
-var _frag2 = _interopRequireDefault(_frag);
-
-var _wagner = __webpack_require__(4);
-
-var _wagner2 = _interopRequireDefault(_wagner);
-
-var _MultiPassBloomPass = __webpack_require__(14);
-
-var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
-
-var _godraypass = __webpack_require__(24);
-
-var _godraypass2 = _interopRequireDefault(_godraypass);
-
-var _threeEffectcomposer = __webpack_require__(33);
-
-var _threeEffectcomposer2 = _interopRequireDefault(_threeEffectcomposer);
-
-var _threeOrbitControls = __webpack_require__(75);
-
-var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var EffectComposer = (0, _threeEffectcomposer2.default)(window.THREE);
-
-var OrbitControls = (0, _threeOrbitControls2.default)(window.THREE);
-var RenderPass = EffectComposer.RenderPass,
-    ShaderPass = EffectComposer.ShaderPass;
-
-
-var OBJ_PATH = '../assets/fan.obj';
-var MODEL_PATH = '../assets/luigi.obj';
-var ROOM_SCALE = 2;
-var FAN_SCALE = 0.002;
-var MODEL_SCALE = 0.01;
-var AMBIENT = 0.1;
-var DEFAULT_LAYER = 0;
-var OCCLUSION_LAYER = 1;
-var CLEAR_COLOR = 0x111111;
-// Inspired by https://medium.com/@andrew_b_berg/volumetric-light-scattering-in-three-js-6e1850680a41
-var projectOnScreen = function projectOnScreen(object, camera) {
-  var mat = new _three.Matrix4();
-  mat.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld);
-  mat.multiplyMatrices(camera.projectionMatrix, mat);
-
-  var c = mat.elements[15];
-  var lPos = new _three.Vector2(mat.elements[12] / c, mat.elements[13] / c);
-  lPos.multiplyScalar(0.5);
-  lPos.addScalar(0.5);
-  return lPos;
-};
-
-var AdditiveBlendingShader = {
-  uniforms: {
-    tDiffuse: { value: null },
-    tAdd: { value: null }
-  },
-
-  vertexShader: ["varying vec2 vUv;", "void main() {", "vUv = uv;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
-
-  fragmentShader: ["uniform sampler2D tDiffuse;", "uniform sampler2D tAdd;", "varying vec2 vUv;", "void main() {", "vec4 color = texture2D( tDiffuse, vUv );", "vec4 add = texture2D( tAdd, vUv );", "gl_FragColor = color + add;", "}"].join("\n")
-};
-
-var OcclusionCloner = function () {
-  function OcclusionCloner(scene) {
-    _classCallCheck(this, OcclusionCloner);
-
-    this.scene = scene;
-    this.objects = new Map();
-  }
-
-  _createClass(OcclusionCloner, [{
-    key: 'add',
-    value: function add(object) {
-      var blackMat = new _three.MeshBasicMaterial({ color: 0x000000 });
-      if (object.material.opacity !== 1) {
-        //  blackMat.color = new Color(0xffffff - (0xffffff * object.material.opacity));
-      }
-      var clone = new _three.Mesh(object.geometry, blackMat);
-      clone.layers.set(OCCLUSION_LAYER);
-      clone.matrixAutoUpdate = false;
-      this.scene.add(clone);
-      this.objects.set(object, clone);
-    }
-  }, {
-    key: 'addLight',
-    value: function addLight(light) {
-      var clone = new _three.Mesh(new _three.SphereBufferGeometry(0.3, 10, 10), new _three.MeshBasicMaterial({ color: 0xffffff }));
-      clone.layers.set(OCCLUSION_LAYER);
-      clone.matrixAutoUpdate = false;
-      this.scene.add(clone);
-      this.objects.set(light, clone);
-    }
-  }, {
-    key: 'update',
-    value: function update() {
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = _slicedToArray(_step.value, 2),
-              object = _step$value[0],
-              clone = _step$value[1];
-
-          clone.matrix = object.matrix;
-          clone.matrixWorld = object.matrixWorld;
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-  }]);
-
-  return OcclusionCloner;
-}();
-
-var VolumetricLightMaterial = new _three.ShaderMaterial({
-  uniforms: {
-    tDiffuse: { value: null },
-    lightPosition: { value: new _three.Vector2(0.5, 0.5) },
-    exposure: { value: 0.1 },
-    decay: { value: 0.96 },
-    density: { value: 2 },
-    weight: { value: 0.5 },
-    samples: { value: 100 }
-  },
-  vertexShader: _vert2.default,
-  fragmentShader: _frag2.default
-});
-
-var Experiment = function (_ThreeApp) {
-  _inherits(Experiment, _ThreeApp);
-
-  function Experiment() {
-    _classCallCheck(this, Experiment);
-
-    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
-  }
-
-  _createClass(Experiment, [{
-    key: 'init',
-    value: function init() {
-      var _this2 = this;
-
-      new OrbitControls(this.camera);
-      this.renderer.setClearColor(0x222222);
-      this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = _three.PCFSoftShadowMap;
-
-      this.occlusionTarget = new _three.WebGLRenderTarget(window.innerWidth * 0.5, window.innerHeight * 0.5);
-      this.occlusionComposer = new EffectComposer(this.renderer, this.occlusionTarget);
-      this.occlusionComposer.addPass(new RenderPass(this.scene, this.camera));
-      var pass = new ShaderPass(VolumetricLightMaterial);
-      pass.needsSwap = false;
-      this.occlusionComposer.addPass(pass);
-      this.volumetricPass = pass;
-      this.composer = new EffectComposer(this.renderer);
-      this.composer.addPass(new RenderPass(this.scene, this.camera));
-      pass = new ShaderPass(AdditiveBlendingShader);
-      pass.uniforms.tAdd.value = this.occlusionTarget.texture;
-      this.composer.addPass(pass);
-      pass.renderToScreen = true;
-
-      this.cloner = new OcclusionCloner(this.scene);
-      this.pivot = new _three.Object3D();
-
-      this.objLoader = new THREE.OBJLoader();
-      this.objLoader.load(OBJ_PATH, function (model) {
-        _this2.fan = model.children[0];
-        _this2.fan.material = new _three.MeshStandardMaterial({
-          metalness: 0.5,
-          roughness: 0.5,
-          color: 0x111111
-        });
-        _this2.fan.scale.set(FAN_SCALE, FAN_SCALE, FAN_SCALE);
-        _this2.fan.position.y = 1.7;
-        _this2.fan.position.z = -0.1;
-        _this2.fan.rotation.x = Math.PI;
-
-        _this2.fan.castShadow = true;
-        _this2.scene.add(_this2.fan);
-        _this2.cloner.add(_this2.fan);
-
-        _this2.sideFan = _this2.fan.clone();
-        _this2.scene.add(_this2.sideFan);
-        _this2.sideFan.position.set(0, 1, 1.5);
-        _this2.sideFan.rotation.x = -Math.PI / 2;
-        _this2.sideFan.castShadow = true;
-        _this2.sideLight = new _three.SpotLight({ color: 0xffffff });
-        _this2.scene.add(_this2.sideLight);
-        _this2.sideLight.position.set(0, 1, 1.8);
-        _this2.sideLight.castShadow = true;
-      });
-      this.objLoader.load(MODEL_PATH, function (model) {
-        _this2.model = model.children[0];
-        _this2.model.material = new _three.MeshStandardMaterial({
-          metalness: 1,
-          roughness: 0.4,
-          color: 0xDAA520
-        });
-        _this2.model.scale.set(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
-
-        _this2.model.castShadow = true;
-        _this2.model.receiveShadow = true;
-        _this2.scene.add(_this2.model);
-        _this2.cloner.add(_this2.model);
-      });
-
-      this.room = new _three.Mesh(new _three.BoxBufferGeometry(1, 1, 1), new _three.MeshStandardMaterial({
-        color: 0x111111,
-        metalness: 0.5,
-        roughness: 0.5,
-        side: _three.DoubleSide
-      }));
-      this.roomShadow = new _three.Mesh(new _three.PlaneBufferGeometry(1, 10, 10), new _three.ShadowMaterial({
-        color: 0x111111,
-        opacity: 0.9
-      }));
-      this.room.scale.set(ROOM_SCALE * 200, ROOM_SCALE, ROOM_SCALE * 20);
-      this.roomShadow.receiveShadow = true;
-      this.room.position.y = ROOM_SCALE / 2;
-      this.roomShadow.rotation.x = Math.PI / -2;
-      this.roomShadow.position.y = 0.001;
-      this.roomShadow.scale.set(this.room.scale.x - 0.01, this.room.scale.y - 0.01, this.room.scale.z - 0.01);
-      this.scene.add(this.room);
-      this.scene.add(this.roomShadow);
-
-      this.light = new _three.AmbientLight(0xff0000, AMBIENT);
-      this.vLight = new _three.PointLight();
-      this.vLight.position.set(0, 1.8, -0.1);
-      this.vLight.castShadow = true;
-      this.scene.add(this.light);
-      this.scene.add(this.vLight);
-      this.cloner.addLight(this.vLight);
-
-      //this.pivot.add(this.camera);
-      this.scene.add(this.pivot);
-      this.camera.position.set(-0.8, 0.1, 1);
-      this.camera.rotation.x = 0.5;
-      this.camera.rotation.y = -0.6;
-      this.renderer.render(this.scene, this.camera);
-    }
-  }, {
-    key: 'updateLightPosition',
-    value: function updateLightPosition() {
-      this.volumetricPass.uniforms.lightPosition.value = projectOnScreen(this.vLight, this.camera);
-    }
-  }, {
-    key: 'update',
-    value: function update(t, delta) {
-      if (this.fan) {
-        this.fan.rotation.y = t * 0.001;
-        this.sideFan.rotation.y = t * 0.001;
-      }
-      this.pivot.rotation.y = t * 0.0001;
-      this.pivot.updateMatrixWorld(true);
-      this.vLight.updateMatrixWorld(true);
-      this.updateLightPosition();
-      this.cloner.update();
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      this.camera.layers.set(OCCLUSION_LAYER);
-      this.renderer.setClearColor(0x000000);
-      this.occlusionComposer.render();
-
-      this.camera.layers.set(DEFAULT_LAYER);
-      this.renderer.setClearColor(CLEAR_COLOR);
-      this.composer.render();
-    }
-  }]);
-
-  return Experiment;
-}(_ThreeApp3.default);
-
-exports.default = new Experiment();
-
-/***/ }),
-/* 73 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}\n"
-
-/***/ }),
-/* 74 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tDiffuse;\nuniform vec2 lightPosition;\nuniform float exposure;\nuniform float decay;\nuniform float density;\nuniform float weight;\nuniform int samples;\nconst int MAX_SAMPLES = 100;\nvoid main(){\n  vec2 texCoord = vUv;\n  // Calculate vector from pixel to light source in screen space\n  vec2 deltaTextCoord = texCoord - lightPosition;\n  // Divide by number of samples and scale by control factor\n  deltaTextCoord *= 1.0 / float(samples) * density;\n  // Store initial sample\n  vec4 color = texture2D(tDiffuse, texCoord);\n  // set up illumination decay factor\n  float illuminationDecay = 1.0;\n\n  // evaluate the summation for samples number of iterations up to 100\n  for(int i=0; i < MAX_SAMPLES; i++){\n    // work around for dynamic number of loop iterations\n    if(i == samples){\n      break;\n    }\n\n    // step sample location along ray\n    texCoord -= deltaTextCoord;\n    // retrieve sample at new location\n    vec4 sample = texture2D(tDiffuse, texCoord);\n    // apply sample attenuation scale/decay factors\n    sample *= illuminationDecay * weight;\n    // accumulate combined color\n    color += sample;\n    // update exponential decay factor\n    illuminationDecay *= decay;\n\n  }\n  // output final color with a further scale control factor\n  gl_FragColor = color * exposure;\n}\n"
-
-/***/ }),
-/* 75 */
+/* 39 */
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -2897,6 +2525,378 @@ module.exports = function( THREE ) {
 	return OrbitControls;
 };
 
+
+/***/ }),
+/* 40 */,
+/* 41 */,
+/* 42 */,
+/* 43 */,
+/* 44 */,
+/* 45 */,
+/* 46 */,
+/* 47 */,
+/* 48 */,
+/* 49 */,
+/* 50 */,
+/* 51 */,
+/* 52 */,
+/* 53 */,
+/* 54 */,
+/* 55 */,
+/* 56 */,
+/* 57 */,
+/* 58 */,
+/* 59 */,
+/* 60 */,
+/* 61 */,
+/* 62 */,
+/* 63 */,
+/* 64 */,
+/* 65 */,
+/* 66 */,
+/* 67 */,
+/* 68 */,
+/* 69 */,
+/* 70 */,
+/* 71 */,
+/* 72 */,
+/* 73 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+__webpack_require__(6);
+
+var _three = __webpack_require__(0);
+
+var _ThreeApp2 = __webpack_require__(7);
+
+var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
+
+var _vert = __webpack_require__(74);
+
+var _vert2 = _interopRequireDefault(_vert);
+
+var _frag = __webpack_require__(75);
+
+var _frag2 = _interopRequireDefault(_frag);
+
+var _wagner = __webpack_require__(4);
+
+var _wagner2 = _interopRequireDefault(_wagner);
+
+var _MultiPassBloomPass = __webpack_require__(14);
+
+var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
+
+var _godraypass = __webpack_require__(25);
+
+var _godraypass2 = _interopRequireDefault(_godraypass);
+
+var _threeEffectcomposer = __webpack_require__(33);
+
+var _threeEffectcomposer2 = _interopRequireDefault(_threeEffectcomposer);
+
+var _threeOrbitControls = __webpack_require__(39);
+
+var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var EffectComposer = (0, _threeEffectcomposer2.default)(window.THREE);
+
+var OrbitControls = (0, _threeOrbitControls2.default)(window.THREE);
+var RenderPass = EffectComposer.RenderPass,
+    ShaderPass = EffectComposer.ShaderPass;
+
+
+var OBJ_PATH = '../assets/fan.obj';
+var MODEL_PATH = '../assets/luigi.obj';
+var ROOM_SCALE = 2;
+var FAN_SCALE = 0.002;
+var MODEL_SCALE = 0.01;
+var AMBIENT = 0.1;
+var DEFAULT_LAYER = 0;
+var OCCLUSION_LAYER = 1;
+var CLEAR_COLOR = 0x111111;
+// Inspired by https://medium.com/@andrew_b_berg/volumetric-light-scattering-in-three-js-6e1850680a41
+var projectOnScreen = function projectOnScreen(object, camera) {
+  var mat = new _three.Matrix4();
+  mat.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld);
+  mat.multiplyMatrices(camera.projectionMatrix, mat);
+
+  var c = mat.elements[15];
+  var lPos = new _three.Vector2(mat.elements[12] / c, mat.elements[13] / c);
+  lPos.multiplyScalar(0.5);
+  lPos.addScalar(0.5);
+  return lPos;
+};
+
+var AdditiveBlendingShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    tAdd: { value: null }
+  },
+
+  vertexShader: ["varying vec2 vUv;", "void main() {", "vUv = uv;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
+
+  fragmentShader: ["uniform sampler2D tDiffuse;", "uniform sampler2D tAdd;", "varying vec2 vUv;", "void main() {", "vec4 color = texture2D( tDiffuse, vUv );", "vec4 add = texture2D( tAdd, vUv );", "gl_FragColor = color + add;", "}"].join("\n")
+};
+
+var OcclusionCloner = function () {
+  function OcclusionCloner(scene) {
+    _classCallCheck(this, OcclusionCloner);
+
+    this.scene = scene;
+    this.objects = new Map();
+  }
+
+  _createClass(OcclusionCloner, [{
+    key: 'add',
+    value: function add(object) {
+      var blackMat = new _three.MeshBasicMaterial({ color: 0x000000 });
+      if (object.material.opacity !== 1) {
+        //  blackMat.color = new Color(0xffffff - (0xffffff * object.material.opacity));
+      }
+      var clone = new _three.Mesh(object.geometry, blackMat);
+      clone.layers.set(OCCLUSION_LAYER);
+      clone.matrixAutoUpdate = false;
+      this.scene.add(clone);
+      this.objects.set(object, clone);
+    }
+  }, {
+    key: 'addLight',
+    value: function addLight(light) {
+      var clone = new _three.Mesh(new _three.SphereBufferGeometry(0.3, 10, 10), new _three.MeshBasicMaterial({ color: 0xffffff }));
+      clone.layers.set(OCCLUSION_LAYER);
+      clone.matrixAutoUpdate = false;
+      this.scene.add(clone);
+      this.objects.set(light, clone);
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = this.objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var _step$value = _slicedToArray(_step.value, 2),
+              object = _step$value[0],
+              clone = _step$value[1];
+
+          clone.matrix = object.matrix;
+          clone.matrixWorld = object.matrixWorld;
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+  }]);
+
+  return OcclusionCloner;
+}();
+
+var VolumetricLightMaterial = new _three.ShaderMaterial({
+  uniforms: {
+    tDiffuse: { value: null },
+    lightPosition: { value: new _three.Vector2(0.5, 0.5) },
+    exposure: { value: 0.1 },
+    decay: { value: 0.96 },
+    density: { value: 2 },
+    weight: { value: 0.5 },
+    samples: { value: 100 }
+  },
+  vertexShader: _vert2.default,
+  fragmentShader: _frag2.default
+});
+
+var Experiment = function (_ThreeApp) {
+  _inherits(Experiment, _ThreeApp);
+
+  function Experiment() {
+    _classCallCheck(this, Experiment);
+
+    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
+  }
+
+  _createClass(Experiment, [{
+    key: 'init',
+    value: function init() {
+      var _this2 = this;
+
+      new OrbitControls(this.camera);
+      this.renderer.setClearColor(0x222222);
+      this.renderer.shadowMap.enabled = true;
+      this.renderer.shadowMap.type = _three.PCFSoftShadowMap;
+
+      this.occlusionTarget = new _three.WebGLRenderTarget(window.innerWidth * 0.5, window.innerHeight * 0.5);
+      this.occlusionComposer = new EffectComposer(this.renderer, this.occlusionTarget);
+      this.occlusionComposer.addPass(new RenderPass(this.scene, this.camera));
+      var pass = new ShaderPass(VolumetricLightMaterial);
+      pass.needsSwap = false;
+      this.occlusionComposer.addPass(pass);
+      this.volumetricPass = pass;
+      this.composer = new EffectComposer(this.renderer);
+      this.composer.addPass(new RenderPass(this.scene, this.camera));
+      pass = new ShaderPass(AdditiveBlendingShader);
+      pass.uniforms.tAdd.value = this.occlusionTarget.texture;
+      this.composer.addPass(pass);
+      pass.renderToScreen = true;
+
+      this.cloner = new OcclusionCloner(this.scene);
+      this.pivot = new _three.Object3D();
+
+      this.objLoader = new THREE.OBJLoader();
+      this.objLoader.load(OBJ_PATH, function (model) {
+        _this2.fan = model.children[0];
+        _this2.fan.material = new _three.MeshStandardMaterial({
+          metalness: 0.5,
+          roughness: 0.5,
+          color: 0x111111
+        });
+        _this2.fan.scale.set(FAN_SCALE, FAN_SCALE, FAN_SCALE);
+        _this2.fan.position.y = 1.7;
+        _this2.fan.position.z = -0.1;
+        _this2.fan.rotation.x = Math.PI;
+
+        _this2.fan.castShadow = true;
+        _this2.scene.add(_this2.fan);
+        _this2.cloner.add(_this2.fan);
+
+        _this2.sideFan = _this2.fan.clone();
+        _this2.scene.add(_this2.sideFan);
+        _this2.sideFan.position.set(0, 1, 1.5);
+        _this2.sideFan.rotation.x = -Math.PI / 2;
+        _this2.sideFan.castShadow = true;
+        _this2.sideLight = new _three.SpotLight({ color: 0xffffff });
+        _this2.scene.add(_this2.sideLight);
+        _this2.sideLight.position.set(0, 1, 1.8);
+        _this2.sideLight.castShadow = true;
+      });
+      this.objLoader.load(MODEL_PATH, function (model) {
+        _this2.model = model.children[0];
+        _this2.model.material = new _three.MeshStandardMaterial({
+          metalness: 1,
+          roughness: 0.4,
+          color: 0xDAA520
+        });
+        _this2.model.scale.set(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
+
+        _this2.model.castShadow = true;
+        _this2.model.receiveShadow = true;
+        _this2.scene.add(_this2.model);
+        _this2.cloner.add(_this2.model);
+      });
+
+      this.room = new _three.Mesh(new _three.BoxBufferGeometry(1, 1, 1), new _three.MeshStandardMaterial({
+        color: 0x111111,
+        metalness: 0.5,
+        roughness: 0.5,
+        side: _three.DoubleSide
+      }));
+      this.roomShadow = new _three.Mesh(new _three.PlaneBufferGeometry(1, 10, 10), new _three.ShadowMaterial({
+        color: 0x111111,
+        opacity: 0.9
+      }));
+      this.room.scale.set(ROOM_SCALE * 200, ROOM_SCALE, ROOM_SCALE * 20);
+      this.roomShadow.receiveShadow = true;
+      this.room.position.y = ROOM_SCALE / 2;
+      this.roomShadow.rotation.x = Math.PI / -2;
+      this.roomShadow.position.y = 0.001;
+      this.roomShadow.scale.set(this.room.scale.x - 0.01, this.room.scale.y - 0.01, this.room.scale.z - 0.01);
+      this.scene.add(this.room);
+      this.scene.add(this.roomShadow);
+
+      this.light = new _three.AmbientLight(0xff0000, AMBIENT);
+      this.vLight = new _three.PointLight();
+      this.vLight.position.set(0, 1.8, -0.1);
+      this.vLight.castShadow = true;
+      this.scene.add(this.light);
+      this.scene.add(this.vLight);
+      this.cloner.addLight(this.vLight);
+
+      //this.pivot.add(this.camera);
+      this.scene.add(this.pivot);
+      this.camera.position.set(-0.8, 0.1, 1);
+      this.camera.rotation.x = 0.5;
+      this.camera.rotation.y = -0.6;
+      this.renderer.render(this.scene, this.camera);
+    }
+  }, {
+    key: 'updateLightPosition',
+    value: function updateLightPosition() {
+      this.volumetricPass.uniforms.lightPosition.value = projectOnScreen(this.vLight, this.camera);
+    }
+  }, {
+    key: 'update',
+    value: function update(t, delta) {
+      if (this.fan) {
+        this.fan.rotation.y = t * 0.001;
+        this.sideFan.rotation.y = t * 0.001;
+      }
+      this.pivot.rotation.y = t * 0.0001;
+      this.pivot.updateMatrixWorld(true);
+      this.vLight.updateMatrixWorld(true);
+      this.updateLightPosition();
+      this.cloner.update();
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      this.camera.layers.set(OCCLUSION_LAYER);
+      this.renderer.setClearColor(0x000000);
+      this.occlusionComposer.render();
+
+      this.camera.layers.set(DEFAULT_LAYER);
+      this.renderer.setClearColor(CLEAR_COLOR);
+      this.composer.render();
+    }
+  }]);
+
+  return Experiment;
+}(_ThreeApp3.default);
+
+exports.default = new Experiment();
+
+/***/ }),
+/* 74 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}\n"
+
+/***/ }),
+/* 75 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tDiffuse;\nuniform vec2 lightPosition;\nuniform float exposure;\nuniform float decay;\nuniform float density;\nuniform float weight;\nuniform int samples;\nconst int MAX_SAMPLES = 100;\nvoid main(){\n  vec2 texCoord = vUv;\n  // Calculate vector from pixel to light source in screen space\n  vec2 deltaTextCoord = texCoord - lightPosition;\n  // Divide by number of samples and scale by control factor\n  deltaTextCoord *= 1.0 / float(samples) * density;\n  // Store initial sample\n  vec4 color = texture2D(tDiffuse, texCoord);\n  // set up illumination decay factor\n  float illuminationDecay = 1.0;\n\n  // evaluate the summation for samples number of iterations up to 100\n  for(int i=0; i < MAX_SAMPLES; i++){\n    // work around for dynamic number of loop iterations\n    if(i == samples){\n      break;\n    }\n\n    // step sample location along ray\n    texCoord -= deltaTextCoord;\n    // retrieve sample at new location\n    vec4 sample = texture2D(tDiffuse, texCoord);\n    // apply sample attenuation scale/decay factors\n    sample *= illuminationDecay * weight;\n    // accumulate combined color\n    color += sample;\n    // update exponential decay factor\n    illuminationDecay *= decay;\n\n  }\n  // output final color with a further scale control factor\n  gl_FragColor = color * exposure;\n}\n"
 
 /***/ })
 /******/ ]);

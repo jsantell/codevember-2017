@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 69);
+/******/ 	return __webpack_require__(__webpack_require__.s = 70);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -999,7 +999,8 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 
 /***/ }),
 /* 23 */,
-/* 24 */
+/* 24 */,
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1016,7 +1017,7 @@ var Pass = __webpack_require__(1);
 var FullBoxBlurPass = __webpack_require__(13);
 
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(25);
+var fragment = __webpack_require__(26);
 
 function Godray(options) {
 
@@ -1069,13 +1070,12 @@ Godray.prototype.run = function(composer) {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nuniform float fX;\nuniform float fY;\nuniform float fExposure;\nuniform float fDecay;\nuniform float fDensity;\nuniform float fWeight;\nuniform float fClamp;\n\nconst int iSamples = 20;\n\nvoid main()\n{\n\tvec2 deltaTextCoord = vec2(vUv - vec2(fX,fY));\n\tdeltaTextCoord *= 1.0 /  float(iSamples) * fDensity;\n\tvec2 coord = vUv;\n\tfloat illuminationDecay = 1.0;\n\tvec4 FragColor = vec4(0.0);\n\tfor(int i=0; i < iSamples ; i++)\n\t{\n\t\tcoord -= deltaTextCoord;\n\t\tvec4 texel = texture2D(tInput, coord);\n\t\ttexel *= illuminationDecay * fWeight;\n\t\tFragColor += texel;\n\t\tilluminationDecay *= fDecay;\n\t}\n\tFragColor *= fExposure;\n\tFragColor = clamp(FragColor, 0.0, fClamp);\n\tgl_FragColor = FragColor;\n}"
 
 /***/ }),
-/* 26 */,
 /* 27 */,
 /* 28 */,
 /* 29 */,
@@ -1531,7 +1531,8 @@ module.exports = function(THREE) {
 /* 66 */,
 /* 67 */,
 /* 68 */,
-/* 69 */
+/* 69 */,
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1553,11 +1554,11 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _vert = __webpack_require__(70);
+var _vert = __webpack_require__(71);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(71);
+var _frag = __webpack_require__(72);
 
 var _frag2 = _interopRequireDefault(_frag);
 
@@ -1569,7 +1570,7 @@ var _MultiPassBloomPass = __webpack_require__(14);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _godraypass = __webpack_require__(24);
+var _godraypass = __webpack_require__(25);
 
 var _godraypass2 = _interopRequireDefault(_godraypass);
 
@@ -1810,13 +1811,13 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 70 */
+/* 71 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}\n"
 
 /***/ }),
-/* 71 */
+/* 72 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tDiffuse;\nuniform vec2 lightPosition;\nuniform float exposure;\nuniform float decay;\nuniform float density;\nuniform float weight;\nuniform int samples;\nconst int MAX_SAMPLES = 100;\nvoid main(){\n  vec2 texCoord = vUv;\n  // Calculate vector from pixel to light source in screen space\n  vec2 deltaTextCoord = texCoord - lightPosition;\n  // Divide by number of samples and scale by control factor\n  deltaTextCoord *= 1.0 / float(samples) * density;\n  // Store initial sample\n  vec4 color = texture2D(tDiffuse, texCoord);\n  // set up illumination decay factor\n  float illuminationDecay = 1.0;\n\n  // evaluate the summation for samples number of iterations up to 100\n  for(int i=0; i < MAX_SAMPLES; i++){\n    // work around for dynamic number of loop iterations\n    if(i == samples){\n      break;\n    }\n\n    // step sample location along ray\n    texCoord -= deltaTextCoord;\n    // retrieve sample at new location\n    vec4 sample = texture2D(tDiffuse, texCoord);\n    // apply sample attenuation scale/decay factors\n    sample *= illuminationDecay * weight;\n    // accumulate combined color\n    color += sample;\n    // update exponential decay factor\n    illuminationDecay *= decay;\n\n  }\n  // output final color with a further scale control factor\n  gl_FragColor = color * exposure;\n}\n"

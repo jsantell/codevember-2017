@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 103);
+/******/ 	return __webpack_require__(__webpack_require__.s = 106);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -213,7 +213,7 @@ module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
 
 /***/ }),
 
-/***/ 103:
+/***/ 106:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -233,7 +233,7 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _three2 = __webpack_require__(104);
+var _three2 = __webpack_require__(107);
 
 var _wagner = __webpack_require__(4);
 
@@ -360,7 +360,7 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 104:
+/***/ 107:
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function() {

@@ -7,7 +7,7 @@
 		exports["app"] = factory(require("three"), require("tween"));
 	else
 		root["app"] = factory(root["THREE"], root["TWEEN"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_26__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_24__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 96);
+/******/ 	return __webpack_require__(__webpack_require__.s = 99);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -999,14 +999,14 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 
 /***/ }),
 /* 23 */,
-/* 24 */,
-/* 25 */,
-/* 26 */
+/* 24 */
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_26__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
 
 /***/ }),
+/* 25 */,
+/* 26 */,
 /* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1112,7 +1112,10 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 /* 93 */,
 /* 94 */,
 /* 95 */,
-/* 96 */
+/* 96 */,
+/* 97 */,
+/* 98 */,
+/* 99 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1130,9 +1133,9 @@ var _three = __webpack_require__(0);
 
 var THREE = _interopRequireWildcard(_three);
 
-var _tween = __webpack_require__(26);
+var _tween = __webpack_require__(24);
 
-var _threeAr = __webpack_require__(97);
+var _threeAr = __webpack_require__(100);
 
 var _ThreeApp2 = __webpack_require__(7);
 
@@ -1358,7 +1361,7 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 97 */
+/* 100 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*

@@ -7,7 +7,7 @@
 		exports["app"] = factory(require("three"), require("tween"));
 	else
 		root["app"] = factory(root["THREE"], root["TWEEN"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_26__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_24__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 68);
+/******/ 	return __webpack_require__(__webpack_require__.s = 69);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -999,14 +999,14 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 
 /***/ }),
 /* 23 */,
-/* 24 */,
-/* 25 */,
-/* 26 */
+/* 24 */
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_26__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
 
 /***/ }),
+/* 25 */,
+/* 26 */,
 /* 27 */,
 /* 28 */,
 /* 29 */,
@@ -1048,7 +1048,8 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_26__;
 /* 65 */,
 /* 66 */,
 /* 67 */,
-/* 68 */
+/* 68 */,
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1076,7 +1077,7 @@ var _MultiPassBloomPass = __webpack_require__(14);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _tween = __webpack_require__(26);
+var _tween = __webpack_require__(24);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
