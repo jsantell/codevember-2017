@@ -156,6 +156,13 @@
         { "name": "three" },
         { "name": "tween" }
       ]
+    },
+    "21": {
+      "title": "alignment",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
