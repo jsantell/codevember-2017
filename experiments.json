@@ -163,6 +163,12 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "22": {
+      "title": "curves",
+      "subtitle": "",
+      "dependencies": [
+      ]
     }
   }
 }

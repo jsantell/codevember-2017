@@ -43,6 +43,7 @@
     "@jsantell/mini-webgl": "^1.0.4",
     "glsl-easings": "^1.0.0",
     "glsl-solid-wireframe": "^1.0.1",
+    "noisejs": "^2.1.0",
     "stats.js": "^0.17.0",
     "three-effectcomposer": "0.0.1",
     "three-obj-loader": "^1.1.3",
