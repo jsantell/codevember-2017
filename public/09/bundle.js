@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 113);
+/******/ 	return __webpack_require__(__webpack_require__.s = 116);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -220,7 +220,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 
 /***/ }),
 
-/***/ 113:
+/***/ 116:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -240,7 +240,7 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _three2 = __webpack_require__(114);
+var _three2 = __webpack_require__(117);
 
 var _wagner = __webpack_require__(4);
 
@@ -367,7 +367,7 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 114:
+/***/ 117:
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function() {
