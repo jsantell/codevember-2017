@@ -176,6 +176,17 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "24": {
+      "title": "more displacement",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" },
+        { "name": "OBJLoader" }
+      ],
+      "attributions": [
+        { "name": "Head Model", "url": "https://www.turbosquid.com/3d-models/free-basic-male-head-3d-model/644257" }
+      ]
     }
   }
 }
