@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 48);
+/******/ 	return __webpack_require__(__webpack_require__.s = 50);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1223,7 +1223,9 @@ module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision h
 /* 45 */,
 /* 46 */,
 /* 47 */,
-/* 48 */
+/* 48 */,
+/* 49 */,
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1247,11 +1249,11 @@ var _BarycentricMaterial = __webpack_require__(29);
 
 var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
 
-var _vert = __webpack_require__(49);
+var _vert = __webpack_require__(51);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(50);
+var _frag = __webpack_require__(52);
 
 var _frag2 = _interopRequireDefault(_frag);
 
@@ -1342,13 +1344,13 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 49 */
+/* 51 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n  //gl_Position = vec4(position, 1.0);\n}\n"
 
 /***/ }),
-/* 50 */
+/* 52 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float uTime;\nuniform float uDelta;\nuniform vec2 uResolution;\nuniform float uPixelRatio;\nvarying vec2 vUv;\n\nvoid main() {\n  float stripes = sin(uTime * 0.001)mod(floor(fract(sin(uTime * 0.1 + vUv.y)) * 10.0), 2.0);\n  gl_FragColor = vec4(stripes);\n}\n"

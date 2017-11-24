@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 83);
+/******/ 	return __webpack_require__(__webpack_require__.s = 85);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -120,7 +120,7 @@ if (window.location.search) {
 
 /***/ }),
 
-/***/ 83:
+/***/ 85:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -134,11 +134,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 __webpack_require__(6);
 
-var _CanvasApp2 = __webpack_require__(84);
+var _CanvasApp2 = __webpack_require__(86);
 
 var _CanvasApp3 = _interopRequireDefault(_CanvasApp2);
 
-var _noisejs = __webpack_require__(85);
+var _noisejs = __webpack_require__(87);
 
 var _noisejs2 = _interopRequireDefault(_noisejs);
 
@@ -202,7 +202,7 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 84:
+/***/ 86:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -260,7 +260,7 @@ exports.default = App;
 
 /***/ }),
 
-/***/ 85:
+/***/ 87:
 /***/ (function(module, exports, __webpack_require__) {
 
 /*

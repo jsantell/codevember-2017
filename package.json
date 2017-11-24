@@ -43,12 +43,13 @@
     "@jsantell/mini-webgl": "^1.0.4",
     "glsl-easings": "^1.0.0",
     "glsl-solid-wireframe": "^1.0.1",
+    "glsl-y-rotate": "^2.0.0",
     "noisejs": "^2.1.0",
     "stats.js": "^0.17.0",
     "three-effectcomposer": "0.0.1",
     "three-obj-loader": "^1.1.3",
     "three-orbit-controls": "^82.1.0",
-    "three.ar.js": "^0.1.5",
+    "three.ar.js": "^0.1.6",
     "three.meshline": "^1.0.3"
   }
 }

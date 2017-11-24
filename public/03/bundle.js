@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 98);
+/******/ 	return __webpack_require__(__webpack_require__.s = 103);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -210,6 +210,261 @@ module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
 
   return shader;
 };
+
+/***/ }),
+
+/***/ 103:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+__webpack_require__(6);
+
+var _three = __webpack_require__(0);
+
+var _ThreeApp2 = __webpack_require__(7);
+
+var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
+
+var _wagner = __webpack_require__(4);
+
+var _wagner2 = _interopRequireDefault(_wagner);
+
+var _MultiPassBloomPass = __webpack_require__(14);
+
+var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
+
+var _VignettePass = __webpack_require__(27);
+
+var _VignettePass2 = _interopRequireDefault(_VignettePass);
+
+var _vine = __webpack_require__(104);
+
+var _vine2 = _interopRequireDefault(_vine);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var VINE_COUNT = 100;
+var VINE_RANGE = 30;
+var frequency = 1000;
+
+var Experiment = function (_ThreeApp) {
+  _inherits(Experiment, _ThreeApp);
+
+  function Experiment() {
+    _classCallCheck(this, Experiment);
+
+    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
+  }
+
+  _createClass(Experiment, [{
+    key: 'init',
+    value: function init() {
+      this.renderer.setClearColor(0x220022);
+
+      this.scene.fog = new _three.Fog(0x440044, 1, 50);
+      this.pivot = new _three.Object3D();
+      this.pivot.position.set(0, 2, 0);
+      this.pivot.add(this.camera);
+      this.scene.add(this.pivot);
+      this.camera.position.set(0, 2, 30);
+
+      this.vines = [];
+      this.vineGroup = new _three.Object3D();
+      this.vineGroup.position.y = 16;
+      this.scene.add(this.vineGroup);
+      for (var i = 0; i < VINE_COUNT; i++) {
+        var vine = new _vine2.default();
+        vine.random = Math.random() * 0.5;
+        vine.x = Math.random() < 0.5 ? -1 : 1;
+        vine.y = Math.random() < 0.5 ? -1 : 1;
+        vine.z = Math.random() < 0.5 ? -1 : 1;
+        vine.position.set(Math.random() * VINE_RANGE - VINE_RANGE / 2, 0, Math.random() * VINE_RANGE - VINE_RANGE / 2);
+        vine.rotation.x = Math.PI;
+        this.vines.push(vine);
+        this.vineGroup.add(vine);
+      }
+
+      this.composer = new _wagner2.default.Composer(this.renderer);
+      this.bloomPass = new _MultiPassBloomPass2.default({
+        zoomBlurStrength: 0.01,
+        applyZoomBlur: false,
+        blurAmount: 1
+      });
+      this.vignettePass = new _VignettePass2.default(1.1, 1.2);
+    }
+  }, {
+    key: 'update',
+    value: function update(t, delta) {
+      this.pivot.rotation.y = t * 0.00001;
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = this.vines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var vine = _step.value;
+
+          var bones = vine.mesh.skeleton.bones;
+          var SCALE = 1;
+          var axis = 0;
+          for (var i = 0; i < bones.length; i++) {
+            var scale = SCALE * (bones.length - 1 - i) / bones.length;
+            scale += Math.cos(vine.random * i * t * 0.001) * 0.01;
+            //+ ((1 + Math.sin(vine.random * t * 0.0001)) * 0.1);
+            //bones[i].rotation.z = Math.sin(t* 0.0001) * 0.01 * vine.random * i * (vine.random < 0.5 ? -1 : 1);
+            var rotationAxis = axis === 0 ? 'x' : axis === 1 ? 'z' : 'y';
+            var dir = vine[rotationAxis];
+            bones[i].rotation[rotationAxis] = vine.random * 0.01 * dir + Math.sin(t * 0.0005 * vine.random + vine.random * 3.0) * dir * (1 + vine.random); ///0.5* vine.random * dir * 1;
+            bones[i].scale.set(scale, scale, scale);
+            axis = (axis + 1) % 2;
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      this.renderer.clearColor();
+      this.composer.reset();
+      this.composer.render(this.scene, this.camera);
+      this.composer.pass(this.bloomPass);
+      this.composer.pass(this.vignettePass);
+      this.composer.toScreen();
+      this.camera.lookAt(this.pivot.position);
+      // this.renderer.render(this.scene, this.camera);
+    }
+  }]);
+
+  return Experiment;
+}(_ThreeApp3.default);
+
+exports.default = new Experiment();
+
+/***/ }),
+
+/***/ 104:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _three = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var points = 4;
+var radius = 0.9;
+var rings = 100;
+var heightPerRing = 0.3;
+
+var Vine = function (_Object3D) {
+  _inherits(Vine, _Object3D);
+
+  function Vine() {
+    _classCallCheck(this, Vine);
+
+    var _this = _possibleConstructorReturn(this, (Vine.__proto__ || Object.getPrototypeOf(Vine)).call(this));
+
+    var indices = [];
+    //const indices = new Float32Array((rings - 1) * points * 2);
+    var vertices = new Float32Array(rings * points * 3);
+    _this.geometry = new _three.Geometry();
+    var bones = [];
+    _this._generateVertices(_this.geometry.vertices, _this.geometry.faces, _this.geometry.skinIndices, _this.geometry.skinWeights, bones);
+    _this.skeleton = new _three.Skeleton(bones);
+    //this.geometry.addAttribute('index', new BufferAttribute(indices, 1));
+    //this.mesh = new Mesh(this.geometry, new MeshBasicMaterial({ color: 0xff0000, shading: FlatShading, side: DoubleSide }));
+    //this.mesh = new Mesh(this.geometry, new MeshBasicMaterial({ color: 0xff0000, side: DoubleSide }));
+    _this.mesh = new _three.SkinnedMesh(_this.geometry, new _three.MeshBasicMaterial({ skinning: true, color: 0xffccff }));
+    _this.mesh.add(bones[0]);
+    _this.mesh.bind(_this.skeleton);
+    _this.mesh.frustumCulled = false;
+    _this.add(_this.mesh);
+    /*
+                let skeletonHelper = new THREE.SkeletonHelper(this.mesh );
+                        skeletonHelper.material.linewidth = 10;
+                                this.add( skeletonHelper );
+        */
+    return _this;
+  }
+
+  /*
+  0 1  4 5
+  3 2  7 6
+  */
+
+
+  _createClass(Vine, [{
+    key: '_generateVertices',
+    value: function _generateVertices(vertices, faces, skinIndices, skinWeights, bones) {
+      for (var j = 0; j < rings; j++) {
+        var bone = new _three.Bone();
+        bone.position.set(0, j * heightPerRing, 0);
+        bones.push(bone);
+        for (var i = 0; i < points; i++) {
+          var theta = Math.PI * 2 * i / points;
+          vertices.push(new _three.Vector3(Math.sin(theta) * radius, j * heightPerRing, Math.cos(theta) * radius));
+          skinIndices.push(new _three.Vector4(j, j - 1, j - 2, j - 3));
+          skinWeights.push(new _three.Vector4(0.45, 0.25, 0.2, 0.1));
+        }
+        if (j !== 0) {
+          for (var _i = 0; _i < points; _i++) {
+            var thisPoint = j * points + _i;
+            var nextPoint = _i === points - 1 ? j * points : j * points + _i + 1;
+            var belowPoint = (j - 1) * points + _i;
+            var nextBelowPoint = (j - 1) * points + _i + 1;
+            faces.push(new _three.Face3(belowPoint, thisPoint, nextPoint));
+            faces.push(new _three.Face3(belowPoint, nextBelowPoint, nextPoint));
+          }
+        }
+      }
+      for (var _i2 = 0; _i2 < bones.length - 1; _i2++) {
+        bones[_i2].add(bones[_i2 + 1]);
+      }
+    }
+  }]);
+
+  return Vine;
+}(_three.Object3D);
+
+exports.default = Vine;
 
 /***/ }),
 
@@ -1059,261 +1314,6 @@ function inject(url) {
     document.body.appendChild(script);
   });
 }
-
-/***/ }),
-
-/***/ 98:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-__webpack_require__(6);
-
-var _three = __webpack_require__(0);
-
-var _ThreeApp2 = __webpack_require__(7);
-
-var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
-
-var _wagner = __webpack_require__(4);
-
-var _wagner2 = _interopRequireDefault(_wagner);
-
-var _MultiPassBloomPass = __webpack_require__(14);
-
-var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
-
-var _VignettePass = __webpack_require__(27);
-
-var _VignettePass2 = _interopRequireDefault(_VignettePass);
-
-var _vine = __webpack_require__(99);
-
-var _vine2 = _interopRequireDefault(_vine);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var VINE_COUNT = 100;
-var VINE_RANGE = 30;
-var frequency = 1000;
-
-var Experiment = function (_ThreeApp) {
-  _inherits(Experiment, _ThreeApp);
-
-  function Experiment() {
-    _classCallCheck(this, Experiment);
-
-    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
-  }
-
-  _createClass(Experiment, [{
-    key: 'init',
-    value: function init() {
-      this.renderer.setClearColor(0x220022);
-
-      this.scene.fog = new _three.Fog(0x440044, 1, 50);
-      this.pivot = new _three.Object3D();
-      this.pivot.position.set(0, 2, 0);
-      this.pivot.add(this.camera);
-      this.scene.add(this.pivot);
-      this.camera.position.set(0, 2, 30);
-
-      this.vines = [];
-      this.vineGroup = new _three.Object3D();
-      this.vineGroup.position.y = 16;
-      this.scene.add(this.vineGroup);
-      for (var i = 0; i < VINE_COUNT; i++) {
-        var vine = new _vine2.default();
-        vine.random = Math.random() * 0.5;
-        vine.x = Math.random() < 0.5 ? -1 : 1;
-        vine.y = Math.random() < 0.5 ? -1 : 1;
-        vine.z = Math.random() < 0.5 ? -1 : 1;
-        vine.position.set(Math.random() * VINE_RANGE - VINE_RANGE / 2, 0, Math.random() * VINE_RANGE - VINE_RANGE / 2);
-        vine.rotation.x = Math.PI;
-        this.vines.push(vine);
-        this.vineGroup.add(vine);
-      }
-
-      this.composer = new _wagner2.default.Composer(this.renderer);
-      this.bloomPass = new _MultiPassBloomPass2.default({
-        zoomBlurStrength: 0.01,
-        applyZoomBlur: false,
-        blurAmount: 1
-      });
-      this.vignettePass = new _VignettePass2.default(1.1, 1.2);
-    }
-  }, {
-    key: 'update',
-    value: function update(t, delta) {
-      this.pivot.rotation.y = t * 0.00001;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.vines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var vine = _step.value;
-
-          var bones = vine.mesh.skeleton.bones;
-          var SCALE = 1;
-          var axis = 0;
-          for (var i = 0; i < bones.length; i++) {
-            var scale = SCALE * (bones.length - 1 - i) / bones.length;
-            scale += Math.cos(vine.random * i * t * 0.001) * 0.01;
-            //+ ((1 + Math.sin(vine.random * t * 0.0001)) * 0.1);
-            //bones[i].rotation.z = Math.sin(t* 0.0001) * 0.01 * vine.random * i * (vine.random < 0.5 ? -1 : 1);
-            var rotationAxis = axis === 0 ? 'x' : axis === 1 ? 'z' : 'y';
-            var dir = vine[rotationAxis];
-            bones[i].rotation[rotationAxis] = vine.random * 0.01 * dir + Math.sin(t * 0.0005 * vine.random + vine.random * 3.0) * dir * (1 + vine.random); ///0.5* vine.random * dir * 1;
-            bones[i].scale.set(scale, scale, scale);
-            axis = (axis + 1) % 2;
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      this.renderer.clearColor();
-      this.composer.reset();
-      this.composer.render(this.scene, this.camera);
-      this.composer.pass(this.bloomPass);
-      this.composer.pass(this.vignettePass);
-      this.composer.toScreen();
-      this.camera.lookAt(this.pivot.position);
-      // this.renderer.render(this.scene, this.camera);
-    }
-  }]);
-
-  return Experiment;
-}(_ThreeApp3.default);
-
-exports.default = new Experiment();
-
-/***/ }),
-
-/***/ 99:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _three = __webpack_require__(0);
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var points = 4;
-var radius = 0.9;
-var rings = 100;
-var heightPerRing = 0.3;
-
-var Vine = function (_Object3D) {
-  _inherits(Vine, _Object3D);
-
-  function Vine() {
-    _classCallCheck(this, Vine);
-
-    var _this = _possibleConstructorReturn(this, (Vine.__proto__ || Object.getPrototypeOf(Vine)).call(this));
-
-    var indices = [];
-    //const indices = new Float32Array((rings - 1) * points * 2);
-    var vertices = new Float32Array(rings * points * 3);
-    _this.geometry = new _three.Geometry();
-    var bones = [];
-    _this._generateVertices(_this.geometry.vertices, _this.geometry.faces, _this.geometry.skinIndices, _this.geometry.skinWeights, bones);
-    _this.skeleton = new _three.Skeleton(bones);
-    //this.geometry.addAttribute('index', new BufferAttribute(indices, 1));
-    //this.mesh = new Mesh(this.geometry, new MeshBasicMaterial({ color: 0xff0000, shading: FlatShading, side: DoubleSide }));
-    //this.mesh = new Mesh(this.geometry, new MeshBasicMaterial({ color: 0xff0000, side: DoubleSide }));
-    _this.mesh = new _three.SkinnedMesh(_this.geometry, new _three.MeshBasicMaterial({ skinning: true, color: 0xffccff }));
-    _this.mesh.add(bones[0]);
-    _this.mesh.bind(_this.skeleton);
-    _this.mesh.frustumCulled = false;
-    _this.add(_this.mesh);
-    /*
-                let skeletonHelper = new THREE.SkeletonHelper(this.mesh );
-                        skeletonHelper.material.linewidth = 10;
-                                this.add( skeletonHelper );
-        */
-    return _this;
-  }
-
-  /*
-  0 1  4 5
-  3 2  7 6
-  */
-
-
-  _createClass(Vine, [{
-    key: '_generateVertices',
-    value: function _generateVertices(vertices, faces, skinIndices, skinWeights, bones) {
-      for (var j = 0; j < rings; j++) {
-        var bone = new _three.Bone();
-        bone.position.set(0, j * heightPerRing, 0);
-        bones.push(bone);
-        for (var i = 0; i < points; i++) {
-          var theta = Math.PI * 2 * i / points;
-          vertices.push(new _three.Vector3(Math.sin(theta) * radius, j * heightPerRing, Math.cos(theta) * radius));
-          skinIndices.push(new _three.Vector4(j, j - 1, j - 2, j - 3));
-          skinWeights.push(new _three.Vector4(0.45, 0.25, 0.2, 0.1));
-        }
-        if (j !== 0) {
-          for (var _i = 0; _i < points; _i++) {
-            var thisPoint = j * points + _i;
-            var nextPoint = _i === points - 1 ? j * points : j * points + _i + 1;
-            var belowPoint = (j - 1) * points + _i;
-            var nextBelowPoint = (j - 1) * points + _i + 1;
-            faces.push(new _three.Face3(belowPoint, thisPoint, nextPoint));
-            faces.push(new _three.Face3(belowPoint, nextBelowPoint, nextPoint));
-          }
-        }
-      }
-      for (var _i2 = 0; _i2 < bones.length - 1; _i2++) {
-        bones[_i2].add(bones[_i2 + 1]);
-      }
-    }
-  }]);
-
-  return Vine;
-}(_three.Object3D);
-
-exports.default = Vine;
 
 /***/ })
 
