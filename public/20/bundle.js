@@ -89,7 +89,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
 
 /***/ }),
 
-/***/ 33:
+/***/ 27:
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -1332,7 +1332,7 @@ var _frag2 = _interopRequireDefault(_frag);
 
 var _tween = __webpack_require__(24);
 
-var _threeOrbitControls = __webpack_require__(33);
+var _threeOrbitControls = __webpack_require__(27);
 
 var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
 

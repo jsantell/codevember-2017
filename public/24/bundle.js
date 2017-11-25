@@ -1003,60 +1003,7 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 /* 25 */,
 /* 26 */,
 /* 27 */,
-/* 28 */,
-/* 29 */,
-/* 30 */,
-/* 31 */,
-/* 32 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.default = modify;
-/**
- * Make all faces use unique vertices
- * so that each face can be separated from others
- *
- * @author alteredq / http://alteredqualia.com/
- */
-
-function modify(geometry) {
-
-	var vertices = [];
-
-	for (var i = 0, il = geometry.faces.length; i < il; i++) {
-
-		var n = vertices.length;
-
-		var face = geometry.faces[i];
-
-		var a = face.a;
-		var b = face.b;
-		var c = face.c;
-
-		var va = geometry.vertices[a];
-		var vb = geometry.vertices[b];
-		var vc = geometry.vertices[c];
-
-		vertices.push(va.clone());
-		vertices.push(vb.clone());
-		vertices.push(vc.clone());
-
-		face.a = n;
-		face.b = n + 1;
-		face.c = n + 2;
-	}
-
-	geometry.vertices = vertices;
-};
-
-/***/ }),
-/* 33 */,
-/* 34 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -2565,10 +2512,10 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(29)))
 
 /***/ }),
-/* 35 */
+/* 29 */
 /***/ (function(module, exports) {
 
 var g;
@@ -2593,6 +2540,59 @@ try {
 
 module.exports = g;
 
+
+/***/ }),
+/* 30 */,
+/* 31 */,
+/* 32 */,
+/* 33 */,
+/* 34 */,
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.default = modify;
+/**
+ * Make all faces use unique vertices
+ * so that each face can be separated from others
+ *
+ * @author alteredq / http://alteredqualia.com/
+ */
+
+function modify(geometry) {
+
+	var vertices = [];
+
+	for (var i = 0, il = geometry.faces.length; i < il; i++) {
+
+		var n = vertices.length;
+
+		var face = geometry.faces[i];
+
+		var a = face.a;
+		var b = face.b;
+		var c = face.c;
+
+		var va = geometry.vertices[a];
+		var vb = geometry.vertices[b];
+		var vc = geometry.vertices[c];
+
+		vertices.push(va.clone());
+		vertices.push(vb.clone());
+		vertices.push(vc.clone());
+
+		face.a = n;
+		face.b = n + 1;
+		face.c = n + 2;
+	}
+
+	geometry.vertices = vertices;
+};
 
 /***/ }),
 /* 36 */,
@@ -2670,7 +2670,7 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _threeAr = __webpack_require__(34);
+var _threeAr = __webpack_require__(28);
 
 var _vert = __webpack_require__(92);
 
@@ -2688,7 +2688,7 @@ var _MultiPassBloomPass = __webpack_require__(14);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _ExplodeModifier = __webpack_require__(32);
+var _ExplodeModifier = __webpack_require__(35);
 
 var _ExplodeModifier2 = _interopRequireDefault(_ExplodeModifier);
 

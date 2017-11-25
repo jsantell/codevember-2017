@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 118);
+/******/ 	return __webpack_require__(__webpack_require__.s = 123);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -220,7 +220,93 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 
 /***/ }),
 
-/***/ 118:
+/***/ 12:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function Stack(shadersPool) {
+  this.passItems = [];
+  this.shadersPool = shadersPool;
+  this.passes = [];
+}
+
+module.exports = Stack;
+
+Stack.prototype.addPass = function(shaderName, enabled, params, index) {
+  var length = 0;
+  var passItem = {
+    shaderName: shaderName,
+    enabled: enabled || false
+  };
+
+  // TODO use and store params values
+
+  this.passItems.push(passItem);
+  length = this.passItems.length;
+
+  this.updatePasses();
+
+  if (index) {
+    return this.movePassToIndex(this.passItems[length], index);
+  }
+  else {
+    return length - 1;
+  }
+};
+
+Stack.prototype.removePass = function(index) {
+  this.passItems.splice(index, 1);
+  this.updatePasses();
+};
+
+Stack.prototype.enablePass = function(index) {
+  this.passItems[index].enabled = true;
+  this.updatePasses();
+};
+
+Stack.prototype.disablePass = function(index) {
+  this.passItems[index].enabled = false;
+  this.updatePasses();
+};
+
+Stack.prototype.isPassEnabled = function(index) {
+  return this.passItems[index].enabled;
+};
+
+Stack.prototype.movePassToIndex = function(index, destIndex) {
+  this.passItems.splice(destIndex, 0, this.passItems.splice(index, 1)[0]);
+  this.updatePasses();
+
+  // TODO check if destIndex is final index
+  return destIndex;
+};
+
+Stack.prototype.reverse = function() {
+  this.passItems.reverse();
+  this.updatePasses();
+};
+
+Stack.prototype.updatePasses = function() {
+  this.passes = this.shadersPool.getPasses(this.passItems);
+
+  // init default params for new passItems
+  this.passItems.forEach(function(passItem, index) {
+    if (passItem.params === undefined) {
+      passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
+    }
+  }.bind(this));
+};
+
+Stack.prototype.getPasses = function() {
+  return this.passes;
+};
+
+
+/***/ }),
+
+/***/ 123:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -240,19 +326,19 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _vert = __webpack_require__(119);
+var _vert = __webpack_require__(124);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(120);
+var _frag = __webpack_require__(125);
 
 var _frag2 = _interopRequireDefault(_frag);
 
-var _pointsFrag = __webpack_require__(121);
+var _pointsFrag = __webpack_require__(126);
 
 var _pointsFrag2 = _interopRequireDefault(_pointsFrag);
 
-var _pointsVert = __webpack_require__(122);
+var _pointsVert = __webpack_require__(127);
 
 var _pointsVert2 = _interopRequireDefault(_pointsVert);
 
@@ -260,7 +346,7 @@ var _wagner = __webpack_require__(4);
 
 var _wagner2 = _interopRequireDefault(_wagner);
 
-var _VignettePass = __webpack_require__(27);
+var _VignettePass = __webpack_require__(30);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
@@ -401,114 +487,28 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 119:
+/***/ 124:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float size;\nvarying vec3 vBC;\nattribute vec3 barycentric;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
 
 /***/ }),
 
-/***/ 12:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-function Stack(shadersPool) {
-  this.passItems = [];
-  this.shadersPool = shadersPool;
-  this.passes = [];
-}
-
-module.exports = Stack;
-
-Stack.prototype.addPass = function(shaderName, enabled, params, index) {
-  var length = 0;
-  var passItem = {
-    shaderName: shaderName,
-    enabled: enabled || false
-  };
-
-  // TODO use and store params values
-
-  this.passItems.push(passItem);
-  length = this.passItems.length;
-
-  this.updatePasses();
-
-  if (index) {
-    return this.movePassToIndex(this.passItems[length], index);
-  }
-  else {
-    return length - 1;
-  }
-};
-
-Stack.prototype.removePass = function(index) {
-  this.passItems.splice(index, 1);
-  this.updatePasses();
-};
-
-Stack.prototype.enablePass = function(index) {
-  this.passItems[index].enabled = true;
-  this.updatePasses();
-};
-
-Stack.prototype.disablePass = function(index) {
-  this.passItems[index].enabled = false;
-  this.updatePasses();
-};
-
-Stack.prototype.isPassEnabled = function(index) {
-  return this.passItems[index].enabled;
-};
-
-Stack.prototype.movePassToIndex = function(index, destIndex) {
-  this.passItems.splice(destIndex, 0, this.passItems.splice(index, 1)[0]);
-  this.updatePasses();
-
-  // TODO check if destIndex is final index
-  return destIndex;
-};
-
-Stack.prototype.reverse = function() {
-  this.passItems.reverse();
-  this.updatePasses();
-};
-
-Stack.prototype.updatePasses = function() {
-  this.passes = this.shadersPool.getPasses(this.passItems);
-
-  // init default params for new passItems
-  this.passItems.forEach(function(passItem, index) {
-    if (passItem.params === undefined) {
-      passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
-    }
-  }.bind(this));
-};
-
-Stack.prototype.getPasses = function() {
-  return this.passes;
-};
-
-
-/***/ }),
-
-/***/ 120:
+/***/ 125:
 /***/ (function(module, exports) {
 
 module.exports = "#extension GL_OES_standard_derivatives : enable\n#define GLSLIFY 1\n\nuniform vec3 color;\nuniform vec3 wireframeColor;\nuniform float rms;\nvarying vec3 vBC;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\nfloat edgeFactor(vec3 bc){\n  vec3 d = fwidth(bc);\n  vec3 a3 = smoothstep(vec3(0.0), d*1.5, bc);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  vec3 c = mix(wireframeColor, color, edgeFactor(vBC));\n  gl_FragColor = vec4(c, 1.0);\n}\n"
 
 /***/ }),
 
-/***/ 121:
+/***/ 126:
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform sampler2D sprite;\nuniform vec3 color;\n\nfloat map_2_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_2_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_2_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_2_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_1_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_1_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_1_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_1_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_1_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_1_2(float h, float s, float l) {\n    return hsl2rgb_1_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float alpha = smoothstep(0.1, 0.9, tex.r);\n  gl_FragColor = vec4(color, alpha);\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform sampler2D sprite;\nuniform vec3 color;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float alpha = smoothstep(0.1, 0.9, tex.r);\n  gl_FragColor = vec4(color, alpha);\n}\n"
 
 /***/ }),
 
-/***/ 122:
+/***/ 127:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float size;\nuniform float rms;\n\nvoid main() {\n  //vec3 p = position + (smoothstep(0.2, 0.5, rms) * 0.1 * position);\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size;\n}\n"
@@ -522,7 +522,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 /***/ }),
 
-/***/ 27:
+/***/ 3:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -530,7 +530,30 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n\n  vUv
 
 var Pass = __webpack_require__(1);
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(28);
+var fragment = __webpack_require__(11);
+
+function CopyPass() {
+  Pass.call(this);
+  this.setShader(vertex, fragment);
+}
+
+module.exports = CopyPass;
+
+CopyPass.prototype = Object.create(Pass.prototype);
+CopyPass.prototype.constructor = CopyPass;
+
+
+/***/ }),
+
+/***/ 30:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var vertex = __webpack_require__(2);
+var fragment = __webpack_require__(31);
 
 function VignettePass(boost, reduction) {
   Pass.call(this);
@@ -555,33 +578,10 @@ VignettePass.prototype.run = function(composer) {
 
 /***/ }),
 
-/***/ 28:
+/***/ 31:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
-
-/***/ }),
-
-/***/ 3:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(11);
-
-function CopyPass() {
-  Pass.call(this);
-  this.setShader(vertex, fragment);
-}
-
-module.exports = CopyPass;
-
-CopyPass.prototype = Object.create(Pass.prototype);
-CopyPass.prototype.constructor = CopyPass;
-
 
 /***/ }),
 

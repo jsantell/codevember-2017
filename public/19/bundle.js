@@ -1076,13 +1076,7 @@ Godray.prototype.run = function(composer) {
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nuniform float fX;\nuniform float fY;\nuniform float fExposure;\nuniform float fDecay;\nuniform float fDensity;\nuniform float fWeight;\nuniform float fClamp;\n\nconst int iSamples = 20;\n\nvoid main()\n{\n\tvec2 deltaTextCoord = vec2(vUv - vec2(fX,fY));\n\tdeltaTextCoord *= 1.0 /  float(iSamples) * fDensity;\n\tvec2 coord = vUv;\n\tfloat illuminationDecay = 1.0;\n\tvec4 FragColor = vec4(0.0);\n\tfor(int i=0; i < iSamples ; i++)\n\t{\n\t\tcoord -= deltaTextCoord;\n\t\tvec4 texel = texture2D(tInput, coord);\n\t\ttexel *= illuminationDecay * fWeight;\n\t\tFragColor += texel;\n\t\tilluminationDecay *= fDecay;\n\t}\n\tFragColor *= fExposure;\n\tFragColor = clamp(FragColor, 0.0, fClamp);\n\tgl_FragColor = FragColor;\n}"
 
 /***/ }),
-/* 27 */,
-/* 28 */,
-/* 29 */,
-/* 30 */,
-/* 31 */,
-/* 32 */,
-/* 33 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -2108,6 +2102,12 @@ module.exports = function( THREE ) {
 
 
 /***/ }),
+/* 28 */,
+/* 29 */,
+/* 30 */,
+/* 31 */,
+/* 32 */,
+/* 33 */,
 /* 34 */,
 /* 35 */,
 /* 36 */
@@ -2608,7 +2608,7 @@ var _threeEffectcomposer = __webpack_require__(36);
 
 var _threeEffectcomposer2 = _interopRequireDefault(_threeEffectcomposer);
 
-var _threeOrbitControls = __webpack_require__(33);
+var _threeOrbitControls = __webpack_require__(27);
 
 var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
 

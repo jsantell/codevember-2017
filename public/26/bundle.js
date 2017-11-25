@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 94);
+/******/ 	return __webpack_require__(__webpack_require__.s = 97);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -3631,7 +3631,10 @@ module.exports = g;
 /* 91 */,
 /* 92 */,
 /* 93 */,
-/* 94 */
+/* 94 */,
+/* 95 */,
+/* 96 */,
+/* 97 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3653,13 +3656,21 @@ var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
 var _threeAr = __webpack_require__(28);
 
-var _vert = __webpack_require__(95);
+var _vert = __webpack_require__(98);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(96);
+var _frag = __webpack_require__(99);
 
 var _frag2 = _interopRequireDefault(_frag);
+
+var _pointsVert = __webpack_require__(100);
+
+var _pointsVert2 = _interopRequireDefault(_pointsVert);
+
+var _pointsFrag = __webpack_require__(101);
+
+var _pointsFrag2 = _interopRequireDefault(_pointsFrag);
 
 var _wagner = __webpack_require__(4);
 
@@ -3683,18 +3694,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var OrbitControls = (0, _threeOrbitControls2.default)(window.THREE);
 
-var DISPLACEMENT = 0.0005;
-var COLOR = 0x555555;
-var NOISE_COLOR = 0x3333ff;
-var LIGHT_INTENSITY = 0.005;
-var MODEL = '../assets/Monument_angels.obj';
-var SCALE = 0.01;
-var DIFFUSE_MAP = {
-  '02___Default': 'D_Monument_angels_a.bmp',
-  'Material__1': 'D_Monument_angels_b.bmp',
-  'Material__2': 'D_Monument_angels_c.bmp',
-  'mat_Monument_angels': 'D_Monument_angels_d.bmp'
-};
+var NOISE_COLOR = 0xff3300;
+var NOISE_THRESHOLD = 0.65;
+var LIGHT_INTENSITY = 0.9;
+var AMBIENT = 0.1;
+var DIFFUSE = '../assets/earthmap1k.jpg';
+var BUMP = '../assets/earthbump1k.jpg';
+var BUMP_POWER = 0.05;
 
 var Experiment = function (_ThreeApp) {
   _inherits(Experiment, _ThreeApp);
@@ -3713,53 +3719,23 @@ var Experiment = function (_ThreeApp) {
       new OrbitControls(this.camera);
       this.renderer.setClearColor(0x111111);
 
-      _threeAr.ARUtils.loadModel({
-        objPath: MODEL,
-        OBJLoader: window.THREE.OBJLoader,
-        mtlPath: ' ../assets/Monument_angels.mtl',
-        MTLLoader: window.THREE.MTLLoader
-      }).then(function (group) {
-        _this2.model = group;
-
-        _this2.model.remove(_this2.model.children[3]);
-        _this2.model.remove(_this2.model.children[2]);
-        _this2.model.remove(_this2.model.children[1]);
-
-        var transform = new _three.Matrix4().compose(new _three.Vector3(0, -1.5, 0), new _three.Quaternion(), new _three.Vector3(SCALE, SCALE, SCALE));
-
-        _this2.model.children[0].geometry.applyMatrix(transform);
-
-        _this2.materials = Object.keys(DIFFUSE_MAP).reduce(function (mats, matName) {
-          var material = _this2.material.clone();
-          material.name = matName;
-          mats[matName] = material;
-          return mats;
-        }, {});
-
-        // Use the MTL to map to materials so we can
-        // use the right diffuse map
-        var origMaterials = _this2.model.children[0].material;
-        _this2.model.children[0].material = origMaterials.map(function (m) {
-          _this2.materials[m.name].uniforms.diffuseMap.value = m.map;
-          return _this2.materials[m.name];
-        });
-
-        _this2.scene.add(_this2.model);
-      });
-
       this.light = new _three.PointLight();
       this.scene.add(this.light);
-      this.light.position.set(0, 0, 7);
+      this.light.position.set(-40, 0, -3);
 
+      this.geometry = new _three.SphereBufferGeometry(2, 100, 100);
       this.material = new _three.ShaderMaterial({
         uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib['lights'], {
           lightIntensity: { value: LIGHT_INTENSITY },
           //alpha: { value: 0.5 },
           //color: { value: new Color(COLOR) },
           noiseColor: { value: new _three.Color(NOISE_COLOR) },
+          noiseThreshold: { value: NOISE_THRESHOLD },
+          ambient: { value: AMBIENT },
           time: { value: 0 },
           diffuseMap: { value: null },
-          displacement: { value: DISPLACEMENT }
+          bumpMap: { value: null },
+          bumpPower: { value: BUMP_POWER }
         }]),
         vertexShader: _vert2.default,
         fragmentShader: _frag2.default,
@@ -3768,54 +3744,57 @@ var Experiment = function (_ThreeApp) {
         transparent: true
       });
       this.textureLoader = new _three.TextureLoader();
+      this.textureLoader.load(DIFFUSE, function (texture) {
+        _this2.material.uniforms.diffuseMap.value = texture;
+      });
+      this.textureLoader.load(BUMP, function (texture) {
+        _this2.material.uniforms.bumpMap.value = texture;
+      });
+      this.textureLoader.load('../assets/particle.jpg', function (texture) {
+        _this2.pointsMaterial.uniforms.alphaMap.value = texture;
+      });
 
-      this.pivot = new _three.Object3D();
-      this.pivot2 = new _three.Object3D();
-      this.pivot.add(this.light);
-      this.scene.add(this.pivot);
-      this.scene.add(this.pivot2);
-      this.camera.position.set(0, 0, 3);
-      this.pivot2.add(this.camera);
+      this.mesh = new _three.Mesh(this.geometry, this.material);
+
+      this.pointsMaterial = new _three.ShaderMaterial({
+        uniforms: {
+          color: { value: new _three.Color(NOISE_COLOR) },
+          noiseThreshold: { value: NOISE_THRESHOLD },
+          time: { value: 0 },
+          alphaMap: { value: null }
+        },
+        transparent: true,
+        vertexShader: _pointsVert2.default,
+        fragmentShader: _pointsFrag2.default
+      });
+      var geometry = new _three.SphereBufferGeometry(2, 100, 100);
+      this.points = new _three.Points(geometry, this.pointsMaterial);
+      this.points.scale.set(1.01, 1.01, 1.01);
+      this.scene.add(this.points);
+      this.scene.add(this.mesh);
+
+      this.lightPivot = new _three.Object3D();
+      this.cameraPivot = new _three.Object3D();
+      this.lightPivot.add(this.light);
+      this.scene.add(this.lightPivot);
+      this.scene.add(this.cameraPivot);
+      this.camera.position.set(0, 0, 5);
+      this.cameraPivot.add(this.camera);
       this.renderer.render(this.scene, this.camera);
       this.composer = new _wagner2.default.Composer(this.renderer);
       this.pass = new _MultiPassBloomPass2.default({
         blurAmount: 5,
         applyZoomBlur: true,
-        zoomBlurStrength: 0.9
+        zoomBlurStrength: 2
       });
     }
   }, {
     key: 'update',
     value: function update(t, delta) {
-      this.pivot.rotation.y = t * -0.001;
-      this.pivot2.rotation.y = Math.sin(t * -0.0001) * 0.5;
-      if (!this.model) {
-        return;
-      }
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = Object.keys(this.materials)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var name = _step.value;
-
-          this.materials[name].uniforms.time.value = t * 0.001;
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
+      this.mesh.rotation.y = Math.PI * 1.2 + t * 0.00005;
+      this.points.rotation.y = this.mesh.rotation.y;
+      this.material.uniforms.time.value = t * 0.001;
+      this.pointsMaterial.uniforms.time.value = t * 0.001;
     }
   }, {
     key: 'render',
@@ -3833,16 +3812,28 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 95 */
+/* 98 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float displacement;\n\nvarying vec3 vNormal;\nvarying vec4 vPosition;\nvarying float vNoise;\nvarying vec2 vUv;\n//\n// Description : Array and textureless GLSL 2D/3D/4D simplex\n//               noise functions.\n//      Author : Ian McEwan, Ashima Arts.\n//  Maintainer : ijm\n//     Lastmod : 20110822 (ijm)\n//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.\n//               Distributed under the MIT License. See LICENSE file.\n//               https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x) {\n     return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nfloat snoise_1_3(vec3 v)\n  {\n  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;\n  const vec4  D_1_4 = vec4(0.0, 0.5, 1.0, 2.0);\n\n// First corner\n  vec3 i  = floor(v + dot(v, C.yyy) );\n  vec3 x0 =   v - i + dot(i, C.xxx) ;\n\n// Other corners\n  vec3 g_1_5 = step(x0.yzx, x0.xyz);\n  vec3 l = 1.0 - g_1_5;\n  vec3 i1 = min( g_1_5.xyz, l.zxy );\n  vec3 i2 = max( g_1_5.xyz, l.zxy );\n\n  //   x0 = x0 - 0.0 + 0.0 * C.xxx;\n  //   x1 = x0 - i1  + 1.0 * C.xxx;\n  //   x2 = x0 - i2  + 2.0 * C.xxx;\n  //   x3 = x0 - 1.0 + 3.0 * C.xxx;\n  vec3 x1 = x0 - i1 + C.xxx;\n  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y\n  vec3 x3 = x0 - D_1_4.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y\n\n// Permutations\n  i = mod289_1_0(i);\n  vec4 p = permute_1_1( permute_1_1( permute_1_1(\n             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))\n           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))\n           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));\n\n// Gradients: 7x7 points over a square, mapped onto an octahedron.\n// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)\n  float n_ = 0.142857142857; // 1.0/7.0\n  vec3  ns = n_ * D_1_4.wyz - D_1_4.xzx;\n\n  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)\n\n  vec4 x_ = floor(j * ns.z);\n  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)\n\n  vec4 x = x_ *ns.x + ns.yyyy;\n  vec4 y = y_ *ns.x + ns.yyyy;\n  vec4 h = 1.0 - abs(x) - abs(y);\n\n  vec4 b0 = vec4( x.xy, y.xy );\n  vec4 b1 = vec4( x.zw, y.zw );\n\n  //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;\n  //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;\n  vec4 s0 = floor(b0)*2.0 + 1.0;\n  vec4 s1 = floor(b1)*2.0 + 1.0;\n  vec4 sh = -step(h, vec4(0.0));\n\n  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;\n  vec4 a1_1_6 = b1.xzyw + s1.xzyw*sh.zzww ;\n\n  vec3 p0_1_7 = vec3(a0.xy,h.x);\n  vec3 p1 = vec3(a0.zw,h.y);\n  vec3 p2 = vec3(a1_1_6.xy,h.z);\n  vec3 p3 = vec3(a1_1_6.zw,h.w);\n\n//Normalise gradients\n  vec4 norm = taylorInvSqrt_1_2(vec4(dot(p0_1_7,p0_1_7), dot(p1,p1), dot(p2, p2), dot(p3,p3)));\n  p0_1_7 *= norm.x;\n  p1 *= norm.y;\n  p2 *= norm.z;\n  p3 *= norm.w;\n\n// Mix final noise value\n  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);\n  m = m * m;\n  return 42.0 * dot( m*m, vec4( dot(p0_1_7,x0), dot(p1,x1),\n                                dot(p2,x2), dot(p3,x3) ) );\n  }\n\n\n\n\nvoid main() {\n  vUv = uv;\n  vNormal = normal;\n  float t = sin(fract(time * 0.0001) * 3.1415926 * 2.0) * 300.0;\n\n  vec4 p = modelViewMatrix * vec4(position, 1.0);\n  float x = p.x / t;\n  float y = p.y - t;\n  float z = p.z * t;\n\n  //vNoise = smoothstep(0.5, 0.9, snoise3(t * vec3(x,y,z)) * 0.5 + 0.5);\n  vNoise = snoise_1_3(vec3(x,y,z)) * 0.5 + 0.5;\n  float displace = smoothstep(0.5, 0.9, vNoise) * displacement;\n  vec3 pos = position + normal * displace;\n  vPosition = modelViewMatrix * vec4(pos, 1.0);\n\n  gl_Position = projectionMatrix * vPosition;\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D bumpMap;\nuniform float bumpPower;\nvarying vec3 vNormal;\nvarying vec4 vPosition;\nvarying float vNoise;\nvarying vec2 vUv;\n//\n// GLSL textureless classic 3D noise \"cnoise\",\n// with an RSL-style periodic variant \"pnoise\".\n// Author:  Stefan Gustavson (stefan.gustavson@liu.se)\n// Version: 2011-10-11\n//\n// Many thanks to Ian McEwan of Ashima Arts for the\n// ideas for permutation and gradient selection.\n//\n// Copyright (c) 2011 Stefan Gustavson. All rights reserved.\n// Distributed under the MIT license. See LICENSE file.\n// https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x)\n{\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x)\n{\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x)\n{\n  return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nvec3 fade_1_3(vec3 t) {\n  return t*t*t*(t*(t*6.0-15.0)+10.0);\n}\n\n// Classic Perlin noise\nfloat cnoise_1_4(vec3 P)\n{\n  vec3 Pi0 = floor(P); // Integer part for indexing\n  vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1\n  Pi0 = mod289_1_0(Pi0);\n  Pi1 = mod289_1_0(Pi1);\n  vec3 Pf0 = fract(P); // Fractional part for interpolation\n  vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n  vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n  vec4 iy = vec4(Pi0.yy, Pi1.yy);\n  vec4 iz0 = Pi0.zzzz;\n  vec4 iz1 = Pi1.zzzz;\n\n  vec4 ixy = permute_1_1(permute_1_1(ix) + iy);\n  vec4 ixy0 = permute_1_1(ixy + iz0);\n  vec4 ixy1 = permute_1_1(ixy + iz1);\n\n  vec4 gx0 = ixy0 * (1.0 / 7.0);\n  vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;\n  gx0 = fract(gx0);\n  vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n  vec4 sz0 = step(gz0, vec4(0.0));\n  gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n  gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n\n  vec4 gx1 = ixy1 * (1.0 / 7.0);\n  vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;\n  gx1 = fract(gx1);\n  vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n  vec4 sz1 = step(gz1, vec4(0.0));\n  gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n  gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n\n  vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);\n  vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);\n  vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);\n  vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);\n  vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);\n  vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);\n  vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);\n  vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);\n\n  vec4 norm0 = taylorInvSqrt_1_2(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n  g000 *= norm0.x;\n  g010 *= norm0.y;\n  g100 *= norm0.z;\n  g110 *= norm0.w;\n  vec4 norm1 = taylorInvSqrt_1_2(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n  g001 *= norm1.x;\n  g011 *= norm1.y;\n  g101 *= norm1.z;\n  g111 *= norm1.w;\n\n  float n000 = dot(g000, Pf0);\n  float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n  float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n  float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n  float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n  float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n  float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n  float n111 = dot(g111, Pf1);\n\n  vec3 fade_xyz = fade_1_3(Pf0);\n  vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n  vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n  float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);\n  return 2.2 * n_xyz;\n}\n\n\n\n\nvoid main() {\n  vec3 bump = texture2D(bumpMap, uv).xyz;\n  vUv = uv;\n  vNormal = (modelViewMatrix * vec4(normal, 1.0)).xyz;\n  float t = sin(fract(time * 0.01) * 3.1415926 * 2.0) * 5.0;\n  vec4 worldPos = modelMatrix * vec4(position, 1.0);\n  float x = worldPos.x + t;\n  float y = worldPos.y - t;\n  float z = worldPos.z + t;\n\n  //vNoise = smoothstep(0.5, 0.9, snoise3(t * vec3(x,y,z)) * 0.5 + 0.5);\n  vNoise = cnoise_1_4(vec3(x,y,z)) * 0.5 + 0.5;\n  vPosition = modelViewMatrix * vec4(position, 1.0);//worldPos;\n  vec4 bumpedPosition = vec4(position + (normal * bump.x * bumpPower), 1.0);\n  gl_Position = projectionMatrix * modelViewMatrix * bumpedPosition;\n}\n"
 
 /***/ }),
-/* 96 */
+/* 99 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float lightIntensity;\nuniform vec3 noiseColor;\nuniform sampler2D diffuseMap;\n\nvarying vec2 vUv;\nvarying vec4 vPosition;\nvarying vec3 vNormal;\nvarying float vNoise;\n\nstruct PointLight {\n  vec3 color;\n  vec3 position; // light position, in camera coordinates\n  float distance; // used for attenuation purposes\n};\n\nuniform PointLight pointLights[NUM_POINT_LIGHTS];\n\nfloat lambertDiffuse_3_0(\n  vec3 lightDirection,\n  vec3 surfaceNormal) {\n  return max(0.0, dot(lightDirection, surfaceNormal));\n}\n\n\nfloat map_1_1(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_1(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_1(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_1(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_2(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_3(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_2(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_2(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_2(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_3(float h, float s, float l) {\n    return hsl2rgb_2_3(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  // via https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/\n  vec3 color = texture2D(diffuseMap, vUv * 0.5 + 0.5).xyz;\n\n  vec3 addedLights = vec3(0.0, 0.0, 0.0);\n  for(int l = 0; l < NUM_POINT_LIGHTS; l++) {\n    vec3 lightDirection = normalize(pointLights[l].position - vPosition.xyz);\n    addedLights += lambertDiffuse_3_0(lightDirection, vNormal);\n  }\n  vec3 c = (color * 0.1) + (color * addedLights * lightIntensity);\n  c += noiseColor * vNoise;\n  c += smoothstep(0.5, 1.0, vNoise) * vec3(1.0, 0.0, -1.0)  * 1.0;\n  float alpha = smoothstep(0.2, 0.4, vNoise);\n  gl_FragColor = vec4(c, alpha);\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float lightIntensity;\nuniform float ambient;\nuniform float noiseThreshold;\nuniform sampler2D diffuseMap;\nuniform vec3 noiseColor;\n\nvarying vec2 vUv;\nvarying vec4 vPosition;\nvarying vec3 vNormal;\nvarying float vNoise;\n\nstruct PointLight {\n  vec3 color;\n  vec3 position; // light position, in camera coordinates\n  float distance; // used for attenuation purposes\n};\n\nuniform PointLight pointLights[NUM_POINT_LIGHTS];\n\nfloat lambertDiffuse_3_0(\n  vec3 lightDirection,\n  vec3 surfaceNormal) {\n  return max(0.0, dot(lightDirection, surfaceNormal));\n}\n\n\nfloat map_1_1(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_1(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_1(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_1(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_2(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_3(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_2(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_2(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_2(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_3(float h, float s, float l) {\n    return hsl2rgb_2_3(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  // via https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/\n  vec3 color = texture2D(diffuseMap, vUv).xyz;\n\n  vec3 addedLights = vec3(0.0, 0.0, 0.0);\n  for(int l = 0; l < NUM_POINT_LIGHTS; l++) {\n    vec3 lightDirection = normalize(pointLights[l].position - vPosition.xyz);\n    addedLights += lambertDiffuse_3_0(lightDirection, vNormal);\n  }\n  vec3 c = (color * ambient) + (color * addedLights * lightIntensity);\n  c += noiseColor * smoothstep(noiseThreshold-0.1, noiseThreshold + 0.05, vNoise);\n  float alpha = 1.0 - smoothstep(noiseThreshold, noiseThreshold + 0.05, vNoise);\n  gl_FragColor = vec4(c, alpha);\n}\n"
+
+/***/ }),
+/* 100 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float noiseThreshold;\n\nvarying vec3 vNormal;\nvarying vec4 vPosition;\nvarying float vNoise;\nvarying vec2 vUv;\n//\n// GLSL textureless classic 3D noise \"cnoise\",\n// with an RSL-style periodic variant \"pnoise\".\n// Author:  Stefan Gustavson (stefan.gustavson@liu.se)\n// Version: 2011-10-11\n//\n// Many thanks to Ian McEwan of Ashima Arts for the\n// ideas for permutation and gradient selection.\n//\n// Copyright (c) 2011 Stefan Gustavson. All rights reserved.\n// Distributed under the MIT license. See LICENSE file.\n// https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x)\n{\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x)\n{\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x)\n{\n  return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nvec3 fade_1_3(vec3 t) {\n  return t*t*t*(t*(t*6.0-15.0)+10.0);\n}\n\n// Classic Perlin noise\nfloat cnoise_1_4(vec3 P)\n{\n  vec3 Pi0 = floor(P); // Integer part for indexing\n  vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1\n  Pi0 = mod289_1_0(Pi0);\n  Pi1 = mod289_1_0(Pi1);\n  vec3 Pf0 = fract(P); // Fractional part for interpolation\n  vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n  vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n  vec4 iy = vec4(Pi0.yy, Pi1.yy);\n  vec4 iz0 = Pi0.zzzz;\n  vec4 iz1 = Pi1.zzzz;\n\n  vec4 ixy = permute_1_1(permute_1_1(ix) + iy);\n  vec4 ixy0 = permute_1_1(ixy + iz0);\n  vec4 ixy1 = permute_1_1(ixy + iz1);\n\n  vec4 gx0 = ixy0 * (1.0 / 7.0);\n  vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;\n  gx0 = fract(gx0);\n  vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n  vec4 sz0 = step(gz0, vec4(0.0));\n  gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n  gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n\n  vec4 gx1 = ixy1 * (1.0 / 7.0);\n  vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;\n  gx1 = fract(gx1);\n  vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n  vec4 sz1 = step(gz1, vec4(0.0));\n  gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n  gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n\n  vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);\n  vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);\n  vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);\n  vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);\n  vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);\n  vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);\n  vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);\n  vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);\n\n  vec4 norm0 = taylorInvSqrt_1_2(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n  g000 *= norm0.x;\n  g010 *= norm0.y;\n  g100 *= norm0.z;\n  g110 *= norm0.w;\n  vec4 norm1 = taylorInvSqrt_1_2(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n  g001 *= norm1.x;\n  g011 *= norm1.y;\n  g101 *= norm1.z;\n  g111 *= norm1.w;\n\n  float n000 = dot(g000, Pf0);\n  float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n  float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n  float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n  float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n  float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n  float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n  float n111 = dot(g111, Pf1);\n\n  vec3 fade_xyz = fade_1_3(Pf0);\n  vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n  vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n  float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);\n  return 2.2 * n_xyz;\n}\n\n\n\n\nvoid main() {\n  vUv = uv;\n  vNormal = normal;\n  float t = sin(fract(time * 0.01) * 3.1415926 * 2.0) * 5.0;\n  vec4 pos = modelMatrix * vec4(position, 1.0);\n  float x = pos.x + t;\n  float y = pos.y - t;\n  float z = pos.z + t;\n\n  vNoise = cnoise_1_4(vec3(x,y,z)) * 0.5 + 0.5;\n  vPosition = pos;\n  gl_PointSize = 70.0 * smoothstep(noiseThreshold - 0.5, noiseThreshold + 0.5, vNoise);\n  gl_PointSize /= distance(vPosition, vec4(cameraPosition, 1.0));\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
+
+/***/ }),
+/* 101 */
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform vec3 color;\nuniform float noiseThreshold;\nuniform sampler2D alphaMap;\n\nvarying vec2 vUv;\nvarying vec4 vPosition;\nvarying vec3 vNormal;\nvarying float vNoise;\n\nfloat lambertDiffuse_3_0(\n  vec3 lightDirection,\n  vec3 surfaceNormal) {\n  return max(0.0, dot(lightDirection, surfaceNormal));\n}\n\n\nfloat map_1_1(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_1(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_1(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_1(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_2(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_3(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_2(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_2(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_2(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_3(float h, float s, float l) {\n    return hsl2rgb_2_3(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n\n  float alpha = 1.0 - abs(vNoise - noiseThreshold);\n  alpha *= smoothstep(0.4, 0.9, texture2D(alphaMap, gl_PointCoord).r);\n  gl_FragColor = vec4(hsl2rgb_2_3(map_1_1(1.0 - vNoise, 0.0, 1.0, 0.0, 0.1), 0.8, 0.5), alpha);\n}\n"
 
 /***/ })
 /******/ ]);

@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 117);
+/******/ 	return __webpack_require__(__webpack_require__.s = 122);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -220,7 +220,93 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 
 /***/ }),
 
-/***/ 117:
+/***/ 12:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function Stack(shadersPool) {
+  this.passItems = [];
+  this.shadersPool = shadersPool;
+  this.passes = [];
+}
+
+module.exports = Stack;
+
+Stack.prototype.addPass = function(shaderName, enabled, params, index) {
+  var length = 0;
+  var passItem = {
+    shaderName: shaderName,
+    enabled: enabled || false
+  };
+
+  // TODO use and store params values
+
+  this.passItems.push(passItem);
+  length = this.passItems.length;
+
+  this.updatePasses();
+
+  if (index) {
+    return this.movePassToIndex(this.passItems[length], index);
+  }
+  else {
+    return length - 1;
+  }
+};
+
+Stack.prototype.removePass = function(index) {
+  this.passItems.splice(index, 1);
+  this.updatePasses();
+};
+
+Stack.prototype.enablePass = function(index) {
+  this.passItems[index].enabled = true;
+  this.updatePasses();
+};
+
+Stack.prototype.disablePass = function(index) {
+  this.passItems[index].enabled = false;
+  this.updatePasses();
+};
+
+Stack.prototype.isPassEnabled = function(index) {
+  return this.passItems[index].enabled;
+};
+
+Stack.prototype.movePassToIndex = function(index, destIndex) {
+  this.passItems.splice(destIndex, 0, this.passItems.splice(index, 1)[0]);
+  this.updatePasses();
+
+  // TODO check if destIndex is final index
+  return destIndex;
+};
+
+Stack.prototype.reverse = function() {
+  this.passItems.reverse();
+  this.updatePasses();
+};
+
+Stack.prototype.updatePasses = function() {
+  this.passes = this.shadersPool.getPasses(this.passItems);
+
+  // init default params for new passItems
+  this.passItems.forEach(function(passItem, index) {
+    if (passItem.params === undefined) {
+      passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
+    }
+  }.bind(this));
+};
+
+Stack.prototype.getPasses = function() {
+  return this.passes;
+};
+
+
+/***/ }),
+
+/***/ 122:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -240,7 +326,7 @@ var THREE = _interopRequireWildcard(_three);
 
 var _tween = __webpack_require__(24);
 
-var _threeAr = __webpack_require__(34);
+var _threeAr = __webpack_require__(28);
 
 var _ThreeApp2 = __webpack_require__(7);
 
@@ -254,7 +340,7 @@ var _MultiPassBloomPass = __webpack_require__(14);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _VignettePass = __webpack_require__(27);
+var _VignettePass = __webpack_require__(30);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
@@ -464,92 +550,6 @@ var Experiment = function (_ThreeApp) {
 }(_ThreeApp3.default);
 
 exports.default = new Experiment();
-
-/***/ }),
-
-/***/ 12:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-function Stack(shadersPool) {
-  this.passItems = [];
-  this.shadersPool = shadersPool;
-  this.passes = [];
-}
-
-module.exports = Stack;
-
-Stack.prototype.addPass = function(shaderName, enabled, params, index) {
-  var length = 0;
-  var passItem = {
-    shaderName: shaderName,
-    enabled: enabled || false
-  };
-
-  // TODO use and store params values
-
-  this.passItems.push(passItem);
-  length = this.passItems.length;
-
-  this.updatePasses();
-
-  if (index) {
-    return this.movePassToIndex(this.passItems[length], index);
-  }
-  else {
-    return length - 1;
-  }
-};
-
-Stack.prototype.removePass = function(index) {
-  this.passItems.splice(index, 1);
-  this.updatePasses();
-};
-
-Stack.prototype.enablePass = function(index) {
-  this.passItems[index].enabled = true;
-  this.updatePasses();
-};
-
-Stack.prototype.disablePass = function(index) {
-  this.passItems[index].enabled = false;
-  this.updatePasses();
-};
-
-Stack.prototype.isPassEnabled = function(index) {
-  return this.passItems[index].enabled;
-};
-
-Stack.prototype.movePassToIndex = function(index, destIndex) {
-  this.passItems.splice(destIndex, 0, this.passItems.splice(index, 1)[0]);
-  this.updatePasses();
-
-  // TODO check if destIndex is final index
-  return destIndex;
-};
-
-Stack.prototype.reverse = function() {
-  this.passItems.reverse();
-  this.updatePasses();
-};
-
-Stack.prototype.updatePasses = function() {
-  this.passes = this.shadersPool.getPasses(this.passItems);
-
-  // init default params for new passItems
-  this.passItems.forEach(function(passItem, index) {
-    if (passItem.params === undefined) {
-      passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
-    }
-  }.bind(this));
-};
-
-Stack.prototype.getPasses = function() {
-  return this.passes;
-};
-
 
 /***/ }),
 
@@ -857,70 +857,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
 
 /***/ }),
 
-/***/ 27:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(28);
-
-function VignettePass(boost, reduction) {
-  Pass.call(this);
-
-  this.setShader(vertex, fragment);
-
-  this.params.boost = boost || 2;
-  this.params.reduction = reduction || 2;
-}
-
-module.exports = VignettePass;
-
-VignettePass.prototype = Object.create(Pass.prototype);
-VignettePass.prototype.constructor = VignettePass;
-
-VignettePass.prototype.run = function(composer) {
-  this.shader.uniforms.boost.value = this.params.boost;
-  this.shader.uniforms.reduction.value = this.params.reduction;
-  composer.pass(this.shader);
-};
-
-
-/***/ }),
-
 /***/ 28:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
-
-/***/ }),
-
-/***/ 3:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(11);
-
-function CopyPass() {
-  Pass.call(this);
-  this.setShader(vertex, fragment);
-}
-
-module.exports = CopyPass;
-
-CopyPass.prototype = Object.create(Pass.prototype);
-CopyPass.prototype.constructor = CopyPass;
-
-
-/***/ }),
-
-/***/ 34:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -2429,11 +2366,11 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(29)))
 
 /***/ }),
 
-/***/ 35:
+/***/ 29:
 /***/ (function(module, exports) {
 
 var g;
@@ -2458,6 +2395,69 @@ try {
 
 module.exports = g;
 
+
+/***/ }),
+
+/***/ 3:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var vertex = __webpack_require__(2);
+var fragment = __webpack_require__(11);
+
+function CopyPass() {
+  Pass.call(this);
+  this.setShader(vertex, fragment);
+}
+
+module.exports = CopyPass;
+
+CopyPass.prototype = Object.create(Pass.prototype);
+CopyPass.prototype.constructor = CopyPass;
+
+
+/***/ }),
+
+/***/ 30:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var vertex = __webpack_require__(2);
+var fragment = __webpack_require__(31);
+
+function VignettePass(boost, reduction) {
+  Pass.call(this);
+
+  this.setShader(vertex, fragment);
+
+  this.params.boost = boost || 2;
+  this.params.reduction = reduction || 2;
+}
+
+module.exports = VignettePass;
+
+VignettePass.prototype = Object.create(Pass.prototype);
+VignettePass.prototype.constructor = VignettePass;
+
+VignettePass.prototype.run = function(composer) {
+  this.shader.uniforms.boost.value = this.params.boost;
+  this.shader.uniforms.reduction.value = this.params.reduction;
+  composer.pass(this.shader);
+};
+
+
+/***/ }),
+
+/***/ 31:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
 
 /***/ }),
 
