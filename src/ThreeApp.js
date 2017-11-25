@@ -35,7 +35,7 @@ export default class App {
 
     this.scene = new Scene();
 
-    this.camera = new PerspectiveCamera(60, this.getAspect(), 0.1, 100);
+    this.camera = new PerspectiveCamera(60, this.getAspect(), 0.1, 1000);
 
     this.onResize = this.onResize.bind(this);
     window.addEventListener('resize', this.onResize);

@@ -41,6 +41,7 @@
   "dependencies": {
     "@alex_toudic/wagner": "^0.1.20",
     "@jsantell/mini-webgl": "^1.0.4",
+    "glsl-diffuse-lambert": "^1.0.0",
     "glsl-easings": "^1.0.0",
     "glsl-solid-wireframe": "^1.0.1",
     "glsl-y-rotate": "^2.0.0",

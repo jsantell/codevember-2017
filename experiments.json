@@ -187,6 +187,18 @@
       "attributions": [
         { "name": "Head Model", "url": "https://www.turbosquid.com/3d-models/free-basic-male-head-3d-model/644257" }
       ]
+    },
+    "25": {
+      "title": "angel",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" },
+        { "name": "OBJLoader" },
+        { "name": "MTLLoader" }
+      ],
+      "attributions": [
+        { "name": "Model", "url": "https://www.turbosquid.com/3d-models/free-monument-angels-3d-model/801221" }
+      ]
     }
   }
 }
