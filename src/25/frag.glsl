@@ -31,5 +31,7 @@ void main() {
   }
   vec3 c = (color * 0.1) + (color * addedLights * lightIntensity);
   c += noiseColor * vNoise;
-  gl_FragColor = vec4(c, 1.0);
+  c += smoothstep(0.5, 1.0, vNoise) * vec3(1.0, 0.0, -1.0)  * 1.0;
+  float alpha = smoothstep(0.2, 0.4, vNoise);
+  gl_FragColor = vec4(c, alpha);
 }

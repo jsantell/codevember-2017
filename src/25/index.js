@@ -9,7 +9,7 @@ import BloomPass from '@alex_toudic/wagner/src/passes/bloom/MultiPassBloomPass';
 import OrbitControlsFn from 'three-orbit-controls';
 const OrbitControls = OrbitControlsFn(window.THREE);
 
-const DISPLACEMENT = 0.001;
+const DISPLACEMENT = 0.0005;
 const COLOR = 0x555555;
 const NOISE_COLOR = 0x3333ff;
 const LIGHT_INTENSITY = 0.005;
@@ -85,7 +85,7 @@ class Experiment extends ThreeApp {
       fragmentShader,
       lights: true,
       side: THREE.FrontSide,
-      //transparent: true,
+      transparent: true,
     });
     this.textureLoader = new TextureLoader();
 
