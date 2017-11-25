@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 75);
+/******/ 	return __webpack_require__(__webpack_require__.s = 94);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1000,82 +1000,8 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 /***/ }),
 /* 23 */,
 /* 24 */,
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-//  USAGE :
-//  https://gist.github.com/Samsy/7219c148e6cbd179883a
-
-//  Port by Samsy for Wagner from http://bkcore.com/blog/3d/webgl-three-js-volumetric-light-godrays.html
-
-
-
-var THREE = __webpack_require__(0);
-var Pass = __webpack_require__(1);
-
-var FullBoxBlurPass = __webpack_require__(13);
-
-var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(26);
-
-function Godray(options) {
-
-  Pass.call(this);
-
-  options = options || {};
-
-  this.setShader(vertex, fragment);
-
-  this.blurPass = new FullBoxBlurPass(2);
-
-  this.width = options.width || 512;
-  this.height = options.height || 512;
-
-  this.params.blurAmount = options.blurAmount || 2;
-
-  this.params.fX = 0.5;
-  this.params.fY = 0.5;
-  this.params.fExposure = 0.6;
-  this.params.fDecay = 0.93;
-  this.params.fDensity = 0.88
-  this.params.fWeight = 0.4
-  this.params.fClamp = 1.0
-
-}
-
-module.exports = Godray;
-
-Godray.prototype = Object.create(Pass.prototype);
-Godray.prototype.constructor = Godray;
-
-Godray.prototype.run = function(composer) {
-
-  this.shader.uniforms.fX.value = this.params.fX;
-  this.shader.uniforms.fY.value = this.params.fY;
-  this.shader.uniforms.fExposure.value = this.params.fExposure;
-  this.shader.uniforms.fDecay.value = this.params.fDecay;
-  this.shader.uniforms.fDensity.value = this.params.fDensity;
-  this.shader.uniforms.fWeight.value = this.params.fWeight;
-  this.shader.uniforms.fClamp.value = this.params.fClamp;
-
-  this.blurPass.params.amount = this.params.blurAmount;
-
-  composer.pass(this.blurPass);
-  composer.pass(this.blurPass);
-
-  composer.pass(this.shader);
-
-};
-
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nuniform float fX;\nuniform float fY;\nuniform float fExposure;\nuniform float fDecay;\nuniform float fDensity;\nuniform float fWeight;\nuniform float fClamp;\n\nconst int iSamples = 20;\n\nvoid main()\n{\n\tvec2 deltaTextCoord = vec2(vUv - vec2(fX,fY));\n\tdeltaTextCoord *= 1.0 /  float(iSamples) * fDensity;\n\tvec2 coord = vUv;\n\tfloat illuminationDecay = 1.0;\n\tvec4 FragColor = vec4(0.0);\n\tfor(int i=0; i < iSamples ; i++)\n\t{\n\t\tcoord -= deltaTextCoord;\n\t\tvec4 texel = texture2D(tInput, coord);\n\t\ttexel *= illuminationDecay * fWeight;\n\t\tFragColor += texel;\n\t\tilluminationDecay *= fDecay;\n\t}\n\tFragColor *= fExposure;\n\tFragColor = clamp(FragColor, 0.0, fClamp);\n\tgl_FragColor = FragColor;\n}"
-
-/***/ }),
+/* 25 */,
+/* 26 */,
 /* 27 */,
 /* 28 */,
 /* 29 */,
@@ -2108,427 +2034,1551 @@ module.exports = function( THREE ) {
 
 
 /***/ }),
-/* 34 */,
-/* 35 */,
-/* 36 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-module.exports = function(THREE) {
-  var CopyShader = EffectComposer.CopyShader = __webpack_require__(37)
-    , RenderPass = EffectComposer.RenderPass = __webpack_require__(38)(THREE)
-    , ShaderPass = EffectComposer.ShaderPass = __webpack_require__(39)(THREE, EffectComposer)
-    , MaskPass = EffectComposer.MaskPass = __webpack_require__(40)(THREE)
-    , ClearMaskPass = EffectComposer.ClearMaskPass = __webpack_require__(41)(THREE)
-
-  function EffectComposer( renderer, renderTarget ) {
-    this.renderer = renderer;
-
-    if ( renderTarget === undefined ) {
-      var width = window.innerWidth || 1;
-      var height = window.innerHeight || 1;
-      var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
-
-      renderTarget = new THREE.WebGLRenderTarget( width, height, parameters );
-    }
-
-    this.renderTarget1 = renderTarget;
-    this.renderTarget2 = renderTarget.clone();
-
-    this.writeBuffer = this.renderTarget1;
-    this.readBuffer = this.renderTarget2;
-
-    this.passes = [];
-
-    this.copyPass = new ShaderPass( CopyShader );
-  };
-
-  EffectComposer.prototype = {
-    swapBuffers: function() {
-
-      var tmp = this.readBuffer;
-      this.readBuffer = this.writeBuffer;
-      this.writeBuffer = tmp;
-
-    },
-
-    addPass: function ( pass ) {
-
-      this.passes.push( pass );
-
-    },
-
-    insertPass: function ( pass, index ) {
-
-      this.passes.splice( index, 0, pass );
-
-    },
-
-    render: function ( delta ) {
-
-      this.writeBuffer = this.renderTarget1;
-      this.readBuffer = this.renderTarget2;
-
-      var maskActive = false;
-
-      var pass, i, il = this.passes.length;
-
-      for ( i = 0; i < il; i ++ ) {
-
-        pass = this.passes[ i ];
-
-        if ( !pass.enabled ) continue;
-
-        pass.render( this.renderer, this.writeBuffer, this.readBuffer, delta, maskActive );
-
-        if ( pass.needsSwap ) {
-
-          if ( maskActive ) {
-
-            var context = this.renderer.context;
-
-            context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
-
-            this.copyPass.render( this.renderer, this.writeBuffer, this.readBuffer, delta );
-
-            context.stencilFunc( context.EQUAL, 1, 0xffffffff );
-
-          }
-
-          this.swapBuffers();
-
-        }
-
-        if ( pass instanceof MaskPass ) {
-
-          maskActive = true;
-
-        } else if ( pass instanceof ClearMaskPass ) {
-
-          maskActive = false;
-
-        }
-
-      }
-
-    },
-
-    reset: function ( renderTarget ) {
-
-      if ( renderTarget === undefined ) {
-
-        renderTarget = this.renderTarget1.clone();
-
-        renderTarget.width = window.innerWidth;
-        renderTarget.height = window.innerHeight;
-
-      }
-
-      this.renderTarget1 = renderTarget;
-      this.renderTarget2 = renderTarget.clone();
-
-      this.writeBuffer = this.renderTarget1;
-      this.readBuffer = this.renderTarget2;
-
-    },
-
-    setSize: function ( width, height ) {
-
-      var renderTarget = this.renderTarget1.clone();
-
-      renderTarget.width = width;
-      renderTarget.height = height;
-
-      this.reset( renderTarget );
-
-    }
-
-  };
-
-  // shared ortho camera
-
-  EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
-
-  EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null );
-
-  EffectComposer.scene = new THREE.Scene();
-  EffectComposer.scene.add( EffectComposer.quad );
-
-  return EffectComposer
-};
-
-/***/ }),
-/* 37 */
-/***/ (function(module, exports) {
-
-/**
- * @author alteredq / http://alteredqualia.com/
+/* WEBPACK VAR INJECTION */(function(global) {/**
+ * @license
+ * three.ar.js
+ * Copyright (c) 2017 Google
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Full-screen textured quad shader
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-module.exports = {
+/**
+ * @license
+ * gl-preserve-state
+ * Copyright (c) 2016, Brandon Jones.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+(function (global, factory) {
+	 true ? factory(exports, __webpack_require__(0)) :
+	typeof define === 'function' && define.amd ? define(['exports', 'three'], factory) :
+	(factory((global['three-ar'] = {}),global.THREE));
+}(this, (function (exports,three) { 'use strict';
+
+var global$1 = typeof global !== "undefined" ? global :
+            typeof self !== "undefined" ? self :
+            typeof window !== "undefined" ? window : {};
+
+var noop = function noop() {};
+var opacityRemap = function opacityRemap(mat) {
+  if (mat.opacity === 0) {
+    mat.opacity = 1;
+  }
+};
+var loadObj = function loadObj(objPath, materialCreator, OBJLoader) {
+  return new Promise(function (resolve, reject) {
+    var loader = new OBJLoader();
+    if (materialCreator) {
+      Object.keys(materialCreator.materials).forEach(function (k) {
+        return opacityRemap(materialCreator.materials[k]);
+      });
+      loader.setMaterials(materialCreator);
+    }
+    loader.load(objPath, resolve, noop, reject);
+  });
+};
+var loadMtl = function loadMtl(mtlPath, MTLLoader) {
+  return new Promise(function (resolve, reject) {
+    var loader = new MTLLoader();
+    loader.setTexturePath(mtlPath.substr(0, mtlPath.lastIndexOf('/') + 1));
+    loader.setMaterialOptions({ ignoreZeroRGBs: true });
+    loader.load(mtlPath, resolve, noop, reject);
+  });
+};
+
+var colors = ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800'].map(function (hex) {
+  return new three.Color(hex);
+});
+var LEARN_MORE_LINK = 'https://developers.google.com/ar/develop/web/getting-started';
+var UNSUPPORTED_MESSAGE = 'This augmented reality experience requires\n  WebARonARCore or WebARonARKit, experimental browsers from Google\n  for Android and iOS. Learn more at the <a href="' + LEARN_MORE_LINK + '">Google Developers site</a>.';
+var ARUtils = Object.create(null);
+ARUtils.isTango = function (display) {
+  return display && display.displayName.toLowerCase().includes('tango');
+};
+var isTango = ARUtils.isTango;
+ARUtils.isARKit = function (display) {
+  return display && display.displayName.toLowerCase().includes('arkit');
+};
+var isARKit = ARUtils.isARKit;
+ARUtils.isARDisplay = function (display) {
+  return isARKit(display) || isTango(display);
+};
+var isARDisplay = ARUtils.isARDisplay;
+ARUtils.getARDisplay = function () {
+  return new Promise(function (resolve, reject) {
+    if (!navigator.getVRDisplays) {
+      resolve(null);
+      return;
+    }
+    navigator.getVRDisplays().then(function (displays) {
+      if (!displays && displays.length === 0) {
+        resolve(null);
+        return;
+      }
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+      try {
+        for (var _iterator = displays[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var display = _step.value;
+          if (isARDisplay(display)) {
+            resolve(display);
+            return;
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+      resolve(null);
+    });
+  });
+};
+
+ARUtils.loadModel = function () {
+  var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  return new Promise(function (resolve, reject) {
+    var mtlPath = config.mtlPath,
+        objPath = config.objPath;
+    var OBJLoader = config.OBJLoader || (global$1.THREE ? global$1.THREE.OBJLoader : null);
+    var MTLLoader = config.MTLLoader || (global$1.THREE ? global$1.THREE.MTLLoader : null);
+    if (!config.objPath) {
+      reject(new Error('`objPath` must be specified.'));
+      return;
+    }
+    if (!OBJLoader) {
+      reject(new Error('Missing OBJLoader as third argument, or window.THREE.OBJLoader existence'));
+      return;
+    }
+    if (config.mtlPath && !MTLLoader) {
+      reject(new Error('Missing MTLLoader as fourth argument, or window.THREE.MTLLoader existence'));
+      return;
+    }
+    var p = Promise.resolve();
+    if (mtlPath) {
+      p = loadMtl(mtlPath, MTLLoader);
+    }
+    p.then(function (materialCreator) {
+      if (materialCreator) {
+        materialCreator.preload();
+      }
+      return loadObj(objPath, materialCreator, OBJLoader);
+    }).then(resolve, reject);
+  });
+};
+
+var model = new three.Matrix4();
+var tempPos = new three.Vector3();
+var tempQuat = new three.Quaternion();
+var tempScale = new three.Vector3();
+ARUtils.placeObjectAtHit = function (object, hit) {
+  var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+  var applyOrientation = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+  if (!hit || !hit.modelMatrix) {
+    throw new Error('placeObjectAtHit requires a VRHit object');
+  }
+  model.fromArray(hit.modelMatrix);
+  model.decompose(tempPos, tempQuat, tempScale);
+  if (easing === 1) {
+    object.position.copy(tempPos);
+    if (applyOrientation) {
+      object.quaternion.copy(tempQuat);
+    }
+  } else {
+    object.position.lerp(tempPos, easing);
+    if (applyOrientation) {
+      object.quaternion.slerp(tempQuat, easing);
+    }
+  }
+};
+var placeObjectAtHit = ARUtils.placeObjectAtHit;
+ARUtils.getRandomPaletteColor = function () {
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+var getRandomPaletteColor = ARUtils.getRandomPaletteColor;
+ARUtils.displayUnsupportedMessage = function (customMessage) {
+  var element = document.createElement('div');
+  element.id = 'webgl-error-message';
+  element.style.fontFamily = 'monospace';
+  element.style.fontSize = '13px';
+  element.style.fontWeight = 'normal';
+  element.style.textAlign = 'center';
+  element.style.background = '#fff';
+  element.style.border = '1px solid black';
+  element.style.color = '#000';
+  element.style.padding = '1.5em';
+  element.style.width = '400px';
+  element.style.margin = '5em auto 0';
+  element.innerHTML = typeof customMessage === 'string' ? customMessage : UNSUPPORTED_MESSAGE;
+  document.body.appendChild(element);
+};
+
+var vertexShader = "precision mediump float;precision mediump int;uniform mat4 modelViewMatrix;uniform mat4 modelMatrix;uniform mat4 projectionMatrix;attribute vec3 position;varying vec3 vPosition;void main(){vPosition=(modelMatrix*vec4(position,1.0)).xyz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}";
+
+var fragmentShader = "precision highp float;varying vec3 vPosition;\n#define countX 7.0\n#define countY 4.0\n#define gridAlpha 0.75\nuniform float dotRadius;uniform vec3 dotColor;uniform vec3 lineColor;uniform vec3 backgroundColor;uniform float alpha;float Circle(in vec2 p,float r){return length(p)-r;}float Line(in vec2 p,in vec2 a,in vec2 b){vec2 pa=p-a;vec2 ba=b-a;float t=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);vec2 pt=a+t*ba;return length(pt-p);}float Union(float a,float b){return min(a,b);}void main(){vec2 count=vec2(countX,countY);vec2 size=vec2(1.0)/count;vec2 halfSize=size*0.5;vec2 uv=mod(vPosition.xz*1.5,size)-halfSize;float dots=Circle(uv-vec2(halfSize.x,0.0),dotRadius);dots=Union(dots,Circle(uv+vec2(halfSize.x,0.0),dotRadius));dots=Union(dots,Circle(uv+vec2(0.0,halfSize.y),dotRadius));dots=Union(dots,Circle(uv-vec2(0.0,halfSize.y),dotRadius));float lines=Line(uv,vec2(0.0,halfSize.y),-vec2(halfSize.x,0.0));lines=Union(lines,Line(uv,vec2(0.0,-halfSize.y),-vec2(halfSize.x,0.0)));lines=Union(lines,Line(uv,vec2(0.0,-halfSize.y),vec2(halfSize.x,0.0)));lines=Union(lines,Line(uv,vec2(0.0,halfSize.y),vec2(halfSize.x,0.0)));lines=Union(lines,Line(uv,vec2(-halfSize.x,halfSize.y),vec2(halfSize.x,halfSize.y)));lines=Union(lines,Line(uv,vec2(-halfSize.x,-halfSize.y),vec2(halfSize.x,-halfSize.y)));lines=Union(lines,Line(uv,vec2(-halfSize.x,0.0),vec2(halfSize.x,0.0)));lines=clamp(smoothstep(0.0,0.0035,lines),0.0,1.0);dots=clamp(smoothstep(0.0,0.001,dots),0.0,1.0);float result=Union(dots,lines);gl_FragColor=vec4(mix(backgroundColor+mix(dotColor,lineColor,dots),backgroundColor,result),mix(gridAlpha,alpha,result));}";
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
+
+var asyncGenerator = function () {
+  function AwaitValue(value) {
+    this.value = value;
+  }
+
+  function AsyncGenerator(gen) {
+    var front, back;
+
+    function send(key, arg) {
+      return new Promise(function (resolve, reject) {
+        var request = {
+          key: key,
+          arg: arg,
+          resolve: resolve,
+          reject: reject,
+          next: null
+        };
+
+        if (back) {
+          back = back.next = request;
+        } else {
+          front = back = request;
+          resume(key, arg);
+        }
+      });
+    }
+
+    function resume(key, arg) {
+      try {
+        var result = gen[key](arg);
+        var value = result.value;
+
+        if (value instanceof AwaitValue) {
+          Promise.resolve(value.value).then(function (arg) {
+            resume("next", arg);
+          }, function (arg) {
+            resume("throw", arg);
+          });
+        } else {
+          settle(result.done ? "return" : "normal", result.value);
+        }
+      } catch (err) {
+        settle("throw", err);
+      }
+    }
+
+    function settle(type, value) {
+      switch (type) {
+        case "return":
+          front.resolve({
+            value: value,
+            done: true
+          });
+          break;
+
+        case "throw":
+          front.reject(value);
+          break;
+
+        default:
+          front.resolve({
+            value: value,
+            done: false
+          });
+          break;
+      }
+
+      front = front.next;
+
+      if (front) {
+        resume(front.key, front.arg);
+      } else {
+        back = null;
+      }
+    }
+
+    this._invoke = send;
+
+    if (typeof gen.return !== "function") {
+      this.return = undefined;
+    }
+  }
+
+  if (typeof Symbol === "function" && Symbol.asyncIterator) {
+    AsyncGenerator.prototype[Symbol.asyncIterator] = function () {
+      return this;
+    };
+  }
+
+  AsyncGenerator.prototype.next = function (arg) {
+    return this._invoke("next", arg);
+  };
+
+  AsyncGenerator.prototype.throw = function (arg) {
+    return this._invoke("throw", arg);
+  };
+
+  AsyncGenerator.prototype.return = function (arg) {
+    return this._invoke("return", arg);
+  };
+
+  return {
+    wrap: function (fn) {
+      return function () {
+        return new AsyncGenerator(fn.apply(this, arguments));
+      };
+    },
+    await: function (value) {
+      return new AwaitValue(value);
+    }
+  };
+}();
+
+
+
+
+
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
+
+
+
+
+
+
+
+var get = function get(object, property, receiver) {
+  if (object === null) object = Function.prototype;
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent === null) {
+      return undefined;
+    } else {
+      return get(parent, property, receiver);
+    }
+  } else if ("value" in desc) {
+    return desc.value;
+  } else {
+    var getter = desc.get;
+
+    if (getter === undefined) {
+      return undefined;
+    }
+
+    return getter.call(receiver);
+  }
+};
+
+var inherits = function (subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+};
+
+
+
+
+
+
+
+
+
+
+
+var possibleConstructorReturn = function (self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+};
+
+
+
+
+
+var slicedToArray = function () {
+  function sliceIterator(arr, i) {
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _e = undefined;
+
+    try {
+      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);
+
+        if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;
+      _e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"]) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+
+    return _arr;
+  }
+
+  return function (arr, i) {
+    if (Array.isArray(arr)) {
+      return arr;
+    } else if (Symbol.iterator in Object(arr)) {
+      return sliceIterator(arr, i);
+    } else {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance");
+    }
+  };
+}();
+
+var DEFAULT_MATERIAL = new three.RawShaderMaterial({
+  side: three.DoubleSide,
+  transparent: true,
   uniforms: {
-    "tDiffuse": { type: "t", value: null },
-    "opacity":  { type: "f", value: 1.0 }
+    dotColor: {
+      value: new three.Color(0xffffff)
+    },
+    lineColor: {
+      value: new three.Color(0x707070)
+    },
+    backgroundColor: {
+      value: new three.Color(0x404040)
+    },
+    dotRadius: {
+      value: 0.006666666667
+    },
+    alpha: {
+      value: 0.4
+    }
   },
-  vertexShader: [
-    "varying vec2 vUv;",
-
-    "void main() {",
-
-      "vUv = uv;",
-      "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-
-    "}"
-  ].join("\n"),
-  fragmentShader: [
-    "uniform float opacity;",
-
-    "uniform sampler2D tDiffuse;",
-
-    "varying vec2 vUv;",
-
-    "void main() {",
-
-      "vec4 texel = texture2D( tDiffuse, vUv );",
-      "gl_FragColor = opacity * texel;",
-
-    "}"
-  ].join("\n")
-};
-
-
-/***/ }),
-/* 38 */
-/***/ (function(module, exports) {
-
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-module.exports = function(THREE) {
-  function RenderPass( scene, camera, overrideMaterial, clearColor, clearAlpha ) {
-    if (!(this instanceof RenderPass)) return new RenderPass(scene, camera, overrideMaterial, clearColor, clearAlpha);
-
-    this.scene = scene;
-    this.camera = camera;
-
-    this.overrideMaterial = overrideMaterial;
-
-    this.clearColor = clearColor;
-    this.clearAlpha = ( clearAlpha !== undefined ) ? clearAlpha : 1;
-
-    this.oldClearColor = new THREE.Color();
-    this.oldClearAlpha = 1;
-
-    this.enabled = true;
-    this.clear = true;
-    this.needsSwap = false;
-
-  };
-
-  RenderPass.prototype = {
-
-    render: function ( renderer, writeBuffer, readBuffer, delta ) {
-
-      this.scene.overrideMaterial = this.overrideMaterial;
-
-      if ( this.clearColor ) {
-
-        this.oldClearColor.copy( renderer.getClearColor() );
-        this.oldClearAlpha = renderer.getClearAlpha();
-
-        renderer.setClearColor( this.clearColor, this.clearAlpha );
-
+  vertexShader: vertexShader,
+  fragmentShader: fragmentShader
+});
+var ARPlanes = function (_Object3D) {
+  inherits(ARPlanes, _Object3D);
+  function ARPlanes(vrDisplay) {
+    classCallCheck(this, ARPlanes);
+    var _this = possibleConstructorReturn(this, (ARPlanes.__proto__ || Object.getPrototypeOf(ARPlanes)).call(this));
+    _this.addPlane_ = function (plane) {
+      var planeObj = _this.createPlane(plane);
+      if (planeObj) {
+        _this.add(planeObj);
+        _this.planes.set(plane.identifier, planeObj);
       }
-
-      renderer.render( this.scene, this.camera, readBuffer, this.clear );
-
-      if ( this.clearColor ) {
-
-        renderer.setClearColor( this.oldClearColor, this.oldClearAlpha );
-
+    };
+    _this.removePlane_ = function (identifier) {
+      var existing = _this.planes.get(identifier);
+      if (existing) {
+        _this.remove(existing);
       }
-
-      this.scene.overrideMaterial = null;
-
+      _this.planes.delete(identifier);
+    };
+    _this.onPlaneAdded_ = function (event) {
+      event.planes.forEach(function (plane) {
+        return _this.addPlane_(plane);
+      });
+    };
+    _this.onPlaneUpdated_ = function (event) {
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+      try {
+        for (var _iterator = event.planes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var plane = _step.value;
+          _this.removePlane_(plane.identifier);
+          _this.addPlane_(plane);
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    };
+    _this.onPlaneRemoved_ = function (event) {
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+      try {
+        for (var _iterator2 = event.planes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var plane = _step2.value;
+          _this.removePlane_(plane.identifier);
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+    };
+    _this.vrDisplay = vrDisplay;
+    _this.planes = new Map();
+    _this.materials = new Map();
+    return _this;
+  }
+  createClass(ARPlanes, [{
+    key: 'enable',
+    value: function enable() {
+      this.vrDisplay.getPlanes().forEach(this.addPlane_);
+      this.vrDisplay.addEventListener('planesadded', this.onPlaneAdded_);
+      this.vrDisplay.addEventListener('planesupdated', this.onPlaneUpdated_);
+      this.vrDisplay.addEventListener('planesremoved', this.onPlaneRemoved_);
     }
-
-  };
-
-  return RenderPass;
-
-};
-
-
-/***/ }),
-/* 39 */
-/***/ (function(module, exports) {
-
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-module.exports = function(THREE, EffectComposer) {
-  function ShaderPass( shader, textureID ) {
-    if (!(this instanceof ShaderPass)) return new ShaderPass(shader, textureID);
-
-    this.textureID = ( textureID !== undefined ) ? textureID : "tDiffuse";
-
-    this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
-
-    this.material = new THREE.ShaderMaterial( {
-
-      uniforms: this.uniforms,
-      vertexShader: shader.vertexShader,
-      fragmentShader: shader.fragmentShader
-
-    } );
-
-    this.renderToScreen = false;
-
-    this.enabled = true;
-    this.needsSwap = true;
-    this.clear = false;
-
-  };
-
-  ShaderPass.prototype = {
-
-    render: function ( renderer, writeBuffer, readBuffer, delta ) {
-
-      if ( this.uniforms[ this.textureID ] ) {
-
-        this.uniforms[ this.textureID ].value = readBuffer;
-
+  }, {
+    key: 'disable',
+    value: function disable() {
+      this.vrDisplay.removeEventListener('planesadded', this.onPlaneAdded_);
+      this.vrDisplay.removeEventListener('planesupdated', this.onPlaneUpdated_);
+      this.vrDisplay.removeEventListener('planesremoved', this.onPlaneRemoved_);
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
+      try {
+        for (var _iterator3 = this.planes.keys()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var identifier = _step3.value;
+          this.removePlane_(identifier);
+        }
+      } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion3 && _iterator3.return) {
+            _iterator3.return();
+          }
+        } finally {
+          if (_didIteratorError3) {
+            throw _iteratorError3;
+          }
+        }
       }
-
-      EffectComposer.quad.material = this.material;
-
-      if ( this.renderToScreen ) {
-
-        renderer.render( EffectComposer.scene, EffectComposer.camera );
-
+      this.materials.clear();
+    }
+  }, {
+    key: 'createPlane',
+    value: function createPlane(plane) {
+      if (plane.vertices.length == 0) {
+        return null;
+      }
+      var geo = new three.Geometry();
+      for (var pt = 0; pt < plane.vertices.length / 3; pt++) {
+        geo.vertices.push(new three.Vector3(plane.vertices[pt * 3], plane.vertices[pt * 3 + 1], plane.vertices[pt * 3 + 2]));
+      }
+      for (var face = 0; face < geo.vertices.length - 2; face++) {
+        geo.faces.push(new three.Face3(0, face + 1, face + 2));
+      }
+      var material = void 0;
+      if (this.materials.has(plane.identifier)) {
+        material = this.materials.get(plane.identifier);
       } else {
-
-        renderer.render( EffectComposer.scene, EffectComposer.camera, writeBuffer, this.clear );
-
+        var color = getRandomPaletteColor();
+        material = DEFAULT_MATERIAL.clone();
+        material.uniforms.backgroundColor.value = color;
+        this.materials.set(plane.identifier, material);
       }
-
+      var planeObj = new three.Mesh(geo, material);
+      var mm = plane.modelMatrix;
+      planeObj.matrixAutoUpdate = false;
+      planeObj.matrix.set(mm[0], mm[4], mm[8], mm[12], mm[1], mm[5], mm[9], mm[13], mm[2], mm[6], mm[10], mm[14], mm[3], mm[7], mm[11], mm[15]);
+      this.add(planeObj);
+      return planeObj;
     }
+  }, {
+    key: 'size',
+    value: function size() {
+      return this.planes.size;
+    }
+  }]);
+  return ARPlanes;
+}(three.Object3D);
 
-  };
-
-  return ShaderPass;
-
+var DEFAULTS = {
+  open: true,
+  showLastHit: true,
+  showPoseStatus: true,
+  showPlanes: false
 };
-
-/***/ }),
-/* 40 */
-/***/ (function(module, exports) {
-
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-module.exports = function(THREE) {
-  function MaskPass( scene, camera ) {
-    if (!(this instanceof MaskPass)) return new MaskPass(scene, camera);
-
-    this.scene = scene;
-    this.camera = camera;
-
-    this.enabled = true;
-    this.clear = true;
-    this.needsSwap = false;
-
-    this.inverse = false;
+var SUCCESS_COLOR = '#00ff00';
+var FAILURE_COLOR = '#ff0077';
+var PLANES_POLLING_TIMER = 500;
+var THROTTLE_SPEED = 500;
+var cachedVRDisplayMethods = new Map();
+function throttle(fn, timer, scope) {
+  var lastFired = void 0;
+  var timeout = void 0;
+  return function () {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+    var current = +new Date();
+    var until = void 0;
+    if (lastFired) {
+      until = lastFired + timer - current;
+    }
+    if (until == undefined || until < 0) {
+      lastFired = current;
+      fn.apply(scope, args);
+    } else if (until >= 0) {
+      clearTimeout(timeout);
+      timeout = setTimeout(function () {
+        lastFired = current;
+        fn.apply(scope, args);
+      }, until);
+    }
   };
-
-  MaskPass.prototype = {
-
-    render: function ( renderer, writeBuffer, readBuffer, delta ) {
-
-      var context = renderer.context;
-
-      // don't update color or depth
-
-      context.colorMask( false, false, false, false );
-      context.depthMask( false );
-
-      // set up stencil
-
-      var writeValue, clearValue;
-
-      if ( this.inverse ) {
-
-        writeValue = 0;
-        clearValue = 1;
-
+}
+var ARDebug = function () {
+  function ARDebug(vrDisplay, scene, config) {
+    classCallCheck(this, ARDebug);
+    if (typeof config === 'undefined' && scene && scene.type !== 'Scene') {
+      config = scene;
+      scene = null;
+    }
+    this.config = Object.assign({}, DEFAULTS, config);
+    this.vrDisplay = vrDisplay;
+    this._view = new ARDebugView({ open: this.config.open });
+    if (this.config.showLastHit && this.vrDisplay.hitTest) {
+      this._view.addRow('hit-test', new ARDebugHitTestRow(vrDisplay));
+    }
+    if (this.config.showPoseStatus && this.vrDisplay.getFrameData) {
+      this._view.addRow('pose-status', new ARDebugPoseRow(vrDisplay));
+    }
+    if (this.config.showPlanes && this.vrDisplay.getPlanes) {
+      if (!scene) {
+        console.warn('ARDebug `{ showPlanes: true }` option requires ' + 'passing in a THREE.Scene as the second parameter ' + 'in the constructor.');
       } else {
-
-        writeValue = 1;
-        clearValue = 0;
-
+        this._view.addRow('show-planes', new ARDebugPlanesRow(vrDisplay, scene));
       }
-
-      context.enable( context.STENCIL_TEST );
-      context.stencilOp( context.REPLACE, context.REPLACE, context.REPLACE );
-      context.stencilFunc( context.ALWAYS, writeValue, 0xffffffff );
-      context.clearStencil( clearValue );
-
-      // draw into the stencil buffer
-
-      renderer.render( this.scene, this.camera, readBuffer, this.clear );
-      renderer.render( this.scene, this.camera, writeBuffer, this.clear );
-
-      // re-enable update of color and depth
-
-      context.colorMask( true, true, true, true );
-      context.depthMask( true );
-
-      // only render where stencil is set to 1
-
-      context.stencilFunc( context.EQUAL, 1, 0xffffffff );  // draw if == 1
-      context.stencilOp( context.KEEP, context.KEEP, context.KEEP );
-
     }
+  }
+  createClass(ARDebug, [{
+    key: 'open',
+    value: function open() {
+      this._view.open();
+    }
+  }, {
+    key: 'close',
+    value: function close() {
+      this._view.close();
+    }
+  }, {
+    key: 'getElement',
+    value: function getElement() {
+      return this._view.getElement();
+    }
+  }]);
+  return ARDebug;
+}();
+var ARDebugView = function () {
+  function ARDebugView() {
+    var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    classCallCheck(this, ARDebugView);
+    this.rows = new Map();
+    this.el = document.createElement('div');
+    this.el.style.backgroundColor = '#333';
+    this.el.style.padding = '5px';
+    this.el.style.fontFamily = 'Roboto, Ubuntu, Arial, sans-serif';
+    this.el.style.color = 'rgb(165, 165, 165)';
+    this.el.style.position = 'absolute';
+    this.el.style.right = '20px';
+    this.el.style.top = '0px';
+    this.el.style.width = '200px';
+    this.el.style.fontSize = '12px';
+    this.el.style.zIndex = 9999;
+    this._rowsEl = document.createElement('div');
+    this._rowsEl.style.transitionProperty = 'max-height';
+    this._rowsEl.style.transitionDuration = '0.5s';
+    this._rowsEl.style.transitionDelay = '0s';
+    this._rowsEl.style.transitionTimingFunction = 'ease-out';
+    this._rowsEl.style.overflow = 'hidden';
+    this._controls = document.createElement('div');
+    this._controls.style.fontSize = '13px';
+    this._controls.style.fontWeight = 'bold';
+    this._controls.style.paddingTop = '5px';
+    this._controls.style.textAlign = 'center';
+    this._controls.style.cursor = 'pointer';
+    this._controls.addEventListener('click', this.toggleControls.bind(this));
+    config.open ? this.open() : this.close();
+    this.el.appendChild(this._rowsEl);
+    this.el.appendChild(this._controls);
+  }
+  createClass(ARDebugView, [{
+    key: 'toggleControls',
+    value: function toggleControls() {
+      if (this._isOpen) {
+        this.close();
+      } else {
+        this.open();
+      }
+    }
+  }, {
+    key: 'open',
+    value: function open() {
+      this._rowsEl.style.maxHeight = '100px';
+      this._isOpen = true;
+      this._controls.textContent = 'Close ARDebug';
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+      try {
+        for (var _iterator = this.rows[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var _ref = _step.value;
+          var _ref2 = slicedToArray(_ref, 2);
+          var row = _ref2[1];
+          row.enable();
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+  }, {
+    key: 'close',
+    value: function close() {
+      this._rowsEl.style.maxHeight = '0px';
+      this._isOpen = false;
+      this._controls.textContent = 'Open ARDebug';
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+      try {
+        for (var _iterator2 = this.rows[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var _ref3 = _step2.value;
+          var _ref4 = slicedToArray(_ref3, 2);
+          var row = _ref4[1];
+          row.disable();
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+    }
+  }, {
+    key: 'getElement',
+    value: function getElement() {
+      return this.el;
+    }
+  }, {
+    key: 'addRow',
+    value: function addRow(id, row) {
+      this.rows.set(id, row);
+      if (this._isOpen) {
+        row.enable();
+      }
+      this._rowsEl.appendChild(row.getElement());
+    }
+  }]);
+  return ARDebugView;
+}();
+var ARDebugRow = function () {
+  function ARDebugRow(title) {
+    classCallCheck(this, ARDebugRow);
+    this.el = document.createElement('div');
+    this.el.style.width = '100%';
+    this.el.style.borderTop = '1px solid rgb(54, 54, 54)';
+    this.el.style.borderBottom = '1px solid #14171A';
+    this.el.style.position = 'relative';
+    this.el.style.padding = '3px 0px';
+    this.el.style.overflow = 'hidden';
+    this._titleEl = document.createElement('span');
+    this._titleEl.style.fontWeight = 'bold';
+    this._titleEl.textContent = title;
+    this._dataEl = document.createElement('span');
+    this._dataEl.style.position = 'absolute';
+    this._dataEl.style.left = '40px';
+    this._dataElText = document.createTextNode('');
+    this._dataEl.appendChild(this._dataElText);
+    this.el.appendChild(this._titleEl);
+    this.el.appendChild(this._dataEl);
+    this._throttledWriteToDOM = throttle(this._writeToDOM, THROTTLE_SPEED, this);
+  }
+  createClass(ARDebugRow, [{
+    key: 'enable',
+    value: function enable() {
+      throw new Error('Implement in child class');
+    }
+  }, {
+    key: 'disable',
+    value: function disable() {
+      throw new Error('Implement in child class');
+    }
+  }, {
+    key: 'getElement',
+    value: function getElement() {
+      return this.el;
+    }
+  }, {
+    key: 'update',
+    value: function update(value, isSuccess, renderImmediately) {
+      if (renderImmediately) {
+        this._writeToDOM(value, isSuccess);
+      } else {
+        this._throttledWriteToDOM(value, isSuccess);
+      }
+    }
+  }, {
+    key: '_writeToDOM',
+    value: function _writeToDOM(value, isSuccess) {
+      this._dataElText.nodeValue = value;
+      this._dataEl.style.color = isSuccess ? SUCCESS_COLOR : FAILURE_COLOR;
+    }
+  }]);
+  return ARDebugRow;
+}();
+var ARDebugHitTestRow = function (_ARDebugRow) {
+  inherits(ARDebugHitTestRow, _ARDebugRow);
+  function ARDebugHitTestRow(vrDisplay) {
+    classCallCheck(this, ARDebugHitTestRow);
+    var _this = possibleConstructorReturn(this, (ARDebugHitTestRow.__proto__ || Object.getPrototypeOf(ARDebugHitTestRow)).call(this, 'Hit'));
+    _this.vrDisplay = vrDisplay;
+    _this._onHitTest = _this._onHitTest.bind(_this);
+    _this._nativeHitTest = cachedVRDisplayMethods.get('hitTest') || _this.vrDisplay.hitTest;
+    cachedVRDisplayMethods.set('hitTest', _this._nativeHitTest);
+    _this._didPreviouslyHit = null;
+    return _this;
+  }
+  createClass(ARDebugHitTestRow, [{
+    key: 'enable',
+    value: function enable() {
+      this.vrDisplay.hitTest = this._onHitTest;
+    }
+  }, {
+    key: 'disable',
+    value: function disable() {
+      this.vrDisplay.hitTest = this._nativeHitTest;
+    }
+  }, {
+    key: '_hitToString',
+    value: function _hitToString(hit) {
+      var mm = hit.modelMatrix;
+      return mm[12].toFixed(2) + ', ' + mm[13].toFixed(2) + ', ' + mm[14].toFixed(2);
+    }
+  }, {
+    key: '_onHitTest',
+    value: function _onHitTest(x, y) {
+      var hits = this._nativeHitTest.call(this.vrDisplay, x, y);
+      var t = (parseInt(performance.now(), 10) / 1000).toFixed(1);
+      var didHit = hits && hits.length;
+      var value = (didHit ? this._hitToString(hits[0]) : 'MISS') + ' @ ' + t + 's';
+      this.update(value, didHit, didHit !== this._didPreviouslyHit);
+      this._didPreviouslyHit = didHit;
+      return hits;
+    }
+  }]);
+  return ARDebugHitTestRow;
+}(ARDebugRow);
+var ARDebugPoseRow = function (_ARDebugRow2) {
+  inherits(ARDebugPoseRow, _ARDebugRow2);
+  function ARDebugPoseRow(vrDisplay) {
+    classCallCheck(this, ARDebugPoseRow);
+    var _this2 = possibleConstructorReturn(this, (ARDebugPoseRow.__proto__ || Object.getPrototypeOf(ARDebugPoseRow)).call(this, 'Pose'));
+    _this2.vrDisplay = vrDisplay;
+    _this2._onGetFrameData = _this2._onGetFrameData.bind(_this2);
+    _this2._nativeGetFrameData = cachedVRDisplayMethods.get('getFrameData') || _this2.vrDisplay.getFrameData;
+    cachedVRDisplayMethods.set('getFrameData', _this2._nativeGetFrameData);
+    _this2.update('Looking for position...', false, true);
+    _this2._initialPose = false;
+    return _this2;
+  }
+  createClass(ARDebugPoseRow, [{
+    key: 'enable',
+    value: function enable() {
+      this.vrDisplay.getFrameData = this._onGetFrameData;
+    }
+  }, {
+    key: 'disable',
+    value: function disable() {
+      this.vrDisplay.getFrameData = this._nativeGetFrameData;
+    }
+  }, {
+    key: '_poseToString',
+    value: function _poseToString(pose) {
+      return pose[0].toFixed(2) + ', ' + pose[1].toFixed(2) + ', ' + pose[2].toFixed(2);
+    }
+  }, {
+    key: '_onGetFrameData',
+    value: function _onGetFrameData(frameData) {
+      var results = this._nativeGetFrameData.call(this.vrDisplay, frameData);
+      var pose = frameData && frameData.pose && frameData.pose.position;
+      var isValidPose = pose && typeof pose[0] === 'number' && typeof pose[1] === 'number' && typeof pose[2] === 'number' && !(pose[0] === 0 && pose[1] === 0 && pose[2] === 0);
+      if (!this._initialPose && !isValidPose) {
+        return results;
+      }
+      var renderImmediately = isValidPose !== this._lastPoseValid;
+      if (isValidPose) {
+        this.update(this._poseToString(pose), true, renderImmediately);
+      } else if (!isValidPose && this._lastPoseValid !== false) {
+        this.update('Position lost', false, renderImmediately);
+      }
+      this._lastPoseValid = isValidPose;
+      this._initialPose = true;
+      return results;
+    }
+  }]);
+  return ARDebugPoseRow;
+}(ARDebugRow);
+var ARDebugPlanesRow = function (_ARDebugRow3) {
+  inherits(ARDebugPlanesRow, _ARDebugRow3);
+  function ARDebugPlanesRow(vrDisplay, scene) {
+    classCallCheck(this, ARDebugPlanesRow);
+    var _this3 = possibleConstructorReturn(this, (ARDebugPlanesRow.__proto__ || Object.getPrototypeOf(ARDebugPlanesRow)).call(this, 'Planes'));
+    _this3.vrDisplay = vrDisplay;
+    _this3.planes = new ARPlanes(_this3.vrDisplay);
+    _this3._onPoll = _this3._onPoll.bind(_this3);
+    _this3.update('Looking for planes...', false, true);
+    if (scene) {
+      scene.add(_this3.planes);
+    }
+    return _this3;
+  }
+  createClass(ARDebugPlanesRow, [{
+    key: 'enable',
+    value: function enable() {
+      if (this._timer) {
+        this.disable();
+      }
+      this._timer = setInterval(this._onPoll, PLANES_POLLING_TIMER);
+      this.planes.enable();
+    }
+  }, {
+    key: 'disable',
+    value: function disable() {
+      clearInterval(this._timer);
+      this._timer = null;
+      this.planes.disable();
+    }
+  }, {
+    key: '_planesToString',
+    value: function _planesToString(count) {
+      return count + ' plane' + (count === 1 ? '' : 's') + ' found';
+    }
+  }, {
+    key: '_onPoll',
+    value: function _onPoll() {
+      var planeCount = this.planes.size();
+      if (this._lastPlaneCount !== planeCount) {
+        this.update(this._planesToString(planeCount), planeCount > 0, true);
+      }
+      this._lastPlaneCount = planeCount;
+    }
+  }]);
+  return ARDebugPlanesRow;
+}(ARDebugRow);
 
-  };
+var frameData = void 0;
+var ARPerspectiveCamera = function (_PerspectiveCamera) {
+  inherits(ARPerspectiveCamera, _PerspectiveCamera);
+  function ARPerspectiveCamera(vrDisplay, fov, aspect, near, far) {
+    classCallCheck(this, ARPerspectiveCamera);
+    var _this = possibleConstructorReturn(this, (ARPerspectiveCamera.__proto__ || Object.getPrototypeOf(ARPerspectiveCamera)).call(this, fov, aspect, near, far));
+    _this.isARPerpsectiveCamera = true;
+    _this.vrDisplay = vrDisplay;
+    _this.updateProjectionMatrix();
+    if (!vrDisplay || !vrDisplay.capabilities.hasPassThroughCamera) {
+      console.warn('ARPerspectiveCamera does not a VRDisplay with\n                    a pass through camera. Using supplied values and defaults\n                    instead of device camera intrinsics');
+    }
+    return _this;
+  }
+  createClass(ARPerspectiveCamera, [{
+    key: 'updateProjectionMatrix',
+    value: function updateProjectionMatrix() {
+      var projMatrix = this.getProjectionMatrix();
+      if (!projMatrix) {
+        get(ARPerspectiveCamera.prototype.__proto__ || Object.getPrototypeOf(ARPerspectiveCamera.prototype), 'updateProjectionMatrix', this).call(this);
+        return;
+      }
+      this.projectionMatrix.fromArray(projMatrix);
+    }
+  }, {
+    key: 'getProjectionMatrix',
+    value: function getProjectionMatrix() {
+      if (this.vrDisplay && this.vrDisplay.getFrameData) {
+        if (!frameData) {
+          frameData = new VRFrameData();
+        }
+        this.vrDisplay.getFrameData(frameData);
+        return frameData.leftProjectionMatrix;
+      }
+      return null;
+    }
+  }]);
+  return ARPerspectiveCamera;
+}(three.PerspectiveCamera);
 
-  return MaskPass
-};
+var ARReticle = function (_Mesh) {
+  inherits(ARReticle, _Mesh);
+  function ARReticle(vrDisplay) {
+    var innerRadius = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.02;
+    var outerRadius = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.05;
+    var color = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0xff0077;
+    var easing = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0.25;
+    classCallCheck(this, ARReticle);
+    var geometry = new three.RingGeometry(innerRadius, outerRadius, 36, 64);
+    var material = new three.MeshBasicMaterial({ color: color });
+    geometry.applyMatrix(new three.Matrix4().makeRotationX(three.Math.degToRad(-90)));
+    var _this = possibleConstructorReturn(this, (ARReticle.__proto__ || Object.getPrototypeOf(ARReticle)).call(this, geometry, material));
+    _this.visible = false;
+    _this.easing = easing;
+    _this.applyOrientation = true;
+    _this.vrDisplay = vrDisplay;
+    _this._planeDir = new three.Vector3();
+    return _this;
+  }
+  createClass(ARReticle, [{
+    key: 'update',
+    value: function update() {
+      var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0.5;
+      var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.5;
+      if (!this.vrDisplay || !this.vrDisplay.hitTest) {
+        return;
+      }
+      var hit = this.vrDisplay.hitTest(x, y);
+      if (hit && hit.length > 0) {
+        this.visible = true;
+        placeObjectAtHit(this, hit[0], this.applyOrientation, this.easing);
+      }
+    }
+  }]);
+  return ARReticle;
+}(three.Mesh);
 
+var vertexSource = "attribute vec3 aVertexPosition;attribute vec2 aTextureCoord;varying vec2 vTextureCoord;void main(void){gl_Position=vec4(aVertexPosition,1.0);vTextureCoord=aTextureCoord;}";
+
+var fragmentSource = "\n#extension GL_OES_EGL_image_external : require\nprecision mediump float;varying vec2 vTextureCoord;uniform samplerExternalOES uSampler;void main(void){gl_FragColor=texture2D(uSampler,vTextureCoord);}";
+
+function WGLUPreserveGLState(gl, bindings, callback) {
+  if (!bindings) {
+    callback(gl);
+    return;
+  }
+  var boundValues = [];
+  var activeTexture = null;
+  for (var i = 0; i < bindings.length; ++i) {
+    var binding = bindings[i];
+    switch (binding) {
+      case gl.TEXTURE_BINDING_2D:
+      case gl.TEXTURE_BINDING_CUBE_MAP:
+        var textureUnit = bindings[++i];
+        if (textureUnit < gl.TEXTURE0 || textureUnit > gl.TEXTURE31) {
+          console.error("TEXTURE_BINDING_2D or TEXTURE_BINDING_CUBE_MAP must be followed by a valid texture unit");
+          boundValues.push(null, null);
+          break;
+        }
+        if (!activeTexture) {
+          activeTexture = gl.getParameter(gl.ACTIVE_TEXTURE);
+        }
+        gl.activeTexture(textureUnit);
+        boundValues.push(gl.getParameter(binding), null);
+        break;
+      case gl.ACTIVE_TEXTURE:
+        activeTexture = gl.getParameter(gl.ACTIVE_TEXTURE);
+        boundValues.push(null);
+        break;
+      default:
+        boundValues.push(gl.getParameter(binding));
+        break;
+    }
+  }
+  callback(gl);
+  for (var i = 0; i < bindings.length; ++i) {
+    var binding = bindings[i];
+    var boundValue = boundValues[i];
+    switch (binding) {
+      case gl.ACTIVE_TEXTURE:
+        break;
+      case gl.ARRAY_BUFFER_BINDING:
+        gl.bindBuffer(gl.ARRAY_BUFFER, boundValue);
+        break;
+      case gl.COLOR_CLEAR_VALUE:
+        gl.clearColor(boundValue[0], boundValue[1], boundValue[2], boundValue[3]);
+        break;
+      case gl.COLOR_WRITEMASK:
+        gl.colorMask(boundValue[0], boundValue[1], boundValue[2], boundValue[3]);
+        break;
+      case gl.CURRENT_PROGRAM:
+        gl.useProgram(boundValue);
+        break;
+      case gl.ELEMENT_ARRAY_BUFFER_BINDING:
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boundValue);
+        break;
+      case gl.FRAMEBUFFER_BINDING:
+        gl.bindFramebuffer(gl.FRAMEBUFFER, boundValue);
+        break;
+      case gl.RENDERBUFFER_BINDING:
+        gl.bindRenderbuffer(gl.RENDERBUFFER, boundValue);
+        break;
+      case gl.TEXTURE_BINDING_2D:
+        var textureUnit = bindings[++i];
+        if (textureUnit < gl.TEXTURE0 || textureUnit > gl.TEXTURE31)
+          break;
+        gl.activeTexture(textureUnit);
+        gl.bindTexture(gl.TEXTURE_2D, boundValue);
+        break;
+      case gl.TEXTURE_BINDING_CUBE_MAP:
+        var textureUnit = bindings[++i];
+        if (textureUnit < gl.TEXTURE0 || textureUnit > gl.TEXTURE31)
+          break;
+        gl.activeTexture(textureUnit);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, boundValue);
+        break;
+      case gl.VIEWPORT:
+        gl.viewport(boundValue[0], boundValue[1], boundValue[2], boundValue[3]);
+        break;
+      case gl.BLEND:
+      case gl.CULL_FACE:
+      case gl.DEPTH_TEST:
+      case gl.SCISSOR_TEST:
+      case gl.STENCIL_TEST:
+        if (boundValue) {
+          gl.enable(binding);
+        } else {
+          gl.disable(binding);
+        }
+        break;
+      default:
+        console.log("No GL restore behavior for 0x" + binding.toString(16));
+        break;
+    }
+    if (activeTexture) {
+      gl.activeTexture(activeTexture);
+    }
+  }
+}
+var glPreserveState = WGLUPreserveGLState;
+
+function getShader(gl, str, type) {
+  var shader = void 0;
+  if (type == 'fragment') {
+    shader = gl.createShader(gl.FRAGMENT_SHADER);
+  } else if (type == 'vertex') {
+    shader = gl.createShader(gl.VERTEX_SHADER);
+  } else {
+    return null;
+  }
+  gl.shaderSource(shader, str);
+  gl.compileShader(shader);
+  var result = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+  if (!result) {
+    alert(gl.getShaderInfoLog(shader));
+    return null;
+  }
+  return shader;
+}
+function getProgram(gl, vs, fs) {
+  var vertexShader = getShader(gl, vs, 'vertex');
+  var fragmentShader = getShader(gl, fs, 'fragment');
+  if (!fragmentShader) {
+    return null;
+  }
+  var shaderProgram = gl.createProgram();
+  gl.attachShader(shaderProgram, vertexShader);
+  gl.attachShader(shaderProgram, fragmentShader);
+  gl.linkProgram(shaderProgram);
+  var result = gl.getProgramParameter(shaderProgram, gl.LINK_STATUS);
+  if (!result) {
+    alert('Could not initialise arview shaders');
+  }
+  return shaderProgram;
+}
+function combineOrientations(screenOrientation, seeThroughCameraOrientation) {
+  var seeThroughCameraOrientationIndex = 0;
+  switch (seeThroughCameraOrientation) {
+    case 90:
+      seeThroughCameraOrientationIndex = 1;
+      break;
+    case 180:
+      seeThroughCameraOrientationIndex = 2;
+      break;
+    case 270:
+      seeThroughCameraOrientationIndex = 3;
+      break;
+    default:
+      seeThroughCameraOrientationIndex = 0;
+      break;
+  }
+  var screenOrientationIndex = 0;
+  switch (screenOrientation) {
+    case 90:
+      screenOrientationIndex = 1;
+      break;
+    case 180:
+      screenOrientationIndex = 2;
+      break;
+    case 270:
+      screenOrientationIndex = 3;
+      break;
+    default:
+      screenOrientationIndex = 0;
+      break;
+  }
+  var ret = screenOrientationIndex - seeThroughCameraOrientationIndex;
+  if (ret < 0) {
+    ret += 4;
+  }
+  return ret % 4;
+}
+var ARVideoRenderer = function () {
+  function ARVideoRenderer(vrDisplay, gl) {
+    classCallCheck(this, ARVideoRenderer);
+    this.vrDisplay = vrDisplay;
+    this.gl = gl;
+    if (this.vrDisplay) {
+      this.passThroughCamera = vrDisplay.getPassThroughCamera();
+      this.program = getProgram(gl, vertexSource, fragmentSource);
+    }
+    gl.useProgram(this.program);
+    this.vertexPositionAttribute = gl.getAttribLocation(this.program, 'aVertexPosition');
+    this.textureCoordAttribute = gl.getAttribLocation(this.program, 'aTextureCoord');
+    this.samplerUniform = gl.getUniformLocation(this.program, 'uSampler');
+    this.vertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+    var vertices = [-1.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, 1.0, -1.0, 0.0];
+    var f32Vertices = new Float32Array(vertices);
+    gl.bufferData(gl.ARRAY_BUFFER, f32Vertices, gl.STATIC_DRAW);
+    this.vertexPositionBuffer.itemSize = 3;
+    this.vertexPositionBuffer.numItems = 12;
+    this.textureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.textureCoordBuffer);
+    var textureCoords = null;
+    if (this.vrDisplay) {
+      var u = this.passThroughCamera.width / this.passThroughCamera.textureWidth;
+      var v = this.passThroughCamera.height / this.passThroughCamera.textureHeight;
+      textureCoords = [[0.0, 0.0, 0.0, v, u, 0.0, u, v], [u, 0.0, 0.0, 0.0, u, v, 0.0, v], [u, v, u, 0.0, 0.0, v, 0.0, 0.0], [0.0, v, u, v, 0.0, 0.0, u, 0.0]];
+    } else {
+      textureCoords = [[0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0], [1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0], [1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0], [0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]];
+    }
+    this.f32TextureCoords = [];
+    for (var i = 0; i < textureCoords.length; i++) {
+      this.f32TextureCoords.push(new Float32Array(textureCoords[i]));
+    }
+    this.combinedOrientation = combineOrientations(screen.orientation.angle, this.passThroughCamera.orientation);
+    gl.bufferData(gl.ARRAY_BUFFER, this.f32TextureCoords[this.combinedOrientation], gl.STATIC_DRAW);
+    this.textureCoordBuffer.itemSize = 2;
+    this.textureCoordBuffer.numItems = 8;
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    this.indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+    var indices = [0, 1, 2, 2, 1, 3];
+    var ui16Indices = new Uint16Array(indices);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ui16Indices, gl.STATIC_DRAW);
+    this.indexBuffer.itemSize = 1;
+    this.indexBuffer.numItems = 6;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    this.texture = gl.createTexture();
+    gl.useProgram(null);
+    this.projectionMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+    this.mvMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+    return this;
+  }
+  createClass(ARVideoRenderer, [{
+    key: 'render',
+    value: function render() {
+      var _this = this;
+      var gl = this.gl;
+      var bindings = [gl.ARRAY_BUFFER_BINDING, gl.ELEMENT_ARRAY_BUFFER_BINDING, gl.CURRENT_PROGRAM];
+      glPreserveState(gl, bindings, function () {
+        gl.useProgram(_this.program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, _this.vertexPositionBuffer);
+        gl.enableVertexAttribArray(_this.vertexPositionAttribute);
+        gl.vertexAttribPointer(_this.vertexPositionAttribute, _this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, _this.textureCoordBuffer);
+        var combinedOrientation = combineOrientations(screen.orientation.angle, _this.passThroughCamera.orientation);
+        if (combinedOrientation !== _this.combinedOrientation) {
+          _this.combinedOrientation = combinedOrientation;
+          gl.bufferData(gl.ARRAY_BUFFER, _this.f32TextureCoords[_this.combinedOrientation], gl.STATIC_DRAW);
+        }
+        gl.enableVertexAttribArray(_this.textureCoordAttribute);
+        gl.vertexAttribPointer(_this.textureCoordAttribute, _this.textureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_EXTERNAL_OES, _this.texture);
+        gl.texImage2D(gl.TEXTURE_EXTERNAL_OES, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, _this.passThroughCamera);
+        gl.uniform1i(_this.samplerUniform, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, _this.indexBuffer);
+        gl.drawElements(gl.TRIANGLES, _this.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+      });
+    }
+  }]);
+  return ARVideoRenderer;
+}();
+var ARView = function () {
+  function ARView(vrDisplay, renderer) {
+    classCallCheck(this, ARView);
+    this.vrDisplay = vrDisplay;
+    if (isARKit(this.vrDisplay)) {
+      return;
+    }
+    this.renderer = renderer;
+    this.gl = renderer.context;
+    this.videoRenderer = new ARVideoRenderer(vrDisplay, this.gl);
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    window.addEventListener('resize', this.onWindowResize.bind(this), false);
+  }
+  createClass(ARView, [{
+    key: 'onWindowResize',
+    value: function onWindowResize() {
+      this.width = window.innerWidth;
+      this.height = window.innerHeight;
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      if (isARKit(this.vrDisplay)) {
+        return;
+      }
+      var gl = this.gl;
+      var dpr = window.devicePixelRatio;
+      var width = this.width * dpr;
+      var height = this.height * dpr;
+      if (gl.viewportWidth !== width) {
+        gl.viewportWidth = width;
+      }
+      if (gl.viewportHeight !== height) {
+        gl.viewportHeight = height;
+      }
+      this.gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+      this.videoRenderer.render();
+    }
+  }]);
+  return ARView;
+}();
+
+(function () {
+  if (window.webarSpeechRecognitionInstance) {
+    var addEventHandlingToObject = function addEventHandlingToObject(object) {
+      object.listeners = {};
+      object.addEventListener = function (eventType, callback) {
+        if (!callback) {
+          return this;
+        }
+        var listeners = this.listeners[eventType];
+        if (!listeners) {
+          this.listeners[eventType] = listeners = [];
+        }
+        if (listeners.indexOf(callback) < 0) {
+          listeners.push(callback);
+        }
+        return this;
+      };
+      object.removeEventListener = function (eventType, callback) {
+        if (!callback) {
+          return this;
+        }
+        var listeners = this.listeners[eventType];
+        if (listeners) {
+          var i = listeners.indexOf(callback);
+          if (i >= 0) {
+            this.listeners[eventType] = listeners.splice(i, 1);
+          }
+        }
+        return this;
+      };
+      object.callEventListeners = function (eventType, event) {
+        if (!event) {
+          event = { target: this };
+        }
+        if (!event.target) {
+          event.target = this;
+        }
+        event.type = eventType;
+        var onEventType = 'on' + eventType;
+        if (typeof this[onEventType] === 'function') {
+          this[onEventType](event);
+        }
+        var listeners = this.listeners[eventType];
+        if (listeners) {
+          for (var i = 0; i < listeners.length; i++) {
+            var typeofListener = _typeof(listeners[i]);
+            if (typeofListener === 'object') {
+              listeners[i].handleEvent(event);
+            } else if (typeofListener === 'function') {
+              listeners[i](event);
+            }
+          }
+        }
+        return this;
+      };
+    };
+    addEventHandlingToObject(window.webarSpeechRecognitionInstance);
+    window.webkitSpeechRecognition = function () {
+      return window.webarSpeechRecognitionInstance;
+    };
+  }
+})();
+
+if (typeof window !== 'undefined' && _typeof(window.THREE) === 'object') {
+  window.THREE.ARDebug = ARDebug;
+  window.THREE.ARPerspectiveCamera = ARPerspectiveCamera;
+  window.THREE.ARReticle = ARReticle;
+  window.THREE.ARUtils = ARUtils;
+  window.THREE.ARView = ARView;
+}
+
+exports.ARDebug = ARDebug;
+exports.ARPerspectiveCamera = ARPerspectiveCamera;
+exports.ARReticle = ARReticle;
+exports.ARUtils = ARUtils;
+exports.ARView = ARView;
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+})));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35)))
 
 /***/ }),
-/* 41 */
+/* 35 */
 /***/ (function(module, exports) {
 
-/**
- * @author alteredq / http://alteredqualia.com/
- */
+var g;
 
-module.exports = function(THREE) {
-  function ClearMaskPass() {
-    if (!(this instanceof ClearMaskPass)) return new ClearMaskPass(scene, camera);
-    this.enabled = true;
-  };
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
 
-  ClearMaskPass.prototype = {
-    render: function ( renderer, writeBuffer, readBuffer, delta ) {
-      var context = renderer.context;
-      context.disable( context.STENCIL_TEST );
-    }
-  };
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
 
-  return ClearMaskPass
-};
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
 
 /***/ }),
+/* 36 */,
+/* 37 */,
+/* 38 */,
+/* 39 */,
+/* 40 */,
+/* 41 */,
 /* 42 */,
 /* 43 */,
 /* 44 */,
@@ -2562,7 +3612,26 @@ module.exports = function(THREE) {
 /* 72 */,
 /* 73 */,
 /* 74 */,
-/* 75 */
+/* 75 */,
+/* 76 */,
+/* 77 */,
+/* 78 */,
+/* 79 */,
+/* 80 */,
+/* 81 */,
+/* 82 */,
+/* 83 */,
+/* 84 */,
+/* 85 */,
+/* 86 */,
+/* 87 */,
+/* 88 */,
+/* 89 */,
+/* 90 */,
+/* 91 */,
+/* 92 */,
+/* 93 */,
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2571,8 +3640,6 @@ module.exports = function(THREE) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -2584,11 +3651,13 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _vert = __webpack_require__(76);
+var _threeAr = __webpack_require__(34);
+
+var _vert = __webpack_require__(95);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(77);
+var _frag = __webpack_require__(96);
 
 var _frag2 = _interopRequireDefault(_frag);
 
@@ -2600,145 +3669,32 @@ var _MultiPassBloomPass = __webpack_require__(14);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
-var _godraypass = __webpack_require__(25);
-
-var _godraypass2 = _interopRequireDefault(_godraypass);
-
-var _threeEffectcomposer = __webpack_require__(36);
-
-var _threeEffectcomposer2 = _interopRequireDefault(_threeEffectcomposer);
-
 var _threeOrbitControls = __webpack_require__(33);
 
 var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var EffectComposer = (0, _threeEffectcomposer2.default)(window.THREE);
-
 var OrbitControls = (0, _threeOrbitControls2.default)(window.THREE);
-var RenderPass = EffectComposer.RenderPass,
-    ShaderPass = EffectComposer.ShaderPass;
 
-
-var OBJ_PATH = '../assets/fan.obj';
-var MODEL_PATH = '../assets/luigi.obj';
-var ROOM_SCALE = 2;
-var FAN_SCALE = 0.002;
-var MODEL_SCALE = 0.01;
-var AMBIENT = 0.1;
-var DEFAULT_LAYER = 0;
-var OCCLUSION_LAYER = 1;
-var CLEAR_COLOR = 0x111111;
-// Inspired by https://medium.com/@andrew_b_berg/volumetric-light-scattering-in-three-js-6e1850680a41
-var projectOnScreen = function projectOnScreen(object, camera) {
-  var mat = new _three.Matrix4();
-  mat.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld);
-  mat.multiplyMatrices(camera.projectionMatrix, mat);
-
-  var c = mat.elements[15];
-  var lPos = new _three.Vector2(mat.elements[12] / c, mat.elements[13] / c);
-  lPos.multiplyScalar(0.5);
-  lPos.addScalar(0.5);
-  return lPos;
+var DISPLACEMENT = 0.0005;
+var COLOR = 0x555555;
+var NOISE_COLOR = 0x3333ff;
+var LIGHT_INTENSITY = 0.005;
+var MODEL = '../assets/Monument_angels.obj';
+var SCALE = 0.01;
+var DIFFUSE_MAP = {
+  '02___Default': 'D_Monument_angels_a.bmp',
+  'Material__1': 'D_Monument_angels_b.bmp',
+  'Material__2': 'D_Monument_angels_c.bmp',
+  'mat_Monument_angels': 'D_Monument_angels_d.bmp'
 };
-
-var AdditiveBlendingShader = {
-  uniforms: {
-    tDiffuse: { value: null },
-    tAdd: { value: null }
-  },
-
-  vertexShader: ["varying vec2 vUv;", "void main() {", "vUv = uv;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
-
-  fragmentShader: ["uniform sampler2D tDiffuse;", "uniform sampler2D tAdd;", "varying vec2 vUv;", "void main() {", "vec4 color = texture2D( tDiffuse, vUv );", "vec4 add = texture2D( tAdd, vUv );", "gl_FragColor = color + add;", "}"].join("\n")
-};
-
-var OcclusionCloner = function () {
-  function OcclusionCloner(scene) {
-    _classCallCheck(this, OcclusionCloner);
-
-    this.scene = scene;
-    this.objects = new Map();
-  }
-
-  _createClass(OcclusionCloner, [{
-    key: 'add',
-    value: function add(object) {
-      var blackMat = new _three.MeshBasicMaterial({ color: 0x000000 });
-      if (object.material.opacity !== 1) {
-        //  blackMat.color = new Color(0xffffff - (0xffffff * object.material.opacity));
-      }
-      var clone = new _three.Mesh(object.geometry, blackMat);
-      clone.layers.set(OCCLUSION_LAYER);
-      clone.matrixAutoUpdate = false;
-      this.scene.add(clone);
-      this.objects.set(object, clone);
-    }
-  }, {
-    key: 'addLight',
-    value: function addLight(light) {
-      var clone = new _three.Mesh(new _three.SphereBufferGeometry(0.3, 10, 10), new _three.MeshBasicMaterial({ color: 0xffffff }));
-      clone.layers.set(OCCLUSION_LAYER);
-      clone.matrixAutoUpdate = false;
-      this.scene.add(clone);
-      this.objects.set(light, clone);
-    }
-  }, {
-    key: 'update',
-    value: function update() {
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = _slicedToArray(_step.value, 2),
-              object = _step$value[0],
-              clone = _step$value[1];
-
-          clone.matrix = object.matrix;
-          clone.matrixWorld = object.matrixWorld;
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-  }]);
-
-  return OcclusionCloner;
-}();
-
-var VolumetricLightMaterial = new _three.ShaderMaterial({
-  uniforms: {
-    tDiffuse: { value: null },
-    lightPosition: { value: new _three.Vector2(0.5, 0.5) },
-    exposure: { value: 0.1 },
-    decay: { value: 0.96 },
-    density: { value: 2 },
-    weight: { value: 0.5 },
-    samples: { value: 100 }
-  },
-  vertexShader: _vert2.default,
-  fragmentShader: _frag2.default
-});
 
 var Experiment = function (_ThreeApp) {
   _inherits(Experiment, _ThreeApp);
@@ -2755,131 +3711,119 @@ var Experiment = function (_ThreeApp) {
       var _this2 = this;
 
       new OrbitControls(this.camera);
-      this.renderer.setClearColor(0x222222);
-      this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = _three.PCFSoftShadowMap;
+      this.renderer.setClearColor(0x111111);
 
-      this.occlusionTarget = new _three.WebGLRenderTarget(window.innerWidth * 0.5, window.innerHeight * 0.5);
-      this.occlusionComposer = new EffectComposer(this.renderer, this.occlusionTarget);
-      this.occlusionComposer.addPass(new RenderPass(this.scene, this.camera));
-      var pass = new ShaderPass(VolumetricLightMaterial);
-      pass.needsSwap = false;
-      this.occlusionComposer.addPass(pass);
-      this.volumetricPass = pass;
-      this.composer = new EffectComposer(this.renderer);
-      this.composer.addPass(new RenderPass(this.scene, this.camera));
-      pass = new ShaderPass(AdditiveBlendingShader);
-      pass.uniforms.tAdd.value = this.occlusionTarget.texture;
-      this.composer.addPass(pass);
-      pass.renderToScreen = true;
+      _threeAr.ARUtils.loadModel({
+        objPath: MODEL,
+        OBJLoader: window.THREE.OBJLoader,
+        mtlPath: ' ../assets/Monument_angels.mtl',
+        MTLLoader: window.THREE.MTLLoader
+      }).then(function (group) {
+        _this2.model = group;
 
-      this.cloner = new OcclusionCloner(this.scene);
-      this.pivot = new _three.Object3D();
+        _this2.model.remove(_this2.model.children[3]);
+        _this2.model.remove(_this2.model.children[2]);
+        _this2.model.remove(_this2.model.children[1]);
 
-      this.objLoader = new THREE.OBJLoader();
-      this.objLoader.load(OBJ_PATH, function (model) {
-        _this2.fan = model.children[0];
-        _this2.fan.material = new _three.MeshStandardMaterial({
-          metalness: 0.5,
-          roughness: 0.5,
-          color: 0x111111
+        var transform = new _three.Matrix4().compose(new _three.Vector3(0, -1.5, 0), new _three.Quaternion(), new _three.Vector3(SCALE, SCALE, SCALE));
+
+        _this2.model.children[0].geometry.applyMatrix(transform);
+
+        _this2.materials = Object.keys(DIFFUSE_MAP).reduce(function (mats, matName) {
+          var material = _this2.material.clone();
+          material.name = matName;
+          mats[matName] = material;
+          return mats;
+        }, {});
+
+        // Use the MTL to map to materials so we can
+        // use the right diffuse map
+        var origMaterials = _this2.model.children[0].material;
+        _this2.model.children[0].material = origMaterials.map(function (m) {
+          _this2.materials[m.name].uniforms.diffuseMap.value = m.map;
+          return _this2.materials[m.name];
         });
-        _this2.fan.scale.set(FAN_SCALE, FAN_SCALE, FAN_SCALE);
-        _this2.fan.position.y = 1.7;
-        _this2.fan.position.z = -0.1;
-        _this2.fan.rotation.x = Math.PI;
 
-        _this2.fan.castShadow = true;
-        _this2.scene.add(_this2.fan);
-        _this2.cloner.add(_this2.fan);
-
-        _this2.sideFan = _this2.fan.clone();
-        _this2.scene.add(_this2.sideFan);
-        _this2.sideFan.position.set(0, 1, 1.5);
-        _this2.sideFan.rotation.x = -Math.PI / 2;
-        _this2.sideFan.castShadow = true;
-        _this2.sideLight = new _three.SpotLight({ color: 0xffffff });
-        _this2.scene.add(_this2.sideLight);
-        _this2.sideLight.position.set(0, 1, 1.8);
-        _this2.sideLight.castShadow = true;
-      });
-      this.objLoader.load(MODEL_PATH, function (model) {
-        _this2.model = model.children[0];
-        _this2.model.material = new _three.MeshStandardMaterial({
-          metalness: 1,
-          roughness: 0.4,
-          color: 0xDAA520
-        });
-        _this2.model.scale.set(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
-
-        _this2.model.castShadow = true;
-        _this2.model.receiveShadow = true;
         _this2.scene.add(_this2.model);
-        _this2.cloner.add(_this2.model);
       });
 
-      this.room = new _three.Mesh(new _three.BoxBufferGeometry(1, 1, 1), new _three.MeshStandardMaterial({
-        color: 0x111111,
-        metalness: 0.5,
-        roughness: 0.5,
-        side: _three.DoubleSide
-      }));
-      this.roomShadow = new _three.Mesh(new _three.PlaneBufferGeometry(1, 10, 10), new _three.ShadowMaterial({
-        color: 0x111111,
-        opacity: 0.9
-      }));
-      this.room.scale.set(ROOM_SCALE * 200, ROOM_SCALE, ROOM_SCALE * 20);
-      this.roomShadow.receiveShadow = true;
-      this.room.position.y = ROOM_SCALE / 2;
-      this.roomShadow.rotation.x = Math.PI / -2;
-      this.roomShadow.position.y = 0.001;
-      this.roomShadow.scale.set(this.room.scale.x - 0.01, this.room.scale.y - 0.01, this.room.scale.z - 0.01);
-      this.scene.add(this.room);
-      this.scene.add(this.roomShadow);
-
-      this.light = new _three.AmbientLight(0xff0000, AMBIENT);
-      this.vLight = new _three.PointLight();
-      this.vLight.position.set(0, 1.8, -0.1);
-      this.vLight.castShadow = true;
+      this.light = new _three.PointLight();
       this.scene.add(this.light);
-      this.scene.add(this.vLight);
-      this.cloner.addLight(this.vLight);
+      this.light.position.set(0, 0, 7);
 
-      //this.pivot.add(this.camera);
+      this.material = new _three.ShaderMaterial({
+        uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib['lights'], {
+          lightIntensity: { value: LIGHT_INTENSITY },
+          //alpha: { value: 0.5 },
+          //color: { value: new Color(COLOR) },
+          noiseColor: { value: new _three.Color(NOISE_COLOR) },
+          time: { value: 0 },
+          diffuseMap: { value: null },
+          displacement: { value: DISPLACEMENT }
+        }]),
+        vertexShader: _vert2.default,
+        fragmentShader: _frag2.default,
+        lights: true,
+        side: THREE.FrontSide,
+        transparent: true
+      });
+      this.textureLoader = new _three.TextureLoader();
+
+      this.pivot = new _three.Object3D();
+      this.pivot2 = new _three.Object3D();
+      this.pivot.add(this.light);
       this.scene.add(this.pivot);
-      this.camera.position.set(-0.8, 0.1, 1);
-      this.camera.rotation.x = 0.5;
-      this.camera.rotation.y = -0.6;
+      this.scene.add(this.pivot2);
+      this.camera.position.set(0, 0, 3);
+      this.pivot2.add(this.camera);
       this.renderer.render(this.scene, this.camera);
-    }
-  }, {
-    key: 'updateLightPosition',
-    value: function updateLightPosition() {
-      this.volumetricPass.uniforms.lightPosition.value = projectOnScreen(this.vLight, this.camera);
+      this.composer = new _wagner2.default.Composer(this.renderer);
+      this.pass = new _MultiPassBloomPass2.default({
+        blurAmount: 5,
+        applyZoomBlur: true,
+        zoomBlurStrength: 0.9
+      });
     }
   }, {
     key: 'update',
     value: function update(t, delta) {
-      if (this.fan) {
-        this.fan.rotation.y = t * 0.001;
-        this.sideFan.rotation.y = t * 0.001;
+      this.pivot.rotation.y = t * -0.001;
+      this.pivot2.rotation.y = Math.sin(t * -0.0001) * 0.5;
+      if (!this.model) {
+        return;
       }
-      this.pivot.rotation.y = t * 0.0001;
-      this.pivot.updateMatrixWorld(true);
-      this.vLight.updateMatrixWorld(true);
-      this.updateLightPosition();
-      this.cloner.update();
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = Object.keys(this.materials)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var name = _step.value;
+
+          this.materials[name].uniforms.time.value = t * 0.001;
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
     }
   }, {
     key: 'render',
     value: function render() {
-      this.camera.layers.set(OCCLUSION_LAYER);
-      this.renderer.setClearColor(0x000000);
-      this.occlusionComposer.render();
-
-      this.camera.layers.set(DEFAULT_LAYER);
-      this.renderer.setClearColor(CLEAR_COLOR);
-      this.composer.render();
+      this.composer.reset();
+      this.composer.render(this.scene, this.camera);
+      this.composer.pass(this.pass);
+      this.composer.toScreen();
     }
   }]);
 
@@ -2889,16 +3833,16 @@ var Experiment = function (_ThreeApp) {
 exports.default = new Experiment();
 
 /***/ }),
-/* 76 */
+/* 95 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float displacement;\n\nvarying vec3 vNormal;\nvarying vec4 vPosition;\nvarying float vNoise;\nvarying vec2 vUv;\n//\n// Description : Array and textureless GLSL 2D/3D/4D simplex\n//               noise functions.\n//      Author : Ian McEwan, Ashima Arts.\n//  Maintainer : ijm\n//     Lastmod : 20110822 (ijm)\n//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.\n//               Distributed under the MIT License. See LICENSE file.\n//               https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x) {\n     return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nfloat snoise_1_3(vec3 v)\n  {\n  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;\n  const vec4  D_1_4 = vec4(0.0, 0.5, 1.0, 2.0);\n\n// First corner\n  vec3 i  = floor(v + dot(v, C.yyy) );\n  vec3 x0 =   v - i + dot(i, C.xxx) ;\n\n// Other corners\n  vec3 g_1_5 = step(x0.yzx, x0.xyz);\n  vec3 l = 1.0 - g_1_5;\n  vec3 i1 = min( g_1_5.xyz, l.zxy );\n  vec3 i2 = max( g_1_5.xyz, l.zxy );\n\n  //   x0 = x0 - 0.0 + 0.0 * C.xxx;\n  //   x1 = x0 - i1  + 1.0 * C.xxx;\n  //   x2 = x0 - i2  + 2.0 * C.xxx;\n  //   x3 = x0 - 1.0 + 3.0 * C.xxx;\n  vec3 x1 = x0 - i1 + C.xxx;\n  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y\n  vec3 x3 = x0 - D_1_4.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y\n\n// Permutations\n  i = mod289_1_0(i);\n  vec4 p = permute_1_1( permute_1_1( permute_1_1(\n             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))\n           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))\n           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));\n\n// Gradients: 7x7 points over a square, mapped onto an octahedron.\n// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)\n  float n_ = 0.142857142857; // 1.0/7.0\n  vec3  ns = n_ * D_1_4.wyz - D_1_4.xzx;\n\n  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)\n\n  vec4 x_ = floor(j * ns.z);\n  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)\n\n  vec4 x = x_ *ns.x + ns.yyyy;\n  vec4 y = y_ *ns.x + ns.yyyy;\n  vec4 h = 1.0 - abs(x) - abs(y);\n\n  vec4 b0 = vec4( x.xy, y.xy );\n  vec4 b1 = vec4( x.zw, y.zw );\n\n  //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;\n  //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;\n  vec4 s0 = floor(b0)*2.0 + 1.0;\n  vec4 s1 = floor(b1)*2.0 + 1.0;\n  vec4 sh = -step(h, vec4(0.0));\n\n  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;\n  vec4 a1_1_6 = b1.xzyw + s1.xzyw*sh.zzww ;\n\n  vec3 p0_1_7 = vec3(a0.xy,h.x);\n  vec3 p1 = vec3(a0.zw,h.y);\n  vec3 p2 = vec3(a1_1_6.xy,h.z);\n  vec3 p3 = vec3(a1_1_6.zw,h.w);\n\n//Normalise gradients\n  vec4 norm = taylorInvSqrt_1_2(vec4(dot(p0_1_7,p0_1_7), dot(p1,p1), dot(p2, p2), dot(p3,p3)));\n  p0_1_7 *= norm.x;\n  p1 *= norm.y;\n  p2 *= norm.z;\n  p3 *= norm.w;\n\n// Mix final noise value\n  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);\n  m = m * m;\n  return 42.0 * dot( m*m, vec4( dot(p0_1_7,x0), dot(p1,x1),\n                                dot(p2,x2), dot(p3,x3) ) );\n  }\n\n\n\n\nvoid main() {\n  vUv = uv;\n  vNormal = normal;\n  float t = sin(fract(time * 0.0001) * 3.1415926 * 2.0) * 300.0;\n\n  vec4 p = modelViewMatrix * vec4(position, 1.0);\n  float x = p.x / t;\n  float y = p.y - t;\n  float z = p.z * t;\n\n  //vNoise = smoothstep(0.5, 0.9, snoise3(t * vec3(x,y,z)) * 0.5 + 0.5);\n  vNoise = snoise_1_3(vec3(x,y,z)) * 0.5 + 0.5;\n  float displace = smoothstep(0.5, 0.9, vNoise) * displacement;\n  vec3 pos = position + normal * displace;\n  vPosition = modelViewMatrix * vec4(pos, 1.0);\n\n  gl_Position = projectionMatrix * vPosition;\n}\n"
 
 /***/ }),
-/* 77 */
+/* 96 */
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tDiffuse;\nuniform vec2 lightPosition;\nuniform float exposure;\nuniform float decay;\nuniform float density;\nuniform float weight;\nuniform int samples;\nconst int MAX_SAMPLES = 100;\nvoid main(){\n  vec2 texCoord = vUv;\n  // Calculate vector from pixel to light source in screen space\n  vec2 deltaTextCoord = texCoord - lightPosition;\n  // Divide by number of samples and scale by control factor\n  deltaTextCoord *= 1.0 / float(samples) * density;\n  // Store initial sample\n  vec4 color = texture2D(tDiffuse, texCoord);\n  // set up illumination decay factor\n  float illuminationDecay = 1.0;\n\n  // evaluate the summation for samples number of iterations up to 100\n  for(int i=0; i < MAX_SAMPLES; i++){\n    // work around for dynamic number of loop iterations\n    if(i == samples){\n      break;\n    }\n\n    // step sample location along ray\n    texCoord -= deltaTextCoord;\n    // retrieve sample at new location\n    vec4 sample = texture2D(tDiffuse, texCoord);\n    // apply sample attenuation scale/decay factors\n    sample *= illuminationDecay * weight;\n    // accumulate combined color\n    color += sample;\n    // update exponential decay factor\n    illuminationDecay *= decay;\n\n  }\n  // output final color with a further scale control factor\n  gl_FragColor = color * exposure;\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float lightIntensity;\nuniform vec3 noiseColor;\nuniform sampler2D diffuseMap;\n\nvarying vec2 vUv;\nvarying vec4 vPosition;\nvarying vec3 vNormal;\nvarying float vNoise;\n\nstruct PointLight {\n  vec3 color;\n  vec3 position; // light position, in camera coordinates\n  float distance; // used for attenuation purposes\n};\n\nuniform PointLight pointLights[NUM_POINT_LIGHTS];\n\nfloat lambertDiffuse_3_0(\n  vec3 lightDirection,\n  vec3 surfaceNormal) {\n  return max(0.0, dot(lightDirection, surfaceNormal));\n}\n\n\nfloat map_1_1(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_1(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_1(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_1(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_2(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_3(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_2(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_2(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_2(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_3(float h, float s, float l) {\n    return hsl2rgb_2_3(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  // via https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/\n  vec3 color = texture2D(diffuseMap, vUv * 0.5 + 0.5).xyz;\n\n  vec3 addedLights = vec3(0.0, 0.0, 0.0);\n  for(int l = 0; l < NUM_POINT_LIGHTS; l++) {\n    vec3 lightDirection = normalize(pointLights[l].position - vPosition.xyz);\n    addedLights += lambertDiffuse_3_0(lightDirection, vNormal);\n  }\n  vec3 c = (color * 0.1) + (color * addedLights * lightIntensity);\n  c += noiseColor * vNoise;\n  c += smoothstep(0.5, 1.0, vNoise) * vec3(1.0, 0.0, -1.0)  * 1.0;\n  float alpha = smoothstep(0.2, 0.4, vNoise);\n  gl_FragColor = vec4(c, alpha);\n}\n"
 
 /***/ })
 /******/ ]);

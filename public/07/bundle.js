@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 114);
+/******/ 	return __webpack_require__(__webpack_require__.s = 117);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -220,7 +220,7 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 
 /***/ }),
 
-/***/ 114:
+/***/ 117:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -240,7 +240,7 @@ var THREE = _interopRequireWildcard(_three);
 
 var _tween = __webpack_require__(24);
 
-var _threeAr = __webpack_require__(40);
+var _threeAr = __webpack_require__(34);
 
 var _ThreeApp2 = __webpack_require__(7);
 
@@ -920,44 +920,7 @@ CopyPass.prototype.constructor = CopyPass;
 
 /***/ }),
 
-/***/ 4:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports.Composer = __webpack_require__(5);
-module.exports.CopyPass = __webpack_require__(3);
-module.exports.BlendMode = {
-  Normal: 1,
-  Dissolve: 2, // UNAVAILABLE
-  Darken: 3,
-  Multiply: 4,
-  ColorBurn: 5,
-  LinearBurn: 6,
-  DarkerColor: 7, // UNAVAILABLE
-  Lighten: 8,
-  Screen: 9,
-  ColorDodge: 10,
-  LinearDodge: 11,
-  LighterColor: 12, // UNAVAILABLE
-  Overlay: 13,
-  SoftLight: 14,
-  HardLight: 15,
-  VividLight: 16, // UNAVAILABLE
-  LinearLight: 17,
-  PinLight: 18, // UNAVAILABLE
-  HardMix: 19, // UNAVAILABLE
-  Difference: 20,
-  Exclusion: 21,
-  Substract: 22, // UNAVAILABLE
-  Divide: 23 // UNAVAILABLE
-};
-
-
-/***/ }),
-
-/***/ 40:
+/***/ 34:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -2466,11 +2429,11 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35)))
 
 /***/ }),
 
-/***/ 41:
+/***/ 35:
 /***/ (function(module, exports) {
 
 var g;
@@ -2494,6 +2457,43 @@ try {
 // easier to handle this case. if(!global) { ...}
 
 module.exports = g;
+
+
+/***/ }),
+
+/***/ 4:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports.Composer = __webpack_require__(5);
+module.exports.CopyPass = __webpack_require__(3);
+module.exports.BlendMode = {
+  Normal: 1,
+  Dissolve: 2, // UNAVAILABLE
+  Darken: 3,
+  Multiply: 4,
+  ColorBurn: 5,
+  LinearBurn: 6,
+  DarkerColor: 7, // UNAVAILABLE
+  Lighten: 8,
+  Screen: 9,
+  ColorDodge: 10,
+  LinearDodge: 11,
+  LighterColor: 12, // UNAVAILABLE
+  Overlay: 13,
+  SoftLight: 14,
+  HardLight: 15,
+  VividLight: 16, // UNAVAILABLE
+  LinearLight: 17,
+  PinLight: 18, // UNAVAILABLE
+  HardMix: 19, // UNAVAILABLE
+  Difference: 20,
+  Exclusion: 21,
+  Substract: 22, // UNAVAILABLE
+  Divide: 23 // UNAVAILABLE
+};
 
 
 /***/ }),
@@ -2772,7 +2772,7 @@ var App = function () {
 
     this.scene = new _three.Scene();
 
-    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
+    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 1000);
 
     this.onResize = this.onResize.bind(this);
     window.addEventListener('resize', this.onResize);

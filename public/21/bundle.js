@@ -277,7 +277,7 @@ var App = function () {
 
     this.scene = new _three.Scene();
 
-    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
+    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 1000);
 
     this.onResize = this.onResize.bind(this);
     window.addEventListener('resize', this.onResize);

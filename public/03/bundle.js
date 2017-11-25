@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 103);
+/******/ 	return __webpack_require__(__webpack_require__.s = 106);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -213,7 +213,7 @@ module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
 
 /***/ }),
 
-/***/ 103:
+/***/ 106:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -245,7 +245,7 @@ var _VignettePass = __webpack_require__(27);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
-var _vine = __webpack_require__(104);
+var _vine = __webpack_require__(107);
 
 var _vine2 = _interopRequireDefault(_vine);
 
@@ -369,7 +369,7 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 104:
+/***/ 107:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1232,7 +1232,7 @@ var App = function () {
 
     this.scene = new _three.Scene();
 
-    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
+    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 1000);
 
     this.onResize = this.onResize.bind(this);
     window.addEventListener('resize', this.onResize);

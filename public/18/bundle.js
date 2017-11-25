@@ -452,7 +452,7 @@ var App = function () {
 
     this.scene = new _three.Scene();
 
-    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
+    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 1000);
 
     this.onResize = this.onResize.bind(this);
     window.addEventListener('resize', this.onResize);
@@ -1082,7 +1082,10 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 /* 30 */,
 /* 31 */,
 /* 32 */,
-/* 33 */
+/* 33 */,
+/* 34 */,
+/* 35 */,
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -1090,11 +1093,11 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
  */
 
 module.exports = function(THREE) {
-  var CopyShader = EffectComposer.CopyShader = __webpack_require__(34)
-    , RenderPass = EffectComposer.RenderPass = __webpack_require__(35)(THREE)
-    , ShaderPass = EffectComposer.ShaderPass = __webpack_require__(36)(THREE, EffectComposer)
-    , MaskPass = EffectComposer.MaskPass = __webpack_require__(37)(THREE)
-    , ClearMaskPass = EffectComposer.ClearMaskPass = __webpack_require__(38)(THREE)
+  var CopyShader = EffectComposer.CopyShader = __webpack_require__(37)
+    , RenderPass = EffectComposer.RenderPass = __webpack_require__(38)(THREE)
+    , ShaderPass = EffectComposer.ShaderPass = __webpack_require__(39)(THREE, EffectComposer)
+    , MaskPass = EffectComposer.MaskPass = __webpack_require__(40)(THREE)
+    , ClearMaskPass = EffectComposer.ClearMaskPass = __webpack_require__(41)(THREE)
 
   function EffectComposer( renderer, renderTarget ) {
     this.renderer = renderer;
@@ -1233,7 +1236,7 @@ module.exports = function(THREE) {
 };
 
 /***/ }),
-/* 34 */
+/* 37 */
 /***/ (function(module, exports) {
 
 /**
@@ -1275,7 +1278,7 @@ module.exports = {
 
 
 /***/ }),
-/* 35 */
+/* 38 */
 /***/ (function(module, exports) {
 
 /**
@@ -1338,7 +1341,7 @@ module.exports = function(THREE) {
 
 
 /***/ }),
-/* 36 */
+/* 39 */
 /***/ (function(module, exports) {
 
 /**
@@ -1400,7 +1403,7 @@ module.exports = function(THREE, EffectComposer) {
 };
 
 /***/ }),
-/* 37 */
+/* 40 */
 /***/ (function(module, exports) {
 
 /**
@@ -1477,7 +1480,7 @@ module.exports = function(THREE) {
 
 
 /***/ }),
-/* 38 */
+/* 41 */
 /***/ (function(module, exports) {
 
 /**
@@ -1501,9 +1504,6 @@ module.exports = function(THREE) {
 };
 
 /***/ }),
-/* 39 */,
-/* 40 */,
-/* 41 */,
 /* 42 */,
 /* 43 */,
 /* 44 */,
@@ -1576,7 +1576,7 @@ var _godraypass = __webpack_require__(25);
 
 var _godraypass2 = _interopRequireDefault(_godraypass);
 
-var _threeEffectcomposer = __webpack_require__(33);
+var _threeEffectcomposer = __webpack_require__(36);
 
 var _threeEffectcomposer2 = _interopRequireDefault(_threeEffectcomposer);
 

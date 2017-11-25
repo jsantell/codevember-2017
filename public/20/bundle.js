@@ -89,7 +89,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
 
 /***/ }),
 
-/***/ 39:
+/***/ 33:
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -1250,7 +1250,7 @@ var App = function () {
 
     this.scene = new _three.Scene();
 
-    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 100);
+    this.camera = new _three.PerspectiveCamera(60, this.getAspect(), 0.1, 1000);
 
     this.onResize = this.onResize.bind(this);
     window.addEventListener('resize', this.onResize);
@@ -1332,7 +1332,7 @@ var _frag2 = _interopRequireDefault(_frag);
 
 var _tween = __webpack_require__(24);
 
-var _threeOrbitControls = __webpack_require__(39);
+var _threeOrbitControls = __webpack_require__(33);
 
 var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
 
