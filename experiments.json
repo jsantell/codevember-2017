@@ -209,6 +209,14 @@
       "attributions": [
         { "name": "Texture via Planet Pixel Emporium", "url": "http://planetpixelemporium.com/earth.html" }
       ]
+    },
+    "27": {
+      "title": "particles",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" },
+        { "name": "dat.gui" }
+      ]
     }
   }
 }
