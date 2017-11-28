@@ -217,6 +217,13 @@
         { "name": "three" },
         { "name": "dat.gui" }
       ]
+    },
+    "28": {
+      "title": "hyperspace",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" }
+      ]
     }
   }
 }
