@@ -7,7 +7,7 @@
 		exports["app"] = factory(require("three"), require("tween"));
 	else
 		root["app"] = factory(root["THREE"], root["TWEEN"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_24__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_25__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -83,13 +83,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
 /***/ }),
 
 /***/ 24:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
-
-/***/ }),
-
-/***/ 25:
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -1116,6 +1109,13 @@ module.exports = function( THREE ) {
 
 /***/ }),
 
+/***/ 25:
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_25__;
+
+/***/ }),
+
 /***/ 6:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1330,9 +1330,9 @@ var _frag = __webpack_require__(80);
 
 var _frag2 = _interopRequireDefault(_frag);
 
-var _tween = __webpack_require__(24);
+var _tween = __webpack_require__(25);
 
-var _threeOrbitControls = __webpack_require__(25);
+var _threeOrbitControls = __webpack_require__(24);
 
 var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
 

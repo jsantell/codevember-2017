@@ -999,8 +999,7 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 
 /***/ }),
 /* 23 */,
-/* 24 */,
-/* 25 */
+/* 24 */
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -2026,6 +2025,7 @@ module.exports = function( THREE ) {
 
 
 /***/ }),
+/* 25 */,
 /* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2608,7 +2608,7 @@ var _threeEffectcomposer = __webpack_require__(37);
 
 var _threeEffectcomposer2 = _interopRequireDefault(_threeEffectcomposer);
 
-var _threeOrbitControls = __webpack_require__(25);
+var _threeOrbitControls = __webpack_require__(24);
 
 var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
 

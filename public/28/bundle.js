@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 118);
+/******/ 	return __webpack_require__(__webpack_require__.s = 107);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -213,14 +213,7 @@ module.exports = function processShader(vertexShaderCode, fragmentShaderCode) {
 
 /***/ }),
 
-/***/ 11:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nvoid main() {\n  gl_FragColor = texture2D( tInput, vUv );\n\n}"
-
-/***/ }),
-
-/***/ 118:
+/***/ 107:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -240,25 +233,13 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _GPUComputationRenderer = __webpack_require__(36);
-
-var _GPUComputationRenderer2 = _interopRequireDefault(_GPUComputationRenderer);
-
-var _vert = __webpack_require__(119);
+var _vert = __webpack_require__(108);
 
 var _vert2 = _interopRequireDefault(_vert);
 
-var _frag = __webpack_require__(120);
+var _frag = __webpack_require__(109);
 
 var _frag2 = _interopRequireDefault(_frag);
-
-var _computePosition = __webpack_require__(121);
-
-var _computePosition2 = _interopRequireDefault(_computePosition);
-
-var _computeVelocity = __webpack_require__(122);
-
-var _computeVelocity2 = _interopRequireDefault(_computeVelocity);
 
 var _wagner = __webpack_require__(4);
 
@@ -268,6 +249,10 @@ var _MultiPassBloomPass = __webpack_require__(14);
 
 var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
 
+var _threeOrbitControls = __webpack_require__(24);
+
+var _threeOrbitControls2 = _interopRequireDefault(_threeOrbitControls);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -276,8 +261,16 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var scale = 30;
-var size = 50;
+var OrbitControls = (0, _threeOrbitControls2.default)(window.THREE);
+
+var SIZE = 160;
+var RINGS = 60;
+var POINTS_PER_RING = 70;
+var RADIUS = 0.5;
+var DISTANCE_BETWEEN_RINGS = 0.15;
+var ALPHA = 0.5;
+var NOISE_MOD = 0.015;
+var POS_DAMPEN = 1.5;
 
 var Experiment = function (_ThreeApp) {
   _inherits(Experiment, _ThreeApp);
@@ -293,166 +286,71 @@ var Experiment = function (_ThreeApp) {
     value: function init() {
       var _this2 = this;
 
-      this.renderer.setClearColor(0x008855);
+      new OrbitControls(this.camera);
+      this.renderer.setClearColor(0x111111);
+
+      this.geometry = new _three.BufferGeometry();
+      var pos = 0;
+      var positions = new Float32Array(RINGS * POINTS_PER_RING * 3);
+      for (var r = 0; r < RINGS; r++) {
+        for (var p = 0; p < POINTS_PER_RING; p++) {
+          var theta = p / POINTS_PER_RING * Math.PI * 2;
+          positions[pos++] = Math.sin(theta) * RADIUS;
+          positions[pos++] = Math.cos(theta) * RADIUS;
+          positions[pos++] = -r * DISTANCE_BETWEEN_RINGS;
+        }
+      }
+      this.geometry.addAttribute('position', new _three.BufferAttribute(positions, 3));
+
       this.material = new _three.ShaderMaterial({
         uniforms: {
-          size: { value: size },
-          time: { value: 0.0 },
-          tPosition: { value: null },
-          tVelocity: { value: null },
-          sprite: { value: null }
+          size: { value: SIZE },
+          alpha: { value: ALPHA },
+          time: { value: 0 },
+          alphaMap: { value: null },
+          dpr: { value: window.devicePixelRatio },
+          maxDistance: { value: RINGS * DISTANCE_BETWEEN_RINGS },
+          noiseMod: { value: NOISE_MOD },
+          posDampen: { value: POS_DAMPEN }
         },
-        fragmentShader: _frag2.default,
-        vertexShader: _vert2.default,
         transparent: true,
-        depthWrite: false
+        depthWrite: false,
+        vertexShader: _vert2.default,
+        fragmentShader: _frag2.default,
+        blending: _three.AdditiveBlending
       });
-      this.material.blending = _three.AdditiveBlending;
+
       this.textureLoader = new _three.TextureLoader();
-      this.textureLoader.load('light.png', function (texture) {
-        _this2.material.uniforms.sprite.value = texture;
+      this.textureLoader.load('../assets/particle.jpg', function (texture) {
+        _this2.material.uniforms.alphaMap.value = texture;
       });
 
-      this.setupGeometry();
+      this.points = new _three.Points(this.geometry, this.material);
+      this.scene.add(this.points);
 
-      this.mesh = new _three.Points(this.geometry, this.material);
-      this.mesh.position.set(0, 0, 0);
-
-      this.setupGPURenderer();
-
-      this.pivot = new _three.Object3D();
-      this.pivot.add(this.camera);
-      this.scene.add(this.mesh);
-      this.scene.add(this.pivot);
-      this.camera.position.set(0, 0, 4);
-
+      this.scene.add(this.camera);
+      this.camera.position.set(0, 0, 0);
+      this.renderer.render(this.scene, this.camera);
       this.composer = new _wagner2.default.Composer(this.renderer);
       this.pass = new _MultiPassBloomPass2.default({
-        zoomBlurStrength: 0.9,
+        blurAmount: 1,
         applyZoomBlur: true,
-        blurAmount: 2
+        zoomBlurStrength: 0.5
       });
-    }
-  }, {
-    key: 'getTextureSize',
-    value: function getTextureSize() {
-      var count = this.geometry.getAttribute('position').count;
-
-      var size = 2;
-      while (size < Math.sqrt(count)) {
-        size *= 2;
-      }
-
-      return size;
-    }
-  }, {
-    key: 'setupGeometry',
-    value: function setupGeometry() {
-      this.geometry = new _three.SphereBufferGeometry(3, scale, scale);
-
-      var verticesCount = this.geometry.getAttribute('position').count;
-      console.log('Particle count: ', verticesCount);
-      var width = this.getTextureSize();
-      var uvs = new Float32Array(verticesCount * 2);
-      var count = 0;
-
-      for (var i = 0; i < width; i++) {
-        for (var j = 0; j < width; j++) {
-          uvs[count++] = i / (width - 1);
-          uvs[count++] = j / (width - 1);
-
-          if (count === verticesCount * 2) {
-            break;
-          }
-        }
-        if (count === verticesCount * 2) {
-          break;
-        }
-      }
-      this.geometry.addAttribute('uv', new _three.BufferAttribute(uvs, 2));
-    }
-  }, {
-    key: 'setupGPURenderer',
-    value: function setupGPURenderer() {
-      var textureSize = this.getTextureSize();
-      this.gpu = new _GPUComputationRenderer2.default(textureSize, textureSize, this.renderer);
-
-      this.velTexture = this.gpu.createTexture();
-      this.posTexture = this.gpu.createTexture();
-
-      this.seedTextures();
-
-      this.velVar = this.gpu.addVariable('tVelocity', _computeVelocity2.default, this.velTexture);
-      this.posVar = this.gpu.addVariable('tPosition', _computePosition2.default, this.posTexture);
-      this.gpu.setVariableDependencies(this.velVar, [this.velVar, this.posVar]);
-      this.gpu.setVariableDependencies(this.posVar, [this.velVar, this.posVar]);
-      this.velVar.material.uniforms.time = { value: 0.0 };
-      this.posVar.material.uniforms.delta = { value: 0.0 };
-
-      var error = this.gpu.init();
-      if (error) {
-        throw new Error(error);
-      }
-    }
-  }, {
-    key: 'seedTextures',
-    value: function seedTextures() {
-      var positionData = this.posTexture.image.data;
-      var velocityData = this.velTexture.image.data;
-
-      // Use BoxBufferGeometry's position to start in
-      // the texture
-      var posCount = 0;
-      var geoPos = this.geometry.getAttribute('position');
-
-      for (var i = 0; i < positionData.length; i += 4) {
-        if (i / 4 >= geoPos.count) {
-          positionData[i] = positionData[i + 1] = positionData[i + 2] = positionData[i + 3] = 0;
-          velocityData[i] = velocityData[i + 1] = velocityData[i + 2] = velocityData[i + 3] = 0;
-        } else {
-          /*
-          // Initial position from buffer geometry
-          positionData[i]     = geoPos.array[posCount++];
-          positionData[i + 1] = geoPos.array[posCount++];
-          positionData[i + 2] = geoPos.array[posCount++];
-          positionData[i + 3] = 1;
-          */
-
-          var theta = Math.random() * Math.PI * 2;
-          var phi = Math.random() * Math.PI - Math.PI / 2;
-          var r = Math.random() * 1.5;
-          positionData[i] = r * Math.cos(theta) * Math.cos(phi);
-          positionData[i + 1] = r * Math.sin(phi);
-          positionData[i + 2] = r * Math.sin(theta) * Math.cos(phi);
-          positionData[i + 3] = 1;
-
-          velocityData[i] = Math.random() * 2 - 1;
-          velocityData[i + 1] = Math.random() * 2 - 1;
-          velocityData[i + 2] = Math.random() * 2 - 1;
-          velocityData[i + 3] = 1;
-        }
-      }
     }
   }, {
     key: 'update',
     value: function update(t, delta) {
-      this.pivot.rotation.y = t * 0.0001;
-      this.material.uniforms.time.value = t;
-      this.velVar.material.uniforms.time.value = t;
-      this.posVar.material.uniforms.delta.value = delta / 1000;
+      this.material.uniforms.time.value = t * 0.001;
+      this.camera.rotation.z -= 0.001;
     }
   }, {
     key: 'render',
     value: function render() {
-      this.renderer.clearColor();
-      this.gpu.compute();
-      this.material.uniforms.tPosition.value = this.gpu.getCurrentRenderTarget(this.posVar).texture;
-      this.material.uniforms.tVelocity.value = this.gpu.getCurrentRenderTarget(this.velVar).texture;
       this.composer.reset();
       this.composer.render(this.scene, this.camera);
       this.composer.pass(this.pass);
       this.composer.toScreen();
-      // this.renderer.render(this.scene, this.camera);
     }
   }]);
 
@@ -463,10 +361,24 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 119:
+/***/ 108:
 /***/ (function(module, exports) {
 
-module.exports = "#define GLSLIFY 1\nuniform float size;\nuniform sampler2D tPosition;\nuniform sampler2D tVelocity;\nvarying vec3 vPosition;\n\nvoid main() {\n  vec3 pos = texture2D(tPosition, uv).xyz;\n  vPosition = pos;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);\n  gl_PointSize = size;\n}\n"
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float size;\nuniform float dpr;\nuniform float noiseMod;\nuniform float posDampen;\nuniform float maxDistance;\nvarying vec3 vPosition;\nvarying float vNoise;\nvarying float vHue;\n//\n// GLSL textureless classic 3D noise \"cnoise\",\n// with an RSL-style periodic variant \"pnoise\".\n// Author:  Stefan Gustavson (stefan.gustavson@liu.se)\n// Version: 2011-10-11\n//\n// Many thanks to Ian McEwan of Ashima Arts for the\n// ideas for permutation and gradient selection.\n//\n// Copyright (c) 2011 Stefan Gustavson. All rights reserved.\n// Distributed under the MIT license. See LICENSE file.\n// https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x)\n{\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x)\n{\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x)\n{\n  return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nvec3 fade_1_3(vec3 t) {\n  return t*t*t*(t*(t*6.0-15.0)+10.0);\n}\n\n// Classic Perlin noise\nfloat cnoise_1_4(vec3 P)\n{\n  vec3 Pi0 = floor(P); // Integer part for indexing\n  vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1\n  Pi0 = mod289_1_0(Pi0);\n  Pi1 = mod289_1_0(Pi1);\n  vec3 Pf0 = fract(P); // Fractional part for interpolation\n  vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n  vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n  vec4 iy = vec4(Pi0.yy, Pi1.yy);\n  vec4 iz0 = Pi0.zzzz;\n  vec4 iz1 = Pi1.zzzz;\n\n  vec4 ixy = permute_1_1(permute_1_1(ix) + iy);\n  vec4 ixy0 = permute_1_1(ixy + iz0);\n  vec4 ixy1 = permute_1_1(ixy + iz1);\n\n  vec4 gx0 = ixy0 * (1.0 / 7.0);\n  vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;\n  gx0 = fract(gx0);\n  vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n  vec4 sz0 = step(gz0, vec4(0.0));\n  gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n  gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n\n  vec4 gx1 = ixy1 * (1.0 / 7.0);\n  vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;\n  gx1 = fract(gx1);\n  vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n  vec4 sz1 = step(gz1, vec4(0.0));\n  gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n  gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n\n  vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);\n  vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);\n  vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);\n  vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);\n  vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);\n  vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);\n  vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);\n  vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);\n\n  vec4 norm0 = taylorInvSqrt_1_2(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n  g000 *= norm0.x;\n  g010 *= norm0.y;\n  g100 *= norm0.z;\n  g110 *= norm0.w;\n  vec4 norm1 = taylorInvSqrt_1_2(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n  g001 *= norm1.x;\n  g011 *= norm1.y;\n  g101 *= norm1.z;\n  g111 *= norm1.w;\n\n  float n000 = dot(g000, Pf0);\n  float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n  float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n  float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n  float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n  float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n  float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n  float n111 = dot(g111, Pf1);\n\n  vec3 fade_xyz = fade_1_3(Pf0);\n  vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n  vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n  float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);\n  return 2.2 * n_xyz;\n}\n\n\n\nfloat quadraticOut_2_5(float t) {\n  return -t * (t - 2.0);\n}\n\n\n\n\nvoid main() {\n  float t = time + 20.0;\n  vNoise = cnoise_1_4(noiseMod * t * vec3(position.x, position.y, 3.0 * position.z+100.0) * 0.5 + 0.5);\n  vPosition = position + (vec3(-position.x, -position.y, 0.0) * vNoise * posDampen);\n  vHue = (-vPosition.z / maxDistance * 0.5) + fract(time * 0.5);\n  gl_PointSize = size / dpr / distance(vPosition, cameraPosition);\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(vPosition, 1.0);\n}\n"
+
+/***/ }),
+
+/***/ 109:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float alpha;\nuniform sampler2D alphaMap;\n\nvarying vec3 vPosition;\nvarying float vNoise;\nvarying float vHue;\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  float pAlpha = smoothstep(0.4, 0.9, texture2D(alphaMap, gl_PointCoord).r);\n  gl_FragColor = vec4(hsl2rgb_2_2(vHue, 0.8, 0.5), alpha * pAlpha);\n}\n"
+
+/***/ }),
+
+/***/ 11:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\n\nvoid main() {\n  gl_FragColor = texture2D( tInput, vUv );\n\n}"
 
 /***/ }),
 
@@ -553,27 +465,6 @@ Stack.prototype.getPasses = function() {
   return this.passes;
 };
 
-
-/***/ }),
-
-/***/ 120:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D sprite;\n\nvarying vec3 vPosition;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(sprite, gl_PointCoord);\n  float l = length(vPosition);\n  float t = clamp(-1.0, 1.0, sin(time * 0.0008));\n  vec3 hsl = hsl2rgb_2_2(map_1_0(t+l, -1.0, 3.0, 0.0, 0.5), 0.8, 0.5);\n  hsl.x += (0.1 * vPosition.y);\n  gl_FragColor = vec4(hsl, smoothstep(0.2, 0.9999,tex.a)*0.3);\n}\n"
-
-/***/ }),
-
-/***/ 121:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float delta;\n\nfloat when_lt_1_0(float x, float y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec2 when_lt_1_0(vec2 x, vec2 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec3 when_lt_1_0(vec3 x, vec3 y) {\n  return max(sign(y - x), 0.0);\n}\n\nvec4 when_lt_1_0(vec4 x, vec4 y) {\n  return max(sign(y - x), 0.0);\n}\n\n\n\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / resolution.xy;\n  vec3 pos = texture2D(tPosition, uv).xyz;\n  vec4 tmpVel = texture2D(tVelocity, uv);\n  vec3 vel = tmpVel.xyz;\n  float mass = tmpVel.w;\n\n  pos += vel * delta * mass;\n\n  pos *= when_lt_1_0(length(pos), 2.5);\n\n  gl_FragColor = vec4(pos, 1.0);\n}\n"
-
-/***/ }),
-
-/***/ 122:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float time;\n\n//\n// Description : Array and textureless GLSL 2D/3D/4D simplex\n//               noise functions.\n//      Author : Ian McEwan, Ashima Arts.\n//  Maintainer : ijm\n//     Lastmod : 20110822 (ijm)\n//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.\n//               Distributed under the MIT License. See LICENSE file.\n//               https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x) {\n     return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nfloat snoise_1_3(vec3 v)\n  {\n  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;\n  const vec4  D_1_4 = vec4(0.0, 0.5, 1.0, 2.0);\n\n// First corner\n  vec3 i  = floor(v + dot(v, C.yyy) );\n  vec3 x0 =   v - i + dot(i, C.xxx) ;\n\n// Other corners\n  vec3 g_1_5 = step(x0.yzx, x0.xyz);\n  vec3 l = 1.0 - g_1_5;\n  vec3 i1 = min( g_1_5.xyz, l.zxy );\n  vec3 i2 = max( g_1_5.xyz, l.zxy );\n\n  //   x0 = x0 - 0.0 + 0.0 * C.xxx;\n  //   x1 = x0 - i1  + 1.0 * C.xxx;\n  //   x2 = x0 - i2  + 2.0 * C.xxx;\n  //   x3 = x0 - 1.0 + 3.0 * C.xxx;\n  vec3 x1 = x0 - i1 + C.xxx;\n  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y\n  vec3 x3 = x0 - D_1_4.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y\n\n// Permutations\n  i = mod289_1_0(i);\n  vec4 p = permute_1_1( permute_1_1( permute_1_1(\n             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))\n           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))\n           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));\n\n// Gradients: 7x7 points over a square, mapped onto an octahedron.\n// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)\n  float n_ = 0.142857142857; // 1.0/7.0\n  vec3  ns = n_ * D_1_4.wyz - D_1_4.xzx;\n\n  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)\n\n  vec4 x_ = floor(j * ns.z);\n  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)\n\n  vec4 x = x_ *ns.x + ns.yyyy;\n  vec4 y = y_ *ns.x + ns.yyyy;\n  vec4 h = 1.0 - abs(x) - abs(y);\n\n  vec4 b0 = vec4( x.xy, y.xy );\n  vec4 b1 = vec4( x.zw, y.zw );\n\n  //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;\n  //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;\n  vec4 s0 = floor(b0)*2.0 + 1.0;\n  vec4 s1 = floor(b1)*2.0 + 1.0;\n  vec4 sh = -step(h, vec4(0.0));\n\n  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;\n  vec4 a1_1_6 = b1.xzyw + s1.xzyw*sh.zzww ;\n\n  vec3 p0_1_7 = vec3(a0.xy,h.x);\n  vec3 p1 = vec3(a0.zw,h.y);\n  vec3 p2 = vec3(a1_1_6.xy,h.z);\n  vec3 p3 = vec3(a1_1_6.zw,h.w);\n\n//Normalise gradients\n  vec4 norm = taylorInvSqrt_1_2(vec4(dot(p0_1_7,p0_1_7), dot(p1,p1), dot(p2, p2), dot(p3,p3)));\n  p0_1_7 *= norm.x;\n  p1 *= norm.y;\n  p2 *= norm.z;\n  p3 *= norm.w;\n\n// Mix final noise value\n  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);\n  m = m * m;\n  return 42.0 * dot( m*m, vec4( dot(p0_1_7,x0), dot(p1,x1),\n                                dot(p2,x2), dot(p3,x3) ) );\n  }\n\n\n\nfloat when_gt_2_8(float x, float y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec2 when_gt_2_8(vec2 x, vec2 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec3 when_gt_2_8(vec3 x, vec3 y) {\n  return max(sign(x - y), 0.0);\n}\n\nvec4 when_gt_2_8(vec4 x, vec4 y) {\n  return max(sign(x - y), 0.0);\n}\n\n\n\n\nconst float max = 3.0;\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / resolution.xy;\n  vec3 pos = texture2D(tPosition, uv).xyz;\n  vec4 tmpVel = texture2D(tVelocity, uv);\n  vec3 vel = tmpVel.xyz;\n  float mass = tmpVel.w;\n\n  // decay\n  vel *= 0.99;\n\n  float mod = cos(time * 0.0001) + 2.0 + mass;\n  float rand = vel.x;\n  vel += -pos * -0.050 * snoise_1_3(vec3(pos.x,pos.y,pos.z)*mod);\n\n  float outOfBounds = when_gt_2_8(length(pos), max);\n  vel = (outOfBounds * -pos * 0.15) + ((1.0 - outOfBounds) * vel);\n\n  gl_FragColor = vec4(vel, mass);\n}\n"
 
 /***/ }),
 
@@ -874,6 +765,1033 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 
 /***/ }),
 
+/***/ 24:
+/***/ (function(module, exports) {
+
+module.exports = function( THREE ) {
+	/**
+	 * @author qiao / https://github.com/qiao
+	 * @author mrdoob / http://mrdoob.com
+	 * @author alteredq / http://alteredqualia.com/
+	 * @author WestLangley / http://github.com/WestLangley
+	 * @author erich666 / http://erichaines.com
+	 */
+
+// This set of controls performs orbiting, dollying (zooming), and panning.
+// Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
+//
+//    Orbit - left mouse / touch: one finger move
+//    Zoom - middle mouse, or mousewheel / touch: two finger spread or squish
+//    Pan - right mouse, or arrow keys / touch: three finter swipe
+
+	function OrbitControls( object, domElement ) {
+
+		this.object = object;
+
+		this.domElement = ( domElement !== undefined ) ? domElement : document;
+
+		// Set to false to disable this control
+		this.enabled = true;
+
+		// "target" sets the location of focus, where the object orbits around
+		this.target = new THREE.Vector3();
+
+		// How far you can dolly in and out ( PerspectiveCamera only )
+		this.minDistance = 0;
+		this.maxDistance = Infinity;
+
+		// How far you can zoom in and out ( OrthographicCamera only )
+		this.minZoom = 0;
+		this.maxZoom = Infinity;
+
+		// How far you can orbit vertically, upper and lower limits.
+		// Range is 0 to Math.PI radians.
+		this.minPolarAngle = 0; // radians
+		this.maxPolarAngle = Math.PI; // radians
+
+		// How far you can orbit horizontally, upper and lower limits.
+		// If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ].
+		this.minAzimuthAngle = - Infinity; // radians
+		this.maxAzimuthAngle = Infinity; // radians
+
+		// Set to true to enable damping (inertia)
+		// If damping is enabled, you must call controls.update() in your animation loop
+		this.enableDamping = false;
+		this.dampingFactor = 0.25;
+
+		// This option actually enables dollying in and out; left as "zoom" for backwards compatibility.
+		// Set to false to disable zooming
+		this.enableZoom = true;
+		this.zoomSpeed = 1.0;
+
+		// Set to false to disable rotating
+		this.enableRotate = true;
+		this.rotateSpeed = 1.0;
+
+		// Set to false to disable panning
+		this.enablePan = true;
+		this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
+
+		// Set to true to automatically rotate around the target
+		// If auto-rotate is enabled, you must call controls.update() in your animation loop
+		this.autoRotate = false;
+		this.autoRotateSpeed = 2.0; // 30 seconds per round when fps is 60
+
+		// Set to false to disable use of the keys
+		this.enableKeys = true;
+
+		// The four arrow keys
+		this.keys = { LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };
+
+		// Mouse buttons
+		this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE, PAN: THREE.MOUSE.RIGHT };
+
+		// for reset
+		this.target0 = this.target.clone();
+		this.position0 = this.object.position.clone();
+		this.zoom0 = this.object.zoom;
+
+		//
+		// public methods
+		//
+
+		this.getPolarAngle = function () {
+
+			return spherical.phi;
+
+		};
+
+		this.getAzimuthalAngle = function () {
+
+			return spherical.theta;
+
+		};
+
+		this.reset = function () {
+
+			scope.target.copy( scope.target0 );
+			scope.object.position.copy( scope.position0 );
+			scope.object.zoom = scope.zoom0;
+
+			scope.object.updateProjectionMatrix();
+			scope.dispatchEvent( changeEvent );
+
+			scope.update();
+
+			state = STATE.NONE;
+
+		};
+
+		// this method is exposed, but perhaps it would be better if we can make it private...
+		this.update = function() {
+
+			var offset = new THREE.Vector3();
+
+			// so camera.up is the orbit axis
+			var quat = new THREE.Quaternion().setFromUnitVectors( object.up, new THREE.Vector3( 0, 1, 0 ) );
+			var quatInverse = quat.clone().inverse();
+
+			var lastPosition = new THREE.Vector3();
+			var lastQuaternion = new THREE.Quaternion();
+
+			return function update () {
+
+				var position = scope.object.position;
+
+				offset.copy( position ).sub( scope.target );
+
+				// rotate offset to "y-axis-is-up" space
+				offset.applyQuaternion( quat );
+
+				// angle from z-axis around y-axis
+				spherical.setFromVector3( offset );
+
+				if ( scope.autoRotate && state === STATE.NONE ) {
+
+					rotateLeft( getAutoRotationAngle() );
+
+				}
+
+				spherical.theta += sphericalDelta.theta;
+				spherical.phi += sphericalDelta.phi;
+
+				// restrict theta to be between desired limits
+				spherical.theta = Math.max( scope.minAzimuthAngle, Math.min( scope.maxAzimuthAngle, spherical.theta ) );
+
+				// restrict phi to be between desired limits
+				spherical.phi = Math.max( scope.minPolarAngle, Math.min( scope.maxPolarAngle, spherical.phi ) );
+
+				spherical.makeSafe();
+
+
+				spherical.radius *= scale;
+
+				// restrict radius to be between desired limits
+				spherical.radius = Math.max( scope.minDistance, Math.min( scope.maxDistance, spherical.radius ) );
+
+				// move target to panned location
+				scope.target.add( panOffset );
+
+				offset.setFromSpherical( spherical );
+
+				// rotate offset back to "camera-up-vector-is-up" space
+				offset.applyQuaternion( quatInverse );
+
+				position.copy( scope.target ).add( offset );
+
+				scope.object.lookAt( scope.target );
+
+				if ( scope.enableDamping === true ) {
+
+					sphericalDelta.theta *= ( 1 - scope.dampingFactor );
+					sphericalDelta.phi *= ( 1 - scope.dampingFactor );
+
+				} else {
+
+					sphericalDelta.set( 0, 0, 0 );
+
+				}
+
+				scale = 1;
+				panOffset.set( 0, 0, 0 );
+
+				// update condition is:
+				// min(camera displacement, camera rotation in radians)^2 > EPS
+				// using small-angle approximation cos(x/2) = 1 - x^2 / 8
+
+				if ( zoomChanged ||
+					lastPosition.distanceToSquared( scope.object.position ) > EPS ||
+					8 * ( 1 - lastQuaternion.dot( scope.object.quaternion ) ) > EPS ) {
+
+					scope.dispatchEvent( changeEvent );
+
+					lastPosition.copy( scope.object.position );
+					lastQuaternion.copy( scope.object.quaternion );
+					zoomChanged = false;
+
+					return true;
+
+				}
+
+				return false;
+
+			};
+
+		}();
+
+		this.dispose = function() {
+
+			scope.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
+			scope.domElement.removeEventListener( 'mousedown', onMouseDown, false );
+			scope.domElement.removeEventListener( 'wheel', onMouseWheel, false );
+
+			scope.domElement.removeEventListener( 'touchstart', onTouchStart, false );
+			scope.domElement.removeEventListener( 'touchend', onTouchEnd, false );
+			scope.domElement.removeEventListener( 'touchmove', onTouchMove, false );
+
+			document.removeEventListener( 'mousemove', onMouseMove, false );
+			document.removeEventListener( 'mouseup', onMouseUp, false );
+
+			window.removeEventListener( 'keydown', onKeyDown, false );
+
+			//scope.dispatchEvent( { type: 'dispose' } ); // should this be added here?
+
+		};
+
+		//
+		// internals
+		//
+
+		var scope = this;
+
+		var changeEvent = { type: 'change' };
+		var startEvent = { type: 'start' };
+		var endEvent = { type: 'end' };
+
+		var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5 };
+
+		var state = STATE.NONE;
+
+		var EPS = 0.000001;
+
+		// current position in spherical coordinates
+		var spherical = new THREE.Spherical();
+		var sphericalDelta = new THREE.Spherical();
+
+		var scale = 1;
+		var panOffset = new THREE.Vector3();
+		var zoomChanged = false;
+
+		var rotateStart = new THREE.Vector2();
+		var rotateEnd = new THREE.Vector2();
+		var rotateDelta = new THREE.Vector2();
+
+		var panStart = new THREE.Vector2();
+		var panEnd = new THREE.Vector2();
+		var panDelta = new THREE.Vector2();
+
+		var dollyStart = new THREE.Vector2();
+		var dollyEnd = new THREE.Vector2();
+		var dollyDelta = new THREE.Vector2();
+
+		function getAutoRotationAngle() {
+
+			return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
+
+		}
+
+		function getZoomScale() {
+
+			return Math.pow( 0.95, scope.zoomSpeed );
+
+		}
+
+		function rotateLeft( angle ) {
+
+			sphericalDelta.theta -= angle;
+
+		}
+
+		function rotateUp( angle ) {
+
+			sphericalDelta.phi -= angle;
+
+		}
+
+		var panLeft = function() {
+
+			var v = new THREE.Vector3();
+
+			return function panLeft( distance, objectMatrix ) {
+
+				v.setFromMatrixColumn( objectMatrix, 0 ); // get X column of objectMatrix
+				v.multiplyScalar( - distance );
+
+				panOffset.add( v );
+
+			};
+
+		}();
+
+		var panUp = function() {
+
+			var v = new THREE.Vector3();
+
+			return function panUp( distance, objectMatrix ) {
+
+				v.setFromMatrixColumn( objectMatrix, 1 ); // get Y column of objectMatrix
+				v.multiplyScalar( distance );
+
+				panOffset.add( v );
+
+			};
+
+		}();
+
+		// deltaX and deltaY are in pixels; right and down are positive
+		var pan = function() {
+
+			var offset = new THREE.Vector3();
+
+			return function pan ( deltaX, deltaY ) {
+
+				var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+
+				if ( scope.object instanceof THREE.PerspectiveCamera ) {
+
+					// perspective
+					var position = scope.object.position;
+					offset.copy( position ).sub( scope.target );
+					var targetDistance = offset.length();
+
+					// half of the fov is center to top of screen
+					targetDistance *= Math.tan( ( scope.object.fov / 2 ) * Math.PI / 180.0 );
+
+					// we actually don't use screenWidth, since perspective camera is fixed to screen height
+					panLeft( 2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix );
+					panUp( 2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix );
+
+				} else if ( scope.object instanceof THREE.OrthographicCamera ) {
+
+					// orthographic
+					panLeft( deltaX * ( scope.object.right - scope.object.left ) / scope.object.zoom / element.clientWidth, scope.object.matrix );
+					panUp( deltaY * ( scope.object.top - scope.object.bottom ) / scope.object.zoom / element.clientHeight, scope.object.matrix );
+
+				} else {
+
+					// camera neither orthographic nor perspective
+					console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.' );
+					scope.enablePan = false;
+
+				}
+
+			};
+
+		}();
+
+		function dollyIn( dollyScale ) {
+
+			if ( scope.object instanceof THREE.PerspectiveCamera ) {
+
+				scale /= dollyScale;
+
+			} else if ( scope.object instanceof THREE.OrthographicCamera ) {
+
+				scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom * dollyScale ) );
+				scope.object.updateProjectionMatrix();
+				zoomChanged = true;
+
+			} else {
+
+				console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+				scope.enableZoom = false;
+
+			}
+
+		}
+
+		function dollyOut( dollyScale ) {
+
+			if ( scope.object instanceof THREE.PerspectiveCamera ) {
+
+				scale *= dollyScale;
+
+			} else if ( scope.object instanceof THREE.OrthographicCamera ) {
+
+				scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom / dollyScale ) );
+				scope.object.updateProjectionMatrix();
+				zoomChanged = true;
+
+			} else {
+
+				console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+				scope.enableZoom = false;
+
+			}
+
+		}
+
+		//
+		// event callbacks - update the object state
+		//
+
+		function handleMouseDownRotate( event ) {
+
+			//console.log( 'handleMouseDownRotate' );
+
+			rotateStart.set( event.clientX, event.clientY );
+
+		}
+
+		function handleMouseDownDolly( event ) {
+
+			//console.log( 'handleMouseDownDolly' );
+
+			dollyStart.set( event.clientX, event.clientY );
+
+		}
+
+		function handleMouseDownPan( event ) {
+
+			//console.log( 'handleMouseDownPan' );
+
+			panStart.set( event.clientX, event.clientY );
+
+		}
+
+		function handleMouseMoveRotate( event ) {
+
+			//console.log( 'handleMouseMoveRotate' );
+
+			rotateEnd.set( event.clientX, event.clientY );
+			rotateDelta.subVectors( rotateEnd, rotateStart );
+
+			var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+
+			// rotating across whole screen goes 360 degrees around
+			rotateLeft( 2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed );
+
+			// rotating up and down along whole screen attempts to go 360, but limited to 180
+			rotateUp( 2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed );
+
+			rotateStart.copy( rotateEnd );
+
+			scope.update();
+
+		}
+
+		function handleMouseMoveDolly( event ) {
+
+			//console.log( 'handleMouseMoveDolly' );
+
+			dollyEnd.set( event.clientX, event.clientY );
+
+			dollyDelta.subVectors( dollyEnd, dollyStart );
+
+			if ( dollyDelta.y > 0 ) {
+
+				dollyIn( getZoomScale() );
+
+			} else if ( dollyDelta.y < 0 ) {
+
+				dollyOut( getZoomScale() );
+
+			}
+
+			dollyStart.copy( dollyEnd );
+
+			scope.update();
+
+		}
+
+		function handleMouseMovePan( event ) {
+
+			//console.log( 'handleMouseMovePan' );
+
+			panEnd.set( event.clientX, event.clientY );
+
+			panDelta.subVectors( panEnd, panStart );
+
+			pan( panDelta.x, panDelta.y );
+
+			panStart.copy( panEnd );
+
+			scope.update();
+
+		}
+
+		function handleMouseUp( event ) {
+
+			//console.log( 'handleMouseUp' );
+
+		}
+
+		function handleMouseWheel( event ) {
+
+			//console.log( 'handleMouseWheel' );
+
+			if ( event.deltaY < 0 ) {
+
+				dollyOut( getZoomScale() );
+
+			} else if ( event.deltaY > 0 ) {
+
+				dollyIn( getZoomScale() );
+
+			}
+
+			scope.update();
+
+		}
+
+		function handleKeyDown( event ) {
+
+			//console.log( 'handleKeyDown' );
+
+			switch ( event.keyCode ) {
+
+				case scope.keys.UP:
+					pan( 0, scope.keyPanSpeed );
+					scope.update();
+					break;
+
+				case scope.keys.BOTTOM:
+					pan( 0, - scope.keyPanSpeed );
+					scope.update();
+					break;
+
+				case scope.keys.LEFT:
+					pan( scope.keyPanSpeed, 0 );
+					scope.update();
+					break;
+
+				case scope.keys.RIGHT:
+					pan( - scope.keyPanSpeed, 0 );
+					scope.update();
+					break;
+
+			}
+
+		}
+
+		function handleTouchStartRotate( event ) {
+
+			//console.log( 'handleTouchStartRotate' );
+
+			rotateStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+		}
+
+		function handleTouchStartDolly( event ) {
+
+			//console.log( 'handleTouchStartDolly' );
+
+			var dx = event.touches[ 0 ].pageX - event.touches[ 1 ].pageX;
+			var dy = event.touches[ 0 ].pageY - event.touches[ 1 ].pageY;
+
+			var distance = Math.sqrt( dx * dx + dy * dy );
+
+			dollyStart.set( 0, distance );
+
+		}
+
+		function handleTouchStartPan( event ) {
+
+			//console.log( 'handleTouchStartPan' );
+
+			panStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+		}
+
+		function handleTouchMoveRotate( event ) {
+
+			//console.log( 'handleTouchMoveRotate' );
+
+			rotateEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+			rotateDelta.subVectors( rotateEnd, rotateStart );
+
+			var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+
+			// rotating across whole screen goes 360 degrees around
+			rotateLeft( 2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed );
+
+			// rotating up and down along whole screen attempts to go 360, but limited to 180
+			rotateUp( 2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed );
+
+			rotateStart.copy( rotateEnd );
+
+			scope.update();
+
+		}
+
+		function handleTouchMoveDolly( event ) {
+
+			//console.log( 'handleTouchMoveDolly' );
+
+			var dx = event.touches[ 0 ].pageX - event.touches[ 1 ].pageX;
+			var dy = event.touches[ 0 ].pageY - event.touches[ 1 ].pageY;
+
+			var distance = Math.sqrt( dx * dx + dy * dy );
+
+			dollyEnd.set( 0, distance );
+
+			dollyDelta.subVectors( dollyEnd, dollyStart );
+
+			if ( dollyDelta.y > 0 ) {
+
+				dollyOut( getZoomScale() );
+
+			} else if ( dollyDelta.y < 0 ) {
+
+				dollyIn( getZoomScale() );
+
+			}
+
+			dollyStart.copy( dollyEnd );
+
+			scope.update();
+
+		}
+
+		function handleTouchMovePan( event ) {
+
+			//console.log( 'handleTouchMovePan' );
+
+			panEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+			panDelta.subVectors( panEnd, panStart );
+
+			pan( panDelta.x, panDelta.y );
+
+			panStart.copy( panEnd );
+
+			scope.update();
+
+		}
+
+		function handleTouchEnd( event ) {
+
+			//console.log( 'handleTouchEnd' );
+
+		}
+
+		//
+		// event handlers - FSM: listen for events and reset state
+		//
+
+		function onMouseDown( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			event.preventDefault();
+
+			if ( event.button === scope.mouseButtons.ORBIT ) {
+
+				if ( scope.enableRotate === false ) return;
+
+				handleMouseDownRotate( event );
+
+				state = STATE.ROTATE;
+
+			} else if ( event.button === scope.mouseButtons.ZOOM ) {
+
+				if ( scope.enableZoom === false ) return;
+
+				handleMouseDownDolly( event );
+
+				state = STATE.DOLLY;
+
+			} else if ( event.button === scope.mouseButtons.PAN ) {
+
+				if ( scope.enablePan === false ) return;
+
+				handleMouseDownPan( event );
+
+				state = STATE.PAN;
+
+			}
+
+			if ( state !== STATE.NONE ) {
+
+				document.addEventListener( 'mousemove', onMouseMove, false );
+				document.addEventListener( 'mouseup', onMouseUp, false );
+
+				scope.dispatchEvent( startEvent );
+
+			}
+
+		}
+
+		function onMouseMove( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			event.preventDefault();
+
+			if ( state === STATE.ROTATE ) {
+
+				if ( scope.enableRotate === false ) return;
+
+				handleMouseMoveRotate( event );
+
+			} else if ( state === STATE.DOLLY ) {
+
+				if ( scope.enableZoom === false ) return;
+
+				handleMouseMoveDolly( event );
+
+			} else if ( state === STATE.PAN ) {
+
+				if ( scope.enablePan === false ) return;
+
+				handleMouseMovePan( event );
+
+			}
+
+		}
+
+		function onMouseUp( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			handleMouseUp( event );
+
+			document.removeEventListener( 'mousemove', onMouseMove, false );
+			document.removeEventListener( 'mouseup', onMouseUp, false );
+
+			scope.dispatchEvent( endEvent );
+
+			state = STATE.NONE;
+
+		}
+
+		function onMouseWheel( event ) {
+
+			if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			handleMouseWheel( event );
+
+			scope.dispatchEvent( startEvent ); // not sure why these are here...
+			scope.dispatchEvent( endEvent );
+
+		}
+
+		function onKeyDown( event ) {
+
+			if ( scope.enabled === false || scope.enableKeys === false || scope.enablePan === false ) return;
+
+			handleKeyDown( event );
+
+		}
+
+		function onTouchStart( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			switch ( event.touches.length ) {
+
+				case 1:	// one-fingered touch: rotate
+
+					if ( scope.enableRotate === false ) return;
+
+					handleTouchStartRotate( event );
+
+					state = STATE.TOUCH_ROTATE;
+
+					break;
+
+				case 2:	// two-fingered touch: dolly
+
+					if ( scope.enableZoom === false ) return;
+
+					handleTouchStartDolly( event );
+
+					state = STATE.TOUCH_DOLLY;
+
+					break;
+
+				case 3: // three-fingered touch: pan
+
+					if ( scope.enablePan === false ) return;
+
+					handleTouchStartPan( event );
+
+					state = STATE.TOUCH_PAN;
+
+					break;
+
+				default:
+
+					state = STATE.NONE;
+
+			}
+
+			if ( state !== STATE.NONE ) {
+
+				scope.dispatchEvent( startEvent );
+
+			}
+
+		}
+
+		function onTouchMove( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			switch ( event.touches.length ) {
+
+				case 1: // one-fingered touch: rotate
+
+					if ( scope.enableRotate === false ) return;
+					if ( state !== STATE.TOUCH_ROTATE ) return; // is this needed?...
+
+					handleTouchMoveRotate( event );
+
+					break;
+
+				case 2: // two-fingered touch: dolly
+
+					if ( scope.enableZoom === false ) return;
+					if ( state !== STATE.TOUCH_DOLLY ) return; // is this needed?...
+
+					handleTouchMoveDolly( event );
+
+					break;
+
+				case 3: // three-fingered touch: pan
+
+					if ( scope.enablePan === false ) return;
+					if ( state !== STATE.TOUCH_PAN ) return; // is this needed?...
+
+					handleTouchMovePan( event );
+
+					break;
+
+				default:
+
+					state = STATE.NONE;
+
+			}
+
+		}
+
+		function onTouchEnd( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			handleTouchEnd( event );
+
+			scope.dispatchEvent( endEvent );
+
+			state = STATE.NONE;
+
+		}
+
+		function onContextMenu( event ) {
+
+			event.preventDefault();
+
+		}
+
+		//
+
+		scope.domElement.addEventListener( 'contextmenu', onContextMenu, false );
+
+		scope.domElement.addEventListener( 'mousedown', onMouseDown, false );
+		scope.domElement.addEventListener( 'wheel', onMouseWheel, false );
+
+		scope.domElement.addEventListener( 'touchstart', onTouchStart, false );
+		scope.domElement.addEventListener( 'touchend', onTouchEnd, false );
+		scope.domElement.addEventListener( 'touchmove', onTouchMove, false );
+
+		window.addEventListener( 'keydown', onKeyDown, false );
+
+		// force an update at start
+
+		this.update();
+
+	};
+
+	OrbitControls.prototype = Object.create( THREE.EventDispatcher.prototype );
+	OrbitControls.prototype.constructor = OrbitControls;
+
+	Object.defineProperties( OrbitControls.prototype, {
+
+		center: {
+
+			get: function () {
+
+				console.warn( 'THREE.OrbitControls: .center has been renamed to .target' );
+				return this.target;
+
+			}
+
+		},
+
+		// backward compatibility
+
+		noZoom: {
+
+			get: function () {
+
+				console.warn( 'THREE.OrbitControls: .noZoom has been deprecated. Use .enableZoom instead.' );
+				return ! this.enableZoom;
+
+			},
+
+			set: function ( value ) {
+
+				console.warn( 'THREE.OrbitControls: .noZoom has been deprecated. Use .enableZoom instead.' );
+				this.enableZoom = ! value;
+
+			}
+
+		},
+
+		noRotate: {
+
+			get: function () {
+
+				console.warn( 'THREE.OrbitControls: .noRotate has been deprecated. Use .enableRotate instead.' );
+				return ! this.enableRotate;
+
+			},
+
+			set: function ( value ) {
+
+				console.warn( 'THREE.OrbitControls: .noRotate has been deprecated. Use .enableRotate instead.' );
+				this.enableRotate = ! value;
+
+			}
+
+		},
+
+		noPan: {
+
+			get: function () {
+
+				console.warn( 'THREE.OrbitControls: .noPan has been deprecated. Use .enablePan instead.' );
+				return ! this.enablePan;
+
+			},
+
+			set: function ( value ) {
+
+				console.warn( 'THREE.OrbitControls: .noPan has been deprecated. Use .enablePan instead.' );
+				this.enablePan = ! value;
+
+			}
+
+		},
+
+		noKeys: {
+
+			get: function () {
+
+				console.warn( 'THREE.OrbitControls: .noKeys has been deprecated. Use .enableKeys instead.' );
+				return ! this.enableKeys;
+
+			},
+
+			set: function ( value ) {
+
+				console.warn( 'THREE.OrbitControls: .noKeys has been deprecated. Use .enableKeys instead.' );
+				this.enableKeys = ! value;
+
+			}
+
+		},
+
+		staticMoving : {
+
+			get: function () {
+
+				console.warn( 'THREE.OrbitControls: .staticMoving has been deprecated. Use .enableDamping instead.' );
+				return ! this.enableDamping;
+
+			},
+
+			set: function ( value ) {
+
+				console.warn( 'THREE.OrbitControls: .staticMoving has been deprecated. Use .enableDamping instead.' );
+				this.enableDamping = ! value;
+
+			}
+
+		},
+
+		dynamicDampingFactor : {
+
+			get: function () {
+
+				console.warn( 'THREE.OrbitControls: .dynamicDampingFactor has been renamed. Use .dampingFactor instead.' );
+				return this.dampingFactor;
+
+			},
+
+			set: function ( value ) {
+
+				console.warn( 'THREE.OrbitControls: .dynamicDampingFactor has been renamed. Use .dampingFactor instead.' );
+				this.dampingFactor = value;
+
+			}
+
+		}
+
+	} );
+
+	return OrbitControls;
+};
+
+
+/***/ }),
+
 /***/ 3:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -894,353 +1812,6 @@ module.exports = CopyPass;
 CopyPass.prototype = Object.create(Pass.prototype);
 CopyPass.prototype.constructor = CopyPass;
 
-
-/***/ }),
-
-/***/ 36:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.default = GPUComputationRenderer;
-/**
- * @author yomboprime https://github.com/yomboprime
- *
- * GPUComputationRenderer, based on SimulationRenderer by zz85
- *
- * The GPUComputationRenderer uses the concept of variables. These variables are RGBA float textures that hold 4 floats
- * for each compute element (texel)
- *
- * Each variable has a fragment shader that defines the computation made to obtain the variable in question.
- * You can use as many variables you need, and make dependencies so you can use textures of other variables in the shader
- * (the sampler uniforms are added automatically) Most of the variables will need themselves as dependency.
- *
- * The renderer has actually two render targets per variable, to make ping-pong. Textures from the current frame are used
- * as inputs to render the textures of the next frame.
- *
- * The render targets of the variables can be used as input textures for your visualization shaders.
- *
- * Variable names should be valid identifiers and should not collide with THREE GLSL used identifiers.
- * a common approach could be to use 'texture' prefixing the variable name; i.e texturePosition, textureVelocity...
- *
- * The size of the computation (sizeX * sizeY) is defined as 'resolution' automatically in the shader. For example:
- * #DEFINE resolution vec2( 1024.0, 1024.0 )
- *
- * -------------
- *
- * Basic use:
- *
- * // Initialization...
- *
- * // Create computation renderer
- * var gpuCompute = new GPUComputationRenderer( 1024, 1024, renderer );
- *
- * // Create initial state float textures
- * var pos0 = gpuCompute.createTexture();
- * var vel0 = gpuCompute.createTexture();
- * // and fill in here the texture data...
- *
- * // Add texture variables
- * var velVar = gpuCompute.addVariable( "textureVelocity", fragmentShaderVel, pos0 );
- * var posVar = gpuCompute.addVariable( "texturePosition", fragmentShaderPos, vel0 );
- *
- * // Add variable dependencies
- * gpuCompute.setVariableDependencies( velVar, [ velVar, posVar ] );
- * gpuCompute.setVariableDependencies( posVar, [ velVar, posVar ] );
- *
- * // Add custom uniforms
- * velVar.material.uniforms.time = { value: 0.0 };
- *
- * // Check for completeness
- * var error = gpuCompute.init();
- * if ( error !== null ) {
- *		console.error( error );
-  * }
- *
- *
- * // In each frame...
- *
- * // Compute!
- * gpuCompute.compute();
- *
- * // Update texture uniforms in your visualization materials with the gpu renderer output
- * myMaterial.uniforms.myTexture.value = gpuCompute.getCurrentRenderTarget( posVar ).texture;
- *
- * // Do your rendering
- * renderer.render( myScene, myCamera );
- *
- * -------------
- *
- * Also, you can use utility functions to create ShaderMaterial and perform computations (rendering between textures)
- * Note that the shaders can have multiple input textures.
- *
- * var myFilter1 = gpuCompute.createShaderMaterial( myFilterFragmentShader1, { theTexture: { value: null } } );
- * var myFilter2 = gpuCompute.createShaderMaterial( myFilterFragmentShader2, { theTexture: { value: null } } );
- *
- * var inputTexture = gpuCompute.createTexture();
- *
- * // Fill in here inputTexture...
- *
- * myFilter1.uniforms.theTexture.value = inputTexture;
- *
- * var myRenderTarget = gpuCompute.createRenderTarget();
- * myFilter2.uniforms.theTexture.value = myRenderTarget.texture;
- *
- * var outputRenderTarget = gpuCompute.createRenderTarget();
- *
- * // Now use the output texture where you want:
- * myMaterial.uniforms.map.value = outputRenderTarget.texture;
- *
- * // And compute each frame, before rendering to screen:
- * gpuCompute.doRenderTarget( myFilter1, myRenderTarget );
- * gpuCompute.doRenderTarget( myFilter2, outputRenderTarget );
- * 
- *
- *
- * @param {int} sizeX Computation problem size is always 2d: sizeX * sizeY elements.
- * @param {int} sizeY Computation problem size is always 2d: sizeX * sizeY elements.
- * @param {WebGLRenderer} renderer The renderer
-  */
-
-function GPUComputationRenderer(sizeX, sizeY, renderer) {
-
-	this.variables = [];
-
-	this.currentTextureIndex = 0;
-
-	var scene = new THREE.Scene();
-
-	var camera = new THREE.Camera();
-	camera.position.z = 1;
-
-	var passThruUniforms = {
-		texture: { value: null }
-	};
-
-	var passThruShader = createShaderMaterial(getPassThroughFragmentShader(), passThruUniforms);
-
-	var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), passThruShader);
-	scene.add(mesh);
-
-	this.addVariable = function (variableName, computeFragmentShader, initialValueTexture) {
-
-		var material = this.createShaderMaterial(computeFragmentShader);
-
-		var variable = {
-			name: variableName,
-			initialValueTexture: initialValueTexture,
-			material: material,
-			dependencies: null,
-			renderTargets: [],
-			wrapS: null,
-			wrapT: null,
-			minFilter: THREE.NearestFilter,
-			magFilter: THREE.NearestFilter
-		};
-
-		this.variables.push(variable);
-
-		return variable;
-	};
-
-	this.setVariableDependencies = function (variable, dependencies) {
-
-		variable.dependencies = dependencies;
-	};
-
-	this.init = function () {
-
-		if (!renderer.extensions.get("OES_texture_float")) {
-
-			return "No OES_texture_float support for float textures.";
-		}
-
-		if (renderer.capabilities.maxVertexTextures === 0) {
-
-			return "No support for vertex shader textures.";
-		}
-
-		for (var i = 0; i < this.variables.length; i++) {
-
-			var variable = this.variables[i];
-
-			// Creates rendertargets and initialize them with input texture
-			variable.renderTargets[0] = this.createRenderTarget(sizeX, sizeY, variable.wrapS, variable.wrapT, variable.minFilter, variable.magFilter);
-			variable.renderTargets[1] = this.createRenderTarget(sizeX, sizeY, variable.wrapS, variable.wrapT, variable.minFilter, variable.magFilter);
-			this.renderTexture(variable.initialValueTexture, variable.renderTargets[0]);
-			this.renderTexture(variable.initialValueTexture, variable.renderTargets[1]);
-
-			// Adds dependencies uniforms to the ShaderMaterial
-			var material = variable.material;
-			var uniforms = material.uniforms;
-			if (variable.dependencies !== null) {
-
-				for (var d = 0; d < variable.dependencies.length; d++) {
-
-					var depVar = variable.dependencies[d];
-
-					if (depVar.name !== variable.name) {
-
-						// Checks if variable exists
-						var found = false;
-						for (var j = 0; j < this.variables.length; j++) {
-
-							if (depVar.name === this.variables[j].name) {
-								found = true;
-								break;
-							}
-						}
-						if (!found) {
-							return "Variable dependency not found. Variable=" + variable.name + ", dependency=" + depVar.name;
-						}
-					}
-
-					uniforms[depVar.name] = { value: null };
-
-					material.fragmentShader = "\nuniform sampler2D " + depVar.name + ";\n" + material.fragmentShader;
-				}
-			}
-		}
-
-		this.currentTextureIndex = 0;
-
-		return null;
-	};
-
-	this.compute = function () {
-
-		var currentTextureIndex = this.currentTextureIndex;
-		var nextTextureIndex = this.currentTextureIndex === 0 ? 1 : 0;
-
-		for (var i = 0, il = this.variables.length; i < il; i++) {
-
-			var variable = this.variables[i];
-
-			// Sets texture dependencies uniforms
-			if (variable.dependencies !== null) {
-
-				var uniforms = variable.material.uniforms;
-				for (var d = 0, dl = variable.dependencies.length; d < dl; d++) {
-
-					var depVar = variable.dependencies[d];
-
-					uniforms[depVar.name].value = depVar.renderTargets[currentTextureIndex].texture;
-				}
-			}
-
-			// Performs the computation for this variable
-			this.doRenderTarget(variable.material, variable.renderTargets[nextTextureIndex]);
-		}
-
-		this.currentTextureIndex = nextTextureIndex;
-	};
-
-	this.getCurrentRenderTarget = function (variable) {
-
-		return variable.renderTargets[this.currentTextureIndex];
-	};
-
-	this.getAlternateRenderTarget = function (variable) {
-
-		return variable.renderTargets[this.currentTextureIndex === 0 ? 1 : 0];
-	};
-
-	function addResolutionDefine(materialShader) {
-
-		materialShader.defines.resolution = 'vec2( ' + sizeX.toFixed(1) + ', ' + sizeY.toFixed(1) + " )";
-	}
-	this.addResolutionDefine = addResolutionDefine;
-
-	// The following functions can be used to compute things manually
-
-	function createShaderMaterial(computeFragmentShader, uniforms) {
-
-		uniforms = uniforms || {};
-
-		var material = new THREE.ShaderMaterial({
-			uniforms: uniforms,
-			vertexShader: getPassThroughVertexShader(),
-			fragmentShader: computeFragmentShader
-		});
-
-		addResolutionDefine(material);
-
-		return material;
-	}
-	this.createShaderMaterial = createShaderMaterial;
-
-	this.createRenderTarget = function (sizeXTexture, sizeYTexture, wrapS, wrapT, minFilter, magFilter) {
-
-		sizeXTexture = sizeXTexture || sizeX;
-		sizeYTexture = sizeYTexture || sizeY;
-
-		wrapS = wrapS || THREE.ClampToEdgeWrapping;
-		wrapT = wrapT || THREE.ClampToEdgeWrapping;
-
-		minFilter = minFilter || THREE.NearestFilter;
-		magFilter = magFilter || THREE.NearestFilter;
-
-		var renderTarget = new THREE.WebGLRenderTarget(sizeXTexture, sizeYTexture, {
-			wrapS: wrapS,
-			wrapT: wrapT,
-			minFilter: minFilter,
-			magFilter: magFilter,
-			format: THREE.RGBAFormat,
-			type: /(iPad|iPhone|iPod)/g.test(navigator.userAgent) ? THREE.HalfFloatType : THREE.FloatType,
-			stencilBuffer: false
-		});
-
-		return renderTarget;
-	};
-
-	this.createTexture = function (sizeXTexture, sizeYTexture) {
-
-		sizeXTexture = sizeXTexture || sizeX;
-		sizeYTexture = sizeYTexture || sizeY;
-
-		var a = new Float32Array(sizeXTexture * sizeYTexture * 4);
-		var texture = new THREE.DataTexture(a, sizeX, sizeY, THREE.RGBAFormat, THREE.FloatType);
-		texture.needsUpdate = true;
-
-		return texture;
-	};
-
-	this.renderTexture = function (input, output) {
-
-		// Takes a texture, and render out in rendertarget
-		// input = Texture
-		// output = RenderTarget
-
-		passThruUniforms.texture.value = input;
-
-		this.doRenderTarget(passThruShader, output);
-
-		passThruUniforms.texture.value = null;
-	};
-
-	this.doRenderTarget = function (material, output) {
-
-		mesh.material = material;
-		renderer.render(scene, camera, output);
-		mesh.material = passThruShader;
-	};
-
-	// Shaders
-
-	function getPassThroughVertexShader() {
-
-		return "void main()	{\n" + "\n" + "	gl_Position = vec4( position, 1.0 );\n" + "\n" + "}\n";
-	}
-
-	function getPassThroughFragmentShader() {
-
-		return "uniform sampler2D texture;\n" + "\n" + "void main() {\n" + "\n" + "	vec2 uv = gl_FragCoord.xy / resolution.xy;\n" + "\n" + "	gl_FragColor = texture2D( texture, uv );\n" + "\n" + "}\n";
-	}
-}
 
 /***/ }),
 

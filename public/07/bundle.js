@@ -7,7 +7,7 @@
 		exports["app"] = factory(require("three"), require("tween"));
 	else
 		root["app"] = factory(root["THREE"], root["TWEEN"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_24__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_25__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 127);
+/******/ 	return __webpack_require__(__webpack_require__.s = 134);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -306,7 +306,41 @@ Stack.prototype.getPasses = function() {
 
 /***/ }),
 
-/***/ 127:
+/***/ 13:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Pass = __webpack_require__(1);
+var BoxBlurPass = __webpack_require__(15);
+
+function FullBoxBlurPass(amount) {
+  Pass.call(this);
+
+  amount = amount || 2;
+
+  this.boxPass = new BoxBlurPass(amount, amount);
+  this.params.amount = amount;
+}
+
+module.exports = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype = Object.create(Pass.prototype);
+FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
+
+FullBoxBlurPass.prototype.run = function(composer) {
+  var s = this.params.amount;
+  this.boxPass.params.delta.set( s, 0 );
+  composer.pass( this.boxPass );
+  this.boxPass.params.delta.set( 0, s );
+  composer.pass( this.boxPass );
+};
+
+
+/***/ }),
+
+/***/ 134:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -324,7 +358,7 @@ var _three = __webpack_require__(0);
 
 var THREE = _interopRequireWildcard(_three);
 
-var _tween = __webpack_require__(24);
+var _tween = __webpack_require__(25);
 
 var _threeAr = __webpack_require__(28);
 
@@ -550,40 +584,6 @@ var Experiment = function (_ThreeApp) {
 }(_ThreeApp3.default);
 
 exports.default = new Experiment();
-
-/***/ }),
-
-/***/ 13:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Pass = __webpack_require__(1);
-var BoxBlurPass = __webpack_require__(15);
-
-function FullBoxBlurPass(amount) {
-  Pass.call(this);
-
-  amount = amount || 2;
-
-  this.boxPass = new BoxBlurPass(amount, amount);
-  this.params.amount = amount;
-}
-
-module.exports = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype = Object.create(Pass.prototype);
-FullBoxBlurPass.prototype.constructor = FullBoxBlurPass;
-
-FullBoxBlurPass.prototype.run = function(composer) {
-  var s = this.params.amount;
-  this.boxPass.params.delta.set( s, 0 );
-  composer.pass( this.boxPass );
-  this.boxPass.params.delta.set( 0, s );
-  composer.pass( this.boxPass );
-};
-
 
 /***/ }),
 
@@ -850,10 +850,10 @@ module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float co
 
 /***/ }),
 
-/***/ 24:
+/***/ 25:
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_25__;
 
 /***/ }),
 

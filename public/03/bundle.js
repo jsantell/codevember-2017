@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 116);
+/******/ 	return __webpack_require__(__webpack_require__.s = 123);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -220,7 +220,93 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 
 /***/ }),
 
-/***/ 116:
+/***/ 12:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function Stack(shadersPool) {
+  this.passItems = [];
+  this.shadersPool = shadersPool;
+  this.passes = [];
+}
+
+module.exports = Stack;
+
+Stack.prototype.addPass = function(shaderName, enabled, params, index) {
+  var length = 0;
+  var passItem = {
+    shaderName: shaderName,
+    enabled: enabled || false
+  };
+
+  // TODO use and store params values
+
+  this.passItems.push(passItem);
+  length = this.passItems.length;
+
+  this.updatePasses();
+
+  if (index) {
+    return this.movePassToIndex(this.passItems[length], index);
+  }
+  else {
+    return length - 1;
+  }
+};
+
+Stack.prototype.removePass = function(index) {
+  this.passItems.splice(index, 1);
+  this.updatePasses();
+};
+
+Stack.prototype.enablePass = function(index) {
+  this.passItems[index].enabled = true;
+  this.updatePasses();
+};
+
+Stack.prototype.disablePass = function(index) {
+  this.passItems[index].enabled = false;
+  this.updatePasses();
+};
+
+Stack.prototype.isPassEnabled = function(index) {
+  return this.passItems[index].enabled;
+};
+
+Stack.prototype.movePassToIndex = function(index, destIndex) {
+  this.passItems.splice(destIndex, 0, this.passItems.splice(index, 1)[0]);
+  this.updatePasses();
+
+  // TODO check if destIndex is final index
+  return destIndex;
+};
+
+Stack.prototype.reverse = function() {
+  this.passItems.reverse();
+  this.updatePasses();
+};
+
+Stack.prototype.updatePasses = function() {
+  this.passes = this.shadersPool.getPasses(this.passItems);
+
+  // init default params for new passItems
+  this.passItems.forEach(function(passItem, index) {
+    if (passItem.params === undefined) {
+      passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
+    }
+  }.bind(this));
+};
+
+Stack.prototype.getPasses = function() {
+  return this.passes;
+};
+
+
+/***/ }),
+
+/***/ 123:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -252,7 +338,7 @@ var _VignettePass = __webpack_require__(30);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
-var _vine = __webpack_require__(117);
+var _vine = __webpack_require__(124);
 
 var _vine2 = _interopRequireDefault(_vine);
 
@@ -376,7 +462,7 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 117:
+/***/ 124:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -472,92 +558,6 @@ var Vine = function (_Object3D) {
 }(_three.Object3D);
 
 exports.default = Vine;
-
-/***/ }),
-
-/***/ 12:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-function Stack(shadersPool) {
-  this.passItems = [];
-  this.shadersPool = shadersPool;
-  this.passes = [];
-}
-
-module.exports = Stack;
-
-Stack.prototype.addPass = function(shaderName, enabled, params, index) {
-  var length = 0;
-  var passItem = {
-    shaderName: shaderName,
-    enabled: enabled || false
-  };
-
-  // TODO use and store params values
-
-  this.passItems.push(passItem);
-  length = this.passItems.length;
-
-  this.updatePasses();
-
-  if (index) {
-    return this.movePassToIndex(this.passItems[length], index);
-  }
-  else {
-    return length - 1;
-  }
-};
-
-Stack.prototype.removePass = function(index) {
-  this.passItems.splice(index, 1);
-  this.updatePasses();
-};
-
-Stack.prototype.enablePass = function(index) {
-  this.passItems[index].enabled = true;
-  this.updatePasses();
-};
-
-Stack.prototype.disablePass = function(index) {
-  this.passItems[index].enabled = false;
-  this.updatePasses();
-};
-
-Stack.prototype.isPassEnabled = function(index) {
-  return this.passItems[index].enabled;
-};
-
-Stack.prototype.movePassToIndex = function(index, destIndex) {
-  this.passItems.splice(destIndex, 0, this.passItems.splice(index, 1)[0]);
-  this.updatePasses();
-
-  // TODO check if destIndex is final index
-  return destIndex;
-};
-
-Stack.prototype.reverse = function() {
-  this.passItems.reverse();
-  this.updatePasses();
-};
-
-Stack.prototype.updatePasses = function() {
-  this.passes = this.shadersPool.getPasses(this.passItems);
-
-  // init default params for new passItems
-  this.passItems.forEach(function(passItem, index) {
-    if (passItem.params === undefined) {
-      passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
-    }
-  }.bind(this));
-};
-
-Stack.prototype.getPasses = function() {
-  return this.passes;
-};
-
 
 /***/ }),
 
