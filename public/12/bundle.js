@@ -1060,13 +1060,7 @@ module.exports = function (mesh, opts) {
 /***/ }),
 /* 24 */,
 /* 25 */,
-/* 26 */,
-/* 27 */,
-/* 28 */,
-/* 29 */,
-/* 30 */,
-/* 31 */,
-/* 32 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1080,11 +1074,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _three = __webpack_require__(0);
 
-var _barycentricVert = __webpack_require__(33);
+var _barycentricVert = __webpack_require__(27);
 
 var _barycentricVert2 = _interopRequireDefault(_barycentricVert);
 
-var _barycentricFrag = __webpack_require__(34);
+var _barycentricFrag = __webpack_require__(28);
 
 var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
 
@@ -1198,18 +1192,24 @@ var BarycentricMaterial = function (_ShaderMaterial) {
 exports.default = BarycentricMaterial;
 
 /***/ }),
-/* 33 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
 
 /***/ }),
-/* 34 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  vec3 color = mix(wireframeColor, color, factor);\n  float a = mix(wireframeAlpha, alpha, factor);\n  gl_FragColor = vec4(color, a);\n}\n"
 
 /***/ }),
+/* 29 */,
+/* 30 */,
+/* 31 */,
+/* 32 */,
+/* 33 */,
+/* 34 */,
 /* 35 */,
 /* 36 */,
 /* 37 */,
@@ -1245,7 +1245,7 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _BarycentricMaterial = __webpack_require__(32);
+var _BarycentricMaterial = __webpack_require__(26);
 
 var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
 

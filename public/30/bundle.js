@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("three"));
+		module.exports = factory(require("three"), require("tween"));
 	else if(typeof define === 'function' && define.amd)
-		define(["three"], factory);
+		define(["three", "tween"], factory);
 	else if(typeof exports === 'object')
-		exports["app"] = factory(require("three"));
+		exports["app"] = factory(require("three"), require("tween"));
 	else
-		root["app"] = factory(root["THREE"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_0__) {
+		root["app"] = factory(root["THREE"], root["TWEEN"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_25__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 131);
+/******/ 	return __webpack_require__(__webpack_require__.s = 114);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -220,6 +220,237 @@ module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput
 
 /***/ }),
 
+/***/ 114:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+__webpack_require__(6);
+
+var _three = __webpack_require__(0);
+
+var _ThreeApp2 = __webpack_require__(7);
+
+var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
+
+var _wagner = __webpack_require__(4);
+
+var _wagner2 = _interopRequireDefault(_wagner);
+
+var _MultiPassBloomPass = __webpack_require__(14);
+
+var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
+
+var _frag = __webpack_require__(115);
+
+var _frag2 = _interopRequireDefault(_frag);
+
+var _vert = __webpack_require__(116);
+
+var _vert2 = _interopRequireDefault(_vert);
+
+var _BarycentricMaterial = __webpack_require__(26);
+
+var _BarycentricMaterial2 = _interopRequireDefault(_BarycentricMaterial);
+
+var _tween = __webpack_require__(25);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var EASING = _tween.Easing.Quartic.InOut;
+var CHANGE_RATE = 5000;
+var ANIMATION = 4000;
+var TEXT = 'thirtydays';
+var SIZE = 30;
+var ALPHA = 0.7;
+var NOISE_MOD = 0.008;
+var POS_DAMPEN = 0.4;
+var SCALE = 0.02;
+var FONT_DEPTH = 5;
+var FONT_PATH = '../assets/hyrax-regular.typeface.json' || '../assets/droidsans.typeface.json';
+
+var Experiment = function (_ThreeApp) {
+  _inherits(Experiment, _ThreeApp);
+
+  function Experiment() {
+    _classCallCheck(this, Experiment);
+
+    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
+  }
+
+  _createClass(Experiment, [{
+    key: 'init',
+    value: function init() {
+      var _this2 = this;
+
+      this.renderer.setClearColor(0x111111);
+      this.loader = new _three.FontLoader();
+      this.loader.load(FONT_PATH, function (font) {
+        _this2.font = font;
+        _this2.textGeometry = [];
+        var largestVertexCount = -Infinity;
+        for (var i = 0; i < TEXT.length; i++) {
+          var letter = TEXT[i];
+          var geo = new _three.TextGeometry(letter, {
+            font: _this2.font,
+            size: 10,
+            height: 2,
+            curveSegments: 5,
+            bevelThickness: 1.5,
+            bevelSegments: 1,
+            bevelEnabled: true
+          });
+          largestVertexCount = Math.max(geo.vertices.length, largestVertexCount);
+          _this2.textGeometry.push(geo);
+        }
+
+        // Debugging
+        console.log(_this2.textGeometry.reduce(function (data, geo, i) {
+          data[TEXT[i]] = geo.vertices.length;
+          return data;
+        }, {}));
+
+        _this2.geometry = new _three.Geometry();
+        for (var _i = 0; _i < largestVertexCount; _i++) {
+          _this2.geometry.vertices.push(new _three.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1));
+        }
+
+        for (var _i2 = 0; _i2 < _this2.textGeometry.length; _i2++) {
+          var _geo = _this2.textGeometry[_i2];
+          var morph = [];
+          for (var v = 0; v < _this2.geometry.vertices.length; v++) {
+            var vec = void 0;
+            if (v >= _geo.vertices.length) {
+              var index = Math.floor(Math.random() * _geo.vertices.length);
+              vec = _geo.vertices[index];
+            } else {
+              vec = _geo.vertices[v];
+            }
+            vec = new _three.Vector3().copy(vec);
+            // center the geo
+            vec.x -= 4;
+            vec.y -= 2.6;
+            morph.push(new _three.Vector3().copy(vec));
+          }
+          _this2.geometry.morphTargets.push({ name: _i2, vertices: morph });
+        }
+
+        // Use first letter for initial geo
+        for (var _i3 = 0; _i3 < _this2.geometry.morphTargets[0].vertices.length; _i3++) {
+          var vert = _this2.geometry.morphTargets[0].vertices[_i3];
+          _this2.geometry.vertices[_i3].copy(vert);
+        }
+
+        _this2.material = new _three.ShaderMaterial({
+          uniforms: {
+            size: { value: SIZE },
+            alpha: { value: ALPHA },
+            time: { value: 0 },
+            alphaMap: { value: null },
+            dpr: { value: window.devicePixelRatio },
+            noiseMod: { value: NOISE_MOD },
+            posDampen: { value: POS_DAMPEN }
+          },
+          vertexShader: _vert2.default,
+          fragmentShader: _frag2.default,
+          transparent: true,
+          depthWrite: false
+        });
+
+        _this2.textureLoader = new _three.TextureLoader();
+        _this2.textureLoader.load('../assets/particle.jpg', function (texture) {
+          _this2.material.uniforms.alphaMap.value = texture;
+        });
+
+        _this2.points = new _three.Points(_this2.geometry, _this2.material);
+        //this.points.position.set(-0.3, -0.3, 0);
+        _this2.scene.add(_this2.points);
+      });
+
+      this.pivot = new _three.Object3D();
+      this.pivot.add(this.camera);
+      this.scene.add(this.pivot);
+      this.camera.position.set(0, 0, 20);
+      this.renderer.render(this.scene, this.camera);
+      this.composer = new _wagner2.default.Composer(this.renderer);
+      this.pass = new _MultiPassBloomPass2.default({
+        zoomBlurStrength: 0.5,
+        applyZoomBlur: true,
+        blurAmount: 2
+      });
+      this._lastChange = -1000;
+      this._currentIndex = 0;
+    }
+  }, {
+    key: 'update',
+    value: function update(t, delta) {
+      var _this3 = this;
+
+      if (!this.material) {
+        return;
+      }
+      (0, _tween.update)();
+      this.material.uniforms.time.value = t * 0.001;
+
+      if (t > CHANGE_RATE + this._lastChange) {
+        this._lastChange = t;
+        var from = this._currentIndex;
+        var to = this._currentIndex = (this._currentIndex + 1) % TEXT.length;
+        new _tween.Tween({ x: 0 }).to({ x: 1 }, ANIMATION).onUpdate(function (val) {
+          var verts = _this3.geometry.vertices;
+          var fromVerts = _this3.geometry.morphTargets[from].vertices;
+          var toVerts = _this3.geometry.morphTargets[to].vertices;
+          for (var i = 0; i < verts.length; i++) {
+            verts[i].lerpVectors(fromVerts[i], toVerts[i], val);
+          }
+          _this3.geometry.verticesNeedUpdate = true;
+        }).easing(EASING).start();
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      this.composer.reset();
+      this.composer.render(this.scene, this.camera);
+      this.composer.pass(this.pass);
+      this.composer.toScreen();
+    }
+  }]);
+
+  return Experiment;
+}(_ThreeApp3.default);
+
+exports.default = new Experiment();
+
+/***/ }),
+
+/***/ 115:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float alpha;\nuniform sampler2D alphaMap;\n\nvarying vec3 vPosition;\nvarying float vNoise;\nvarying float vHue;\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  float pAlpha = smoothstep(0.1, 0.9, texture2D(alphaMap, gl_PointCoord).r);\n  gl_FragColor = vec4(vec3(0.5), alpha * pAlpha);\n}\n"
+
+/***/ }),
+
+/***/ 116:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float size;\nuniform float dpr;\nuniform float noiseMod;\nuniform float posDampen;\nuniform float maxDistance;\nvarying vec3 vPosition;\nvarying float vNoise;\nvarying float vHue;\n//\n// GLSL textureless classic 3D noise \"cnoise\",\n// with an RSL-style periodic variant \"pnoise\".\n// Author:  Stefan Gustavson (stefan.gustavson@liu.se)\n// Version: 2011-10-11\n//\n// Many thanks to Ian McEwan of Ashima Arts for the\n// ideas for permutation and gradient selection.\n//\n// Copyright (c) 2011 Stefan Gustavson. All rights reserved.\n// Distributed under the MIT license. See LICENSE file.\n// https://github.com/ashima/webgl-noise\n//\n\nvec3 mod289_1_0(vec3 x)\n{\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289_1_0(vec4 x)\n{\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute_1_1(vec4 x)\n{\n  return mod289_1_0(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt_1_2(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\nvec3 fade_1_3(vec3 t) {\n  return t*t*t*(t*(t*6.0-15.0)+10.0);\n}\n\n// Classic Perlin noise\nfloat cnoise_1_4(vec3 P)\n{\n  vec3 Pi0 = floor(P); // Integer part for indexing\n  vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1\n  Pi0 = mod289_1_0(Pi0);\n  Pi1 = mod289_1_0(Pi1);\n  vec3 Pf0 = fract(P); // Fractional part for interpolation\n  vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n  vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n  vec4 iy = vec4(Pi0.yy, Pi1.yy);\n  vec4 iz0 = Pi0.zzzz;\n  vec4 iz1 = Pi1.zzzz;\n\n  vec4 ixy = permute_1_1(permute_1_1(ix) + iy);\n  vec4 ixy0 = permute_1_1(ixy + iz0);\n  vec4 ixy1 = permute_1_1(ixy + iz1);\n\n  vec4 gx0 = ixy0 * (1.0 / 7.0);\n  vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;\n  gx0 = fract(gx0);\n  vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n  vec4 sz0 = step(gz0, vec4(0.0));\n  gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n  gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n\n  vec4 gx1 = ixy1 * (1.0 / 7.0);\n  vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;\n  gx1 = fract(gx1);\n  vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n  vec4 sz1 = step(gz1, vec4(0.0));\n  gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n  gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n\n  vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);\n  vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);\n  vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);\n  vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);\n  vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);\n  vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);\n  vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);\n  vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);\n\n  vec4 norm0 = taylorInvSqrt_1_2(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n  g000 *= norm0.x;\n  g010 *= norm0.y;\n  g100 *= norm0.z;\n  g110 *= norm0.w;\n  vec4 norm1 = taylorInvSqrt_1_2(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n  g001 *= norm1.x;\n  g011 *= norm1.y;\n  g101 *= norm1.z;\n  g111 *= norm1.w;\n\n  float n000 = dot(g000, Pf0);\n  float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n  float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n  float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n  float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n  float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n  float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n  float n111 = dot(g111, Pf1);\n\n  vec3 fade_xyz = fade_1_3(Pf0);\n  vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n  vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n  float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);\n  return 2.2 * n_xyz;\n}\n\n\n\nfloat quadraticOut_2_5(float t) {\n  return -t * (t - 2.0);\n}\n\n\n\n\nconst float MIN_POINTSIZE = 1.0;\nconst float MAX_DISTANCE = 5.0;\nconst float IDEAL_DISTANCE = 7.0;\nvoid main() {\n  float t = time + 20.0;\n  vNoise = cnoise_1_4(noiseMod * t * vec3(position.x, position.y, 3.0 * position.z+100.0) * 0.5 + 0.5);\n  vPosition = position + (vec3(-position.x, -position.y, 0.0) * vNoise * posDampen);\n  if (vPosition.z > 0.2) {\n    vPosition.z = 0.0;\n  }\n\n  float cameraDist = distance(vPosition, cameraPosition);\n  float d = length(vPosition);\n  if (d < IDEAL_DISTANCE) {\n    gl_PointSize = size - (3.0 * d);\n  } else {\n    gl_PointSize = size * (1.0 / (d - IDEAL_DISTANCE));\n  }\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(vPosition, 1.0);\n}\n"
+
+/***/ }),
+
 /***/ 12:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -337,167 +568,6 @@ FullBoxBlurPass.prototype.run = function(composer) {
   composer.pass( this.boxPass );
 };
 
-
-/***/ }),
-
-/***/ 131:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-__webpack_require__(6);
-
-var _three = __webpack_require__(0);
-
-var _ThreeApp2 = __webpack_require__(7);
-
-var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
-
-var _wagner = __webpack_require__(4);
-
-var _wagner2 = _interopRequireDefault(_wagner);
-
-var _MultiPassBloomPass = __webpack_require__(14);
-
-var _MultiPassBloomPass2 = _interopRequireDefault(_MultiPassBloomPass);
-
-var _vert = __webpack_require__(132);
-
-var _vert2 = _interopRequireDefault(_vert);
-
-var _frag = __webpack_require__(133);
-
-var _frag2 = _interopRequireDefault(_frag);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var LIMIT = 15;
-var size = 20;
-var randomDir = function randomDir() {
-  return Math.random() < 0.5 ? -1 : 1;
-};
-
-var Experiment = function (_ThreeApp) {
-  _inherits(Experiment, _ThreeApp);
-
-  function Experiment() {
-    _classCallCheck(this, Experiment);
-
-    return _possibleConstructorReturn(this, (Experiment.__proto__ || Object.getPrototypeOf(Experiment)).apply(this, arguments));
-  }
-
-  _createClass(Experiment, [{
-    key: 'init',
-    value: function init() {
-      var _this2 = this;
-
-      this.renderer.setClearColor(0x000000);
-
-      this.pivot = new _three.Object3D();
-      this.pivot.position.set(0, 0, 0);
-      this.pivot.add(this.camera);
-      this.scene.add(this.pivot);
-      this.camera.position.set(0, 2, 40);
-
-      this.geometry = new _three.DodecahedronGeometry(3, 2);
-      this.material = new _three.ShaderMaterial({
-        transparent: true,
-        fragmentShader: _frag2.default,
-        vertexShader: _vert2.default,
-        uniforms: {
-          color: { value: new _three.Color(0xddddff) },
-          time: { value: 0 },
-          size: { value: size },
-          alphaMap: { value: 0 }
-        },
-        depthWrite: false
-      });
-      this.material.blending = _three.AdditiveBlending;
-      this.textureLoader = new _three.TextureLoader();
-      this.textureLoader.load('particle.jpg', function (texture) {
-        _this2.material.uniforms.alphaMap.value = texture;
-      });
-      this.points = new _three.Points(this.geometry, this.material);
-      for (var i = 0; i < this.geometry.vertices.length; i++) {
-        var mod = Math.random() * 0.4;
-        var v = this.geometry.vertices[i];
-        var value = i / this.geometry.vertices.length * Math.random();
-        v.velocity = new _three.Vector3(Math.random() * randomDir(), Math.random() * randomDir(), Math.random() * randomDir());
-        v.velocity.x *= 0.02;
-        v.velocity.y *= 0.02;
-        v.velocity.z *= 0.02;
-      }
-      this.scene.add(this.points);
-      this.composer = new _wagner2.default.Composer(this.renderer);
-      this.bloomPass = new _MultiPassBloomPass2.default({
-        zoomBlurStrength: 0.8, //0.2,
-        applyZoomBlur: true,
-        blurAmount: 100
-      });
-    }
-  }, {
-    key: 'update',
-    value: function update(t, delta) {
-      for (var i = 0; i < this.geometry.vertices.length; i++) {
-        var vertex = this.geometry.vertices[i];
-        if (vertex.length() > LIMIT) {
-          vertex.velocity.x *= Math.random() * -2;
-          vertex.velocity.y *= Math.random() * -2;
-          vertex.velocity.z *= Math.random() * -2;
-        }
-        vertex.x += delta * 0.1 * vertex.velocity.x + Math.sin(t * i * 0.001 + vertex.velocity.x) * 0.01;
-        vertex.y += delta * 0.1 * vertex.velocity.y + Math.cos(t * i * 0.001 + vertex.velocity.y) * 0.01;
-        vertex.z += delta * 0.1 * vertex.velocity.z + Math.sin(t * i * 0.001 + vertex.velocity.z) * 0.01;
-      }
-      this.pivot.rotation.y = t * 0.0001;
-      this.pivot.rotation.z = t * 0.0001;
-      this.geometry.verticesNeedUpdate = true;
-      this.material.uniforms.time.value = t * 0.001;
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      this.renderer.clearColor();
-      this.composer.reset();
-      this.composer.render(this.scene, this.camera);
-      this.composer.pass(this.bloomPass);
-      this.composer.toScreen();
-      this.camera.lookAt(this.pivot.position);
-      // this.renderer.render(this.scene, this.camera);
-    }
-  }]);
-
-  return Experiment;
-}(_ThreeApp3.default);
-
-exports.default = new Experiment();
-
-/***/ }),
-
-/***/ 132:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float size;\nvarying vec3 vPosition;\n\nvoid main() {\n  vPosition = position;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  gl_PointSize = size * length(modelViewMatrix * vec4(position, 1.0)) / 4.0;\n}\n"
-
-/***/ }),
-
-/***/ 133:
-/***/ (function(module, exports) {
-
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform sampler2D alphaMap;\nvarying vec3 vPosition;\nuniform vec3 color;\n\nfloat map_1_0(float value, float inMin, float inMax, float outMin, float outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec2 map_1_0(vec2 value, vec2 inMin, vec2 inMax, vec2 outMin, vec2 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec3 map_1_0(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\nvec4 map_1_0(vec4 value, vec4 inMin, vec4 inMax, vec4 outMin, vec4 outMax) {\n  return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);\n}\n\n\n\nfloat hue2rgb_2_1(float f1, float f2, float hue) {\n    if (hue < 0.0)\n        hue += 1.0;\n    else if (hue > 1.0)\n        hue -= 1.0;\n    float res;\n    if ((6.0 * hue) < 1.0)\n        res = f1 + (f2 - f1) * 6.0 * hue;\n    else if ((2.0 * hue) < 1.0)\n        res = f2;\n    else if ((3.0 * hue) < 2.0)\n        res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\n    else\n        res = f1;\n    return res;\n}\n\nvec3 hsl2rgb_2_2(vec3 hsl) {\n    vec3 rgb;\n    \n    if (hsl.y == 0.0) {\n        rgb = vec3(hsl.z); // Luminance\n    } else {\n        float f2;\n        \n        if (hsl.z < 0.5)\n            f2 = hsl.z * (1.0 + hsl.y);\n        else\n            f2 = hsl.z + hsl.y - hsl.y * hsl.z;\n            \n        float f1 = 2.0 * hsl.z - f2;\n        \n        rgb.r = hue2rgb_2_1(f1, f2, hsl.x + (1.0/3.0));\n        rgb.g = hue2rgb_2_1(f1, f2, hsl.x);\n        rgb.b = hue2rgb_2_1(f1, f2, hsl.x - (1.0/3.0));\n    }   \n    return rgb;\n}\n\nvec3 hsl2rgb_2_2(float h, float s, float l) {\n    return hsl2rgb_2_2(vec3(h, s, l));\n}\n\n\n\nvoid main() {\n  vec4 tex = texture2D(alphaMap, gl_PointCoord);\n  float l = length(vPosition) * 2.0;\n  float t = sin(time*2.0) * 2.0;\n  float m = map_1_0(t+(l), -3.0, 7.0, 0.2, 0.6);\n  vec3 hsl = hsl2rgb_2_2(m, 0.8, 0.5);\n  float alpha = smoothstep(0.1, 0.8, tex.r) * 0.005 * l;//smoothstep(1.0, 2.0, l);\n  gl_FragColor = vec4(hsl, alpha);\n}\n"
 
 /***/ }),
 
@@ -761,6 +831,221 @@ BrightnessContrastPass.prototype.run = function(composer) {
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nuniform float brightness;\nuniform float contrast;\nuniform sampler2D tInput;\n\nvarying vec2 vUv;\n\nvoid main() {\n\n  vec3 color = texture2D(tInput, vUv).rgb;\n  vec3 colorContrasted = (color) * contrast;\n  vec3 bright = colorContrasted + vec3(brightness,brightness,brightness);\n  gl_FragColor.rgb = bright;\n  gl_FragColor.a = 1.;\n\n}"
+
+/***/ }),
+
+/***/ 23:
+/***/ (function(module, exports) {
+
+module.exports = function (mesh, opts) {
+  if (!opts) opts = {};
+  var vars = opts.attributes ? {} : null;
+  var vkeys = vars && Object.keys(opts.attributes)
+  if (vars) {
+    for (var k = 0; k < vkeys.length; k++) {
+      vars[vkeys[k]] = []
+    }
+  }
+
+  var i, j;
+  var pts = [];
+  var cells = [];
+  var barycentricAttrs = [];
+
+  var mpts = mesh.positions;
+  var mcells = mesh.cells;
+
+  var c = 0;
+  for (i = 0; i < mesh.cells.length; i++) {
+    var cell = mcells[i];
+    if (cell.length === 3) {
+      pts.push(mpts[cell[0]]);
+      pts.push(mpts[cell[1]]);
+      pts.push(mpts[cell[2]]);
+      barycentricAttrs.push([0, 0]);
+      barycentricAttrs.push([1, 0]);
+      barycentricAttrs.push([0, 1]);
+      cells.push(c++);
+      cells.push(c++);
+      cells.push(c++);
+      if (vkeys) {
+        for (j = 0; j < vkeys.length; j++) {
+          var vkey = vkeys[j];
+          vars[vkey].push(opts.attributes[vkey][cell[0]]);
+          vars[vkey].push(opts.attributes[vkey][cell[1]]);
+          vars[vkey].push(opts.attributes[vkey][cell[2]]);
+        }
+      }
+    }
+  }
+
+  var ret = {
+    positions: pts,
+    attributes: vars,
+    barycentric: barycentricAttrs
+  };
+
+  if (mesh.cells) {
+    ret.cells = cells;
+  }
+
+  return ret;
+};
+
+
+/***/ }),
+
+/***/ 25:
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_25__;
+
+/***/ }),
+
+/***/ 26:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _three = __webpack_require__(0);
+
+var _barycentricVert = __webpack_require__(27);
+
+var _barycentricVert2 = _interopRequireDefault(_barycentricVert);
+
+var _barycentricFrag = __webpack_require__(28);
+
+var _barycentricFrag2 = _interopRequireDefault(_barycentricFrag);
+
+var _glslSolidWireframe = __webpack_require__(23);
+
+var _glslSolidWireframe2 = _interopRequireDefault(_glslSolidWireframe);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var DEFAULTS = {
+  color: new _three.Color(0x333333),
+  wireframeColor: new _three.Color(0xeeeeee),
+  alpha: 0.0,
+  wireframeAlpha: 1.0,
+  width: 5.0
+};
+
+var BarycentricMaterial = function (_ShaderMaterial) {
+  _inherits(BarycentricMaterial, _ShaderMaterial);
+
+  function BarycentricMaterial() {
+    var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, BarycentricMaterial);
+
+    var props = Object.assign({}, DEFAULTS, config);
+    return _possibleConstructorReturn(this, (BarycentricMaterial.__proto__ || Object.getPrototypeOf(BarycentricMaterial)).call(this, {
+      uniforms: {
+        color: { value: props.color },
+        wireframeColor: { value: props.wireframeColor },
+        alpha: { value: props.alpha },
+        wireframeAlpha: { value: props.wireframeAlpha },
+        width: { value: props.width }
+      },
+      vertexShader: _barycentricVert2.default,
+      fragmentShader: _barycentricFrag2.default,
+      transparent: true,
+      side: _three.DoubleSide,
+      depthWrite: false
+    }));
+  }
+
+  _createClass(BarycentricMaterial, null, [{
+    key: 'applyBarycentricCoordinates',
+    value: function applyBarycentricCoordinates(geometry) {
+      var positions = [];
+      var cells = [];
+      var verts = geometry.attributes.position.array;
+      var vertCount = geometry.attributes.position.count;
+      var faces = []; //geometry.index ? geometry.index.array : [];
+
+      if (!faces.length) {
+        for (var i = 0; i < vertCount - 2; i++) {
+          faces.push(i);
+          faces.push(i + 1);
+          faces.push(i + 2);
+        }
+      }
+
+      var faceCount = faces.length / 3;
+
+      // Convert from long arrays to array-of-arrays
+      for (var _i = 0; _i < vertCount; _i++) {
+        positions.push([verts[_i * 3 + 0], verts[_i * 3 + 1], verts[_i * 3 + 2]]);
+      }
+      for (var _i2 = 0; _i2 < faceCount; _i2++) {
+        cells.push([faces[_i2 * 3 + 0], faces[_i2 * 3 + 1], faces[_i2 * 3 + 2]]);
+      }
+
+      var ret = (0, _glslSolidWireframe2.default)({
+        positions: positions,
+        cells: cells
+      });
+      // Convert back from array-of-arrays to long array
+      var barycentric = new Float32Array(ret.barycentric.length * 2);
+      var count = 0;
+      for (var _i3 = 0; _i3 < ret.barycentric.length; _i3++) {
+        barycentric[count++] = ret.barycentric[_i3][0];
+        barycentric[count++] = ret.barycentric[_i3][1];
+      }
+      /*
+          count = 0;
+          for (let i = 0; i < ret.positions.length; i++) {
+            verts[count++] = ret.positions[i][0];
+            verts[count++] = ret.positions[i][1];
+            verts[count++] = ret.positions[i][2];
+          }
+      
+          count = 0;
+          for (let i = 0; i < ret.cells.length; i++) {
+            faces[count++] = ret.cells[i][0];
+            faces[count++] = ret.cells[i][1];
+            faces[count++] = ret.cells[i][2];
+          }
+          geometry.attributes.position.needsUpdate = true;
+          geometry.index.needsUpdate = true;
+      */
+      geometry.addAttribute('barycentric', new _three.BufferAttribute(barycentric, 2));
+    }
+  }]);
+
+  return BarycentricMaterial;
+}(_three.ShaderMaterial);
+
+exports.default = BarycentricMaterial;
+
+/***/ }),
+
+/***/ 27:
+/***/ (function(module, exports) {
+
+module.exports = "#define GLSLIFY 1\nattribute vec2 barycentric;\n\nvarying vec2 vBC;\n\nvoid main() {\n  vBC = barycentric;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}\n"
+
+/***/ }),
+
+/***/ 28:
+/***/ (function(module, exports) {
+
+module.exports = "#extension GL_OES_standard_derivatives : enable\n\nprecision highp float;\nprecision highp int;\n#define GLSLIFY 1\n\nuniform float width;\nuniform vec3 color;\nuniform float alpha;\nuniform vec3 wireframeColor;\nuniform float wireframeAlpha;\nvarying vec2 vBC;\n\nfloat gridFactor (vec2 vBC, float w) {\n  vec3 bary = vec3(vBC.x, vBC.y, 1.0 - vBC.x - vBC.y);\n  vec3 d = fwidth(bary);\n  vec3 a3 = smoothstep(d * (w - 0.5), d * (w + 0.5), bary);\n  return min(min(a3.x, a3.y), a3.z);\n}\n\nvoid main() {\n  float factor = gridFactor(vBC, width);\n  vec3 color = mix(wireframeColor, color, factor);\n  float a = mix(wireframeAlpha, alpha, factor);\n  gl_FragColor = vec4(color, a);\n}\n"
 
 /***/ }),
 

@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 140);
+/******/ 	return __webpack_require__(__webpack_require__.s = 143);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -306,7 +306,7 @@ Stack.prototype.getPasses = function() {
 
 /***/ }),
 
-/***/ 140:
+/***/ 143:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -326,13 +326,13 @@ var _ThreeApp2 = __webpack_require__(7);
 
 var _ThreeApp3 = _interopRequireDefault(_ThreeApp2);
 
-var _three2 = __webpack_require__(141);
+var _three2 = __webpack_require__(144);
 
 var _wagner = __webpack_require__(4);
 
 var _wagner2 = _interopRequireDefault(_wagner);
 
-var _VignettePass = __webpack_require__(30);
+var _VignettePass = __webpack_require__(33);
 
 var _VignettePass2 = _interopRequireDefault(_VignettePass);
 
@@ -453,7 +453,7 @@ exports.default = new Experiment();
 
 /***/ }),
 
-/***/ 141:
+/***/ 144:
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function() {
@@ -967,7 +967,7 @@ CopyPass.prototype.constructor = CopyPass;
 
 /***/ }),
 
-/***/ 30:
+/***/ 33:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -975,7 +975,7 @@ CopyPass.prototype.constructor = CopyPass;
 
 var Pass = __webpack_require__(1);
 var vertex = __webpack_require__(2);
-var fragment = __webpack_require__(31);
+var fragment = __webpack_require__(34);
 
 function VignettePass(boost, reduction) {
   Pass.call(this);
@@ -1000,7 +1000,7 @@ VignettePass.prototype.run = function(composer) {
 
 /***/ }),
 
-/***/ 31:
+/***/ 34:
 /***/ (function(module, exports) {
 
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nuniform sampler2D tInput;\nuniform vec2 resolution;\n\nuniform float reduction;\nuniform float boost;\n\nvoid main() {\n\n  vec4 color = texture2D( tInput, vUv );\n\n  vec2 center = resolution * 0.5;\n  float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;\n  vignette = boost - vignette * reduction;\n\n  color.rgb *= vignette;\n  gl_FragColor = color;\n\n}"
