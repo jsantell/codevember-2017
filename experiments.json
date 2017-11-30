@@ -231,6 +231,14 @@
       "dependencies": [
         { "name": "three" }
       ]
+    },
+    "30": {
+      "title": "thirty days",
+      "subtitle": "",
+      "dependencies": [
+        { "name": "three" },
+        { "name": "tween" }
+      ]
     }
   }
 }
