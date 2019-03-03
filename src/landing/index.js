@@ -22,7 +22,7 @@ const ROTATION_LIMIT_Y = 0.1;
 const ROTATION_LIMIT_X = 0.2;
 const FONT_DEPTH = 5;
 const CAMERA_Y = 0;
-const FONT_PATH = '../assets/hyrax-regular.typeface.json' || '../assets/droidsans.typeface.json';
+const FONT_PATH = 'assets/hyrax-regular.typeface.json' || 'assets/droidsans.typeface.json';
 class Experiment extends ThreeApp {
   init() {
     // Set the video tiles to be almost "below the fold"
