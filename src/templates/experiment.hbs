@@ -5,7 +5,6 @@
   <title>Codevember 2017: {{htmlWebpackPlugin.options.id}}: {{htmlWebpackPlugin.options.title}}</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet">
   <link href="../styles/experiments.css" rel="stylesheet">
-  <script src="../scripts/ga.js"></script>
 </head>
 <body>
   <div id="info">
@@ -22,6 +21,8 @@
   {{#each htmlWebpackPlugin.options.dependencies}}
     <script src="../scripts/{{name}}.min.js"></script>
   {{/each}}
+  <script async defer src="https://cdn.simpleanalytics.io/hello.js"></script>
+  <noscript><img src="https://api.simpleanalytics.io/hello.gif" alt=""></noscript>
   <script src="bundle.js"></script>
 </body>
 </html>
